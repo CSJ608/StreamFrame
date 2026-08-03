@@ -25,4 +25,11 @@ public sealed class StreamConnectionOptions
     /// <see cref="IStreamingFrameCodec"/> 时生效；否则自动回退到"序列化→帧"两段缓冲。
     /// </summary>
     public bool UseStreamingEncode { get; set; } = true;
+
+    /// <summary>
+    /// 被动模式（isActive=false）下，accept 到第一个客户端后是否关闭监听 socket。
+    /// 默认 true：同一时间仅接受一个客户端，后续连接被 TCP 层立即拒绝（与单客户端设备对接场景匹配）。
+    /// 设为 false 可保持监听，但当前框架仍只处理第一个已连接客户端。
+    /// </summary>
+    public bool AcceptFirstClientOnly { get; set; } = true;
 }

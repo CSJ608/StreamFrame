@@ -166,6 +166,15 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
                     var socket = await _server!.AcceptAsync(ct).ConfigureAwait(false);
                     socket.Blocking = false;
                     socket.ReceiveBufferSize = _options.SocketReceiveBufferSize;
+
+                    // 单客户端模式：accept 到第一个客户端后关闭监听 socket，
+                    // 后续连接在 TCP 层被立即拒绝。
+                    if (_options.AcceptFirstClientOnly && _server != null)
+                    {
+                        _server.Dispose();
+                        _server = null;
+                    }
+
                     return socket;
                 }
                 catch (Exception ex) when (!ct.IsCancellationRequested && !IsDisposed)
