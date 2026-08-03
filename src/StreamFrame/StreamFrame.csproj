@@ -12,6 +12,7 @@
     <Description>通用 socket 通讯框架：帧边界判定（IFrameCodec）与帧内编解码（ICodec&lt;TMessage&gt;）插件化，支持长度前缀 / STX-ETX 定界，可选流式零拷贝发送。</Description>
     <Authors>Marci</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/CSJ608/StreamFrame</RepositoryUrl>
     <PackageTags>socket;tcp;stream;framing;codec;length-prefix;stx;etx;pipelines</PackageTags>
@@ -24,6 +25,10 @@
   <ItemGroup>
     <PackageReference Include="System.IO.Pipelines" Version="8.0.0" />
     <PackageReference Include="System.Threading.Channels" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>

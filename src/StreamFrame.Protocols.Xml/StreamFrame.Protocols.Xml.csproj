@@ -4,6 +4,10 @@
     <ProjectReference Include="..\StreamFrame\StreamFrame.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -16,6 +20,7 @@
     <Description>StreamFrame 的 XML 报文示例驱动：XmlDocumentCodec（XmlSerializer / XmlWriter 编解码）。</Description>
     <Authors>Marci</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/CSJ608/StreamFrame</RepositoryUrl>
     <PackageTags>socket;xml;streamframe;codec</PackageTags>
