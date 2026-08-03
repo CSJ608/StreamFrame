@@ -36,6 +36,15 @@ jobs:
           dotnet pack src/StreamFrame/StreamFrame.csproj -c Release --no-build -o artifacts
           dotnet pack src/StreamFrame.Protocols.Xml/StreamFrame.Protocols.Xml.csproj -c Release --no-build -o artifacts
 
+      - name: Debug NUGET_USER
+        run: |
+          echo "NUGET_USER length: ${#NUGET_USER}"
+          if [ -z "${NUGET_USER}" ]; then
+            echo "::error::NUGET_USER is EMPTY. Add it in Settings → Secrets and variables → Actions → Variables (not Secrets)."
+          fi
+        env:
+          NUGET_USER: ${{ vars.NUGET_USER }}
+
       - name: NuGet Login (OIDC)
         id: login
         uses: NuGet/login@v1
