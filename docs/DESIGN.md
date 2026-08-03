@@ -48,6 +48,8 @@ public interface IFrameCodec
 | `LengthPrefixFrameCodec` | 4 字节**大端**长度头 + 负载 | 负载最大 16 MiB（可配）；非法长度丢弃头重同步 |
 | `StxEtxFrameCodec` | STX `0x02` … ETX `0x03` | **plain 不做转义**：负载不得含 0x02/0x03，二进制负载请用 LengthPrefix |
 
+两个内置 framing 同时实现 `IStreamingFrameCodec`：支持流式单缓冲编码（见下文），与纯函数 `EncodeFrame` 字节输出完全一致。
+
 STX/ETX 边界处理（与 SamSung 一致）：
 - 待定帧的 ETX 前再次遇到 STX → 丢弃旧半包从新 STX 重新开始
 - 无前导 STX 的孤立 ETX → 噪声跳过
@@ -102,7 +104,16 @@ socket --ReceiveAsync--> pipe.Writer --[Pipe]--> FrameDecoder.RunAsync
 
 ### 发送流水线（有界队列背压 + 串行化）
 
-业务线程 `SendAsync` 仅入队到有界 `Channel<TMessage>`（capacity 可配）；发送 worker 出队 → `codec.Encode` → `framing.EncodeFrame` → 持 `_sendLock` 逐段 `socket.SendAsync`。队列满时 `SendAsync` 自然 await 背压，大帧不阻塞调用线程。
+业务线程 `SendAsync` 仅入队到有界 `Channel<TMessage>`（capacity 可配）；发送 worker 出队 → 编码加帧 → 持 `_sendLock` 逐段 `socket.SendAsync`。队列满时 `SendAsync` 自然 await 背压，大帧不阻塞调用线程。
+
+**两种帧编码路径**（连接选项 `UseStreamingEncode`，默认开启）：
+- **流式**（默认）：若 framing 实现 `IStreamingFrameCodec`，走 `BeginFrame → codec.Encode(写同一缓冲) → EndFrame` 单缓冲路径，`LengthPrefix` 在 Begin 占位、End 原地回填长度。**全程零 memcpy**，与 secs4net 的 `EncodeMessage` 模式一致。
+- **纯函数回退**：若 framing 不支持流式（自定义实现未实现 `IStreamingFrameCodec`），自动回退到 `EncodeFrame(payload)` 两段缓冲（含一次 memcpy）。
+
+```csharp
+// 自定义 framing 时：实现 IFrameCodec 即可（走纯函数路径）；
+// 想消除 memcpy 再额外实现 IStreamingFrameCodec 的可选成员 BeginFrame/EndFrame。
+```
 
 ### 生命周期
 
@@ -120,6 +131,7 @@ socket --ReceiveAsync--> pipe.Writer --[Pipe]--> FrameDecoder.RunAsync
 
 `test/StreamFrame.Tests/`，无需真实 socket：
 - Framing 专项：长度越界/负数/超 Max、孤立 ETX、新 STX 丢弃旧半包、超长帧
+- 流式编码：Begin/EndFrame 与纯函数 EncodeFrame **字节输出一致性**、长度头回填正确、超长拒绝
 - 解码循环：整帧粘包、按 23 字节小块分片喂（半包）
 - XML codec：往返、DTD 拒绝（XXE 防御）
 - 端到端：`samples/StreamFrame.Demo` 演示 XML+LengthPrefix、文本+STX/ETX、断线重连三场景

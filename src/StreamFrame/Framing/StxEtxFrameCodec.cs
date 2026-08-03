@@ -14,8 +14,10 @@ namespace StreamFrame.Abstractions;
 /// <item>无前导 STX 的孤立 ETX 被视为噪声字节跳过。</item>
 /// <item>到达缓冲区末尾但无闭合 ETX 时回到最后一个 STX 处等待后续数据。</item>
 /// </list>
+/// 实现 <see cref="IStreamingFrameCodec"/>：BeginFrame 写 STX、EndFrame 写 ETX，
+/// 与 <see cref="IFrameCodec.EncodeFrame"/> 字节输出完全一致。
 /// </summary>
-public sealed class StxEtxFrameCodec : IFrameCodec
+public sealed class StxEtxFrameCodec : IStreamingFrameCodec
 {
     private const byte STX = 0x02;
     private const byte ETX = 0x03;
@@ -47,6 +49,32 @@ public sealed class StxEtxFrameCodec : IFrameCodec
         payload.CopyTo(destination[1..]);
         destination[payload.Length + 1] = ETX;
         writer.Advance(payload.Length + 2);
+    }
+
+    public void BeginFrame(IWrittenBufferWriter writer)
+    {
+        var destination = writer.GetSpan(1);
+        destination[0] = STX;
+        writer.Advance(1);
+    }
+
+    public void EndFrame(IWrittenBufferWriter writer)
+    {
+        var payloadLength = writer.WrittenCount - 1; // 减掉 BeginFrame 写入的 STX
+        if (payloadLength < 0 || payloadLength > MaxPayloadBytes)
+            throw new InvalidOperationException($"Frame payload of {payloadLength} bytes exceeds MaxPayloadBytes={MaxPayloadBytes}.");
+
+        // 校验负载不包含 STX/ETX（plain 协议约束），防止发送不可解析的帧。
+        // 解码端遇到负载内的 STX 会截断、ETX 会提前闭合，必须在发送前拒绝。
+        var payload = writer.WrittenSpan.Slice(1);
+        if (payload.IndexOfAny(STX, ETX) >= 0)
+            throw new InvalidOperationException(
+                "Plain STX/ETX framing cannot carry payload bytes 0x02/0x03. " +
+                "Use LengthPrefixFrameCodec for binary payloads.");
+
+        var destination = writer.GetSpan(1);
+        destination[0] = ETX;
+        writer.Advance(1);
     }
 
     public bool TryDecodeFrame(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> payload)

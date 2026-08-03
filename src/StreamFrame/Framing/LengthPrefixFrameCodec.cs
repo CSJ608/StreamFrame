@@ -5,8 +5,10 @@ namespace StreamFrame.Abstractions;
 
 /// <summary>
 /// 4 字节大端长度前缀 + 负载 的帧定界。负载最大 16 MiB。
+/// 实现 <see cref="IStreamingFrameCodec"/>：支持单缓冲原地编码（BeginFrame 预留长度位，
+/// EndFrame 回填长度），与 <see cref="IFrameCodec.EncodeFrame"/> 字节输出完全一致。
 /// </summary>
-public sealed class LengthPrefixFrameCodec : IFrameCodec
+public sealed class LengthPrefixFrameCodec : IStreamingFrameCodec
 {
     public const int LengthPrefixSize = 4;
     public const int DefaultMaxPayloadBytes = 16 * 1024 * 1024;
@@ -30,6 +32,23 @@ public sealed class LengthPrefixFrameCodec : IFrameCodec
         BinaryPrimitives.WriteInt32BigEndian(header, payload.Length);
         writer.Advance(LengthPrefixSize);
         writer.Write(payload);
+    }
+
+    public void BeginFrame(IWrittenBufferWriter writer)
+    {
+        var header = writer.GetSpan(LengthPrefixSize);
+        header.Clear(); // 占位 4 字节，EndFrame 回填
+        writer.Advance(LengthPrefixSize);
+    }
+
+    public void EndFrame(IWrittenBufferWriter writer)
+    {
+        var payloadLength = writer.WrittenCount - LengthPrefixSize;
+        if (payloadLength < 0 || payloadLength > MaxPayloadBytes)
+            throw new InvalidOperationException($"Frame payload of {payloadLength} bytes exceeds MaxPayloadBytes={MaxPayloadBytes}.");
+
+        var header = writer.WrittenSpan.Slice(0, LengthPrefixSize);
+        BinaryPrimitives.WriteInt32BigEndian(header, payloadLength);
     }
 
     public bool TryDecodeFrame(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> payload)

@@ -346,11 +346,23 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
 
     private async Task SendFramedAsync(TMessage message, CancellationToken ct)
     {
+        // 流式编码：单缓冲、零 memcpy（BeginFrame 占位 → codec 直接写 → EndFrame 回填/收尾）
+        if (_options.UseStreamingEncode && _framing is IStreamingFrameCodec streaming)
+        {
+            using var frame = new PooledBufferWriter(_options.EncodeBufferInitialSize);
+            streaming.BeginFrame(frame);
+            _codec.Encode(message, frame, ct);
+            streaming.EndFrame(frame);
+            await SendRawAsync(frame.WrittenMemory, ct).ConfigureAwait(false);
+            return;
+        }
+
+        // 纯函数编码：序列化产物 → 帧，两段缓冲（含一次 memcpy）
         using var payload = new PooledBufferWriter(_options.EncodeBufferInitialSize);
         _codec.Encode(message, payload, ct);
-        using var frame = new PooledBufferWriter(payload.WrittenCount + 16);
-        _framing.EncodeFrame(payload.WrittenSpan, frame);
-        await SendRawAsync(frame.WrittenMemory, ct).ConfigureAwait(false);
+        using var frame2 = new PooledBufferWriter(payload.WrittenCount + 16);
+        _framing.EncodeFrame(payload.WrittenSpan, frame2);
+        await SendRawAsync(frame2.WrittenMemory, ct).ConfigureAwait(false);
     }
 
     private async Task SendRawAsync(ReadOnlyMemory<byte> buffer, CancellationToken ct)
@@ -421,9 +433,10 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
 }
 
 /// <summary>
-/// 按初始大小租用 ArrayPool 缓冲、可动态扩容的 IBufferWriter，用于编码中间字节。
+/// 按初始大小租用 ArrayPool 缓冲、可动态扩容的 IWrittenBufferWriter，用于编码中间字节。
+/// GetSpan 保证返回至少 sizeHint 长的段（不足时先扩容），写入的数据可立即通过 WrittenSpan 读取。
 /// </summary>
-internal sealed class PooledBufferWriter : IBufferWriter<byte>, IDisposable
+internal sealed class PooledBufferWriter : IWrittenBufferWriter, IDisposable
 {
     private byte[] _buffer;
     private int _written;
@@ -432,7 +445,7 @@ internal sealed class PooledBufferWriter : IBufferWriter<byte>, IDisposable
         => _buffer = ArrayPool<byte>.Shared.Rent(Math.Max(capacity, 1));
 
     public ReadOnlyMemory<byte> WrittenMemory => _buffer.AsMemory(0, _written);
-    public ReadOnlySpan<byte> WrittenSpan => _buffer.AsSpan(0, _written);
+    public Span<byte> WrittenSpan => _buffer.AsSpan(0, _written);
     public int WrittenCount => _written;
 
     public void Advance(int count)
@@ -456,10 +469,13 @@ internal sealed class PooledBufferWriter : IBufferWriter<byte>, IDisposable
 
     private void EnsureCapacity(int sizeHint)
     {
-        if (sizeHint <= _buffer.Length - _written)
+        // 剩余空间必须至少容纳 max(sizeHint, 1) 字节——GetSpan 不允许返回空 span
+        // （BuffersExtensions.Write 内部以 GetSpan(0) 多段循环拷贝，依赖非空返回值）。
+        var required = _written + Math.Max(sizeHint, 1);
+        if (required <= _buffer.Length)
             return;
 
-        var newSize = Math.Max(sizeHint, _buffer.Length * 2);
+        var newSize = Math.Max(required, _buffer.Length * 2);
         var newBuffer = ArrayPool<byte>.Shared.Rent(newSize);
         Array.Copy(_buffer, newBuffer, _written);
         ArrayPool<byte>.Shared.Return(_buffer);
