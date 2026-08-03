@@ -1,0 +1,69 @@
+using System.Buffers;
+using System.Buffers.Binary;
+
+namespace StreamFrame.Abstractions;
+
+/// <summary>
+/// 4 字节大端长度前缀 + 负载 的帧定界。负载最大 16 MiB。
+/// </summary>
+public sealed class LengthPrefixFrameCodec : IFrameCodec
+{
+    public const int LengthPrefixSize = 4;
+    public const int DefaultMaxPayloadBytes = 16 * 1024 * 1024;
+
+    public int MaxPayloadBytes { get; }
+
+    public LengthPrefixFrameCodec(int maxPayloadBytes = DefaultMaxPayloadBytes)
+    {
+        if (maxPayloadBytes <= 0)
+            throw new ArgumentOutOfRangeException(nameof(maxPayloadBytes));
+
+        MaxPayloadBytes = maxPayloadBytes;
+    }
+
+    public void EncodeFrame(ReadOnlySpan<byte> payload, IBufferWriter<byte> writer)
+    {
+        if (payload.Length > MaxPayloadBytes)
+            throw new InvalidOperationException($"Frame payload of {payload.Length} bytes exceeds MaxPayloadBytes={MaxPayloadBytes}.");
+
+        var header = writer.GetSpan(LengthPrefixSize);
+        BinaryPrimitives.WriteInt32BigEndian(header, payload.Length);
+        writer.Advance(LengthPrefixSize);
+        writer.Write(payload);
+    }
+
+    public bool TryDecodeFrame(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> payload)
+    {
+        payload = default;
+        if (buffer.Length < LengthPrefixSize)
+            return false;
+
+        var length = ReadLengthPrefix(buffer);
+
+        // 非法长度（负数 / 超上限）：丢弃长度头，尝试从下一字节重新同步。
+        if ((uint)length > (uint)MaxPayloadBytes)
+        {
+            buffer = buffer.Slice(LengthPrefixSize);
+            return false;
+        }
+
+        var frameLength = LengthPrefixSize + length;
+        if (buffer.Length < frameLength)
+            return false;
+
+        payload = buffer.Slice(LengthPrefixSize, length);
+        buffer = buffer.Slice(frameLength);
+        return true;
+    }
+
+    private static int ReadLengthPrefix(in ReadOnlySequence<byte> buffer)
+    {
+        var header = buffer.Slice(0, LengthPrefixSize);
+        if (header.IsSingleSegment)
+            return BinaryPrimitives.ReadInt32BigEndian(header.FirstSpan);
+
+        Span<byte> tmp = stackalloc byte[LengthPrefixSize];
+        header.CopyTo(tmp);
+        return BinaryPrimitives.ReadInt32BigEndian(tmp);
+    }
+}

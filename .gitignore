@@ -1,0 +1,15 @@
+## .NET build output
+bin/
+obj/
+*.user
+
+## Visual Studio
+.vs/
+.idea/
+
+## NuGet
+*.nupkg
+packages/
+
+## Logs
+*.log
