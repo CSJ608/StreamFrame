@@ -1,4 +1,5 @@
 # 打标签 v* 时：构建 + 测试 + 打包，创建 GitHub Release 并附 nupkg/snupkg。
+# Release 正文优先从 CHANGELOG.md 提取当前版本段落；找不到时回退到 GitHub 自动生成。
 name: release
 
 on:
@@ -37,7 +38,35 @@ jobs:
         id: tag
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
-      - name: Create Release
+      - name: Extract changelog section for this version
+        id: notes
+        run: |
+          version="${{ steps.tag.outputs.version }}"
+          # 用 index() 固定字符串匹配版本头，避开正则转义；遇到下一个 "## [" 停止。
+          awk -v header="## [$version]" '
+            found == 0 && index($0, header) == 1 { found = 1; next }
+            found == 1 && index($0, "## [") == 1 { exit }
+            found == 1 { print }
+          ' CHANGELOG.md > release-notes.md
+          if [ -s release-notes.md ]; then
+            echo "has_notes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_notes=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create Release (from CHANGELOG)
+        if: steps.notes.outputs.has_notes == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body_path: release-notes.md
+          files: |
+            artifacts/*.nupkg
+            artifacts/*.snupkg
+
+      - name: Create Release (auto-generated notes)
+        if: steps.notes.outputs.has_notes != 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
