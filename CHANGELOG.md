@@ -5,6 +5,14 @@
 
 ## [Unreleased]
 
+### 新增
+- 暂无
+
+### 修复
+- 暂无
+
+## [1.1.0] - 2026-08-04
+
 ### 变更
 - 被动模式新增 `AcceptFirstClientOnly` 选项（默认 `true`）：accept 到第一个客户端后关闭监听 socket，后续连接在 TCP 层被立即拒绝，保证单客户端语义与参考实现一致。
 
@@ -31,6 +39,7 @@
 - 发布自动化：`release.yml`（tag 自动建 GitHub Release）、`publish-nuget.yml`（OIDC Trusted Publishing 推送 nuget.org）。
 - 单元测试 25 个 + 三场景端到端 demo。
 
-[Unreleased]: https://github.com/CSJ608/StreamFrame/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/CSJ608/StreamFrame/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/CSJ608/StreamFrame/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/CSJ608/StreamFrame/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/CSJ608/StreamFrame/releases/tag/v1.0.0
