@@ -79,8 +79,7 @@ jobs:
       - name: Build
         run: dotnet build StreamFrame.slnx -c Release
 
-      - name: Test
-        run: dotnet test StreamFrame.slnx -c Release --no-build
+      # 测试由上方 test 矩阵 job 把关（含 Windows net48）；此处直接打包发布
 
       - name: Pack
         run: |
