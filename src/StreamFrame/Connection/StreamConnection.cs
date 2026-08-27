@@ -150,7 +150,17 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
     private async Task<Socket> ConnectAsync(CancellationToken ct)
     {
         var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        await socket.ConnectAsync(IpAddress, Port, ct).ConfigureAwait(false);
+        try
+        {
+            await socket.ConnectAsync(IpAddress, Port, ct).ConfigureAwait(false);
+        }
+        catch
+        {
+            // 连接失败/取消同样释放本次尝试的 socket，否则失败重试一次泄漏一个
+            socket.Dispose();
+            throw;
+        }
+
         ConfigureSocket(socket);
         return socket;
     }
