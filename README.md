@@ -140,6 +140,13 @@ var conn = new StreamConnection<XDocument>(..., logger: loggerFactory.CreateLogg
 
 生产环境建议开启 `TcpKeepAlive = true`；有周期性报文的协议可再加 `ReceiveIdleTimeoutMs`（如心跳周期的 3 倍），双保险兜底半开连接。
 
+## 性能
+
+BenchmarkDotNet 实测（详见 [bench/README.md](bench/README.md)，可本地复现）：
+
+- **流式编码**：每帧堆分配减半（单缓冲 vs 双缓冲），小负载耗时快 25–35%，大负载持平；
+- **切帧吞吐**：`LengthPrefixFramer` ≈10 ns/帧，`StxEtxFramer` ≈1.1 µs/帧（逐字节扫描）——高吞吐场景优先长度前缀。
+
 ## 依赖
 
 - [System.IO.Pipelines](https://www.nuget.org/packages/System.IO.Pipelines)
@@ -151,7 +158,8 @@ var conn = new StreamConnection<XDocument>(..., logger: loggerFactory.CreateLogg
 ```bash
 dotnet build StreamFrame.slnx
 dotnet test
-dotnet run --project samples/StreamFrame.Demo
+dotnet run --project samples/StreamFrame.Demo          # 三场景端到端 demo
+dotnet run -c Release --project bench/StreamFrame.Benchmarks   # 性能基准（约 5-10 分钟）
 ```
 
 ## 项目结构
