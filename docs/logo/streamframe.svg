@@ -1,13 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <!-- StreamFrame logo: two length-prefixed frames riding a byte stream -->
+  <!-- StreamFrame：字节流（青色波）贯穿帧（白色环） -->
   <rect width="128" height="128" rx="28" fill="#4338CA"/>
-  <!-- stream: one full period, two quadratic segments -->
-  <path d="M 18 90 Q 41 72 64 90 Q 87 108 110 90"
-        fill="none" stroke="#22D3EE" stroke-width="9" stroke-linecap="round"/>
-  <!-- frame A (upper-left): white outline + inset cyan header cell -->
-  <rect x="22" y="28" width="42" height="32" rx="7" fill="none" stroke="#FFFFFF" stroke-width="5"/>
-  <rect x="25" y="31" width="13" height="26" rx="3" fill="#22D3EE"/>
-  <!-- frame B (stepped lower-right, smaller) -->
-  <rect x="72" y="38" width="36" height="28" rx="7" fill="none" stroke="#FFFFFF" stroke-width="5"/>
-  <rect x="75" y="41" width="12" height="22" rx="3" fill="#22D3EE"/>
+  <path d="M10 64 Q37 48 64 64 Q91 80 118 64" fill="none" stroke="#22D3EE" stroke-width="9" stroke-linecap="round"/>
+  <rect x="32" y="32" width="64" height="64" rx="15" fill="#FFFFFF"/>
+  <rect x="45" y="45" width="38" height="38" rx="7" fill="#4338CA"/>
 </svg>
