@@ -76,8 +76,8 @@ static async Task RunXmlLengthPrefixScenarioAsync(CancellationToken ct)
     client.Start(ct);
     server.Start(ct);
 
-    // 等连接建立
-    await Task.Delay(800, ct);
+    // 等双方连接就绪（不再是 Task.Delay 盲等）
+    await Task.WhenAll(client.WaitForConnectedAsync(ct), server.WaitForConnectedAsync(ct));
 
     for (var i = 1; i <= 3; i++)
     {
@@ -139,7 +139,7 @@ static async Task RunStxEtxTextScenarioAsync(CancellationToken ct)
     client.Start(ct);
     server.Start(ct);
 
-    await Task.Delay(800, ct);
+    await Task.WhenAll(client.WaitForConnectedAsync(ct), server.WaitForConnectedAsync(ct));
 
     var payloads = new[] { "hello", "world-01", "multiline\nline2" };
     for (var i = 0; i < payloads.Length; i++)
@@ -209,7 +209,7 @@ static async Task RunReconnectScenarioAsync(CancellationToken ct)
 
     Assert(ConnectingCount() >= 2, $"主动端应反复重试（至少 2 次 Connecting），实际 {ConnectingCount()} 次");
 
-    // 此刻启动服务端，主动端应在下一次重试时连上
+    // 此刻启动服务端，主动端应在下一次重试时连上（最多等 4 秒）
     var server = new StreamConnection<string>(
         new LengthPrefixFrameCodec(),
         new Utf8TextCodec(),
@@ -232,14 +232,14 @@ static async Task RunReconnectScenarioAsync(CancellationToken ct)
     WireFrameErrors(server, "Srv3");
     WireFrameErrors(client, "Cli3");
 
-    // 等服务端起来并连上，最多等 4 秒
-    var connectDeadline = DateTime.UtcNow.AddSeconds(4);
-    while (!seen.Contains(nameof(ConnectionState.Connected)) && DateTime.UtcNow < connectDeadline && !ct.IsCancellationRequested)
+    try
     {
-        await Task.Delay(100, ct);
+        await client.WaitForConnectedAsync(ct).WaitAsync(TimeSpan.FromSeconds(4), ct);
     }
-
-    Assert(seen.Contains(nameof(ConnectionState.Connected)), "主动端应能连上后启动的服务端");
+    catch (TimeoutException)
+    {
+    }
+    Assert(client.State == ConnectionState.Connected, "主动端应能连上后启动的服务端");
 
     await client.SendAsync("after-reconnect", ct);
     await Task.Delay(400, ct);
@@ -251,11 +251,14 @@ static async Task RunReconnectScenarioAsync(CancellationToken ct)
     Console.WriteLine("\n主动端强制重连，模拟链路中断…");
     client.Reconnect();
 
-    var bothConnected = DateTime.UtcNow.AddSeconds(5);
-    while ((client.State != ConnectionState.Connected || server.State != ConnectionState.Connected)
-           && DateTime.UtcNow < bothConnected && !ct.IsCancellationRequested)
+    try
     {
-        await Task.Delay(100, ct);
+        await Task.WhenAll(
+            client.WaitForConnectedAsync(ct).WaitAsync(TimeSpan.FromSeconds(5), ct),
+            server.WaitForConnectedAsync(ct).WaitAsync(TimeSpan.FromSeconds(5), ct));
+    }
+    catch (TimeoutException)
+    {
     }
     Assert(client.State == ConnectionState.Connected && server.State == ConnectionState.Connected,
         $"重连后双方应回到 Connected（client={client.State}, server={server.State}）");

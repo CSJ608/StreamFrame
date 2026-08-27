@@ -80,9 +80,45 @@ public sealed class StreamConnectionOptions
     public int KeepAliveIntervalMs { get; set; } = 5_000;
 
     /// <summary>
+    /// 接收消息通道容量（默认 0 = 不限制）：解码出的业务消息先入通道，再由 GetMessages 消费。
+    /// 设为正数后，消费慢时解码循环暂停读取（TCP 背压自然传导到对端），防止慢消费者撑爆内存。
+    /// 注意：消费完全停滞期间，会话拆除最多等待 2 秒（内部超时）后继续。
+    /// </summary>
+    public int ReceiveQueueCapacity { get; set; }
+
+    /// <summary>
     /// 接收空闲超时（毫秒）：连续这么久没收到任何字节即判定连接死亡，断线重连。
     /// 默认 0 = 关闭。与 <see cref="TcpKeepAlive"/> 互补：这是应用层的"多久必须有流量"约束，
     /// 适合有周期性报文的协议（如设备心跳）。
     /// </summary>
     public int ReceiveIdleTimeoutMs { get; set; }
+
+    /// <summary>
+    /// 校验所有参数取值的合法性（由 <see cref="StreamConnection{TMessage}"/> 构造时调用）。
+    /// 非法值在构造时立即失败，而不是在运行中的重连/收发路径深处抛出难定位的异常。
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">任一参数取值非法。</exception>
+    internal void Validate()
+    {
+        if (ConnectRetryDelayMs < 0)
+            throw new ArgumentOutOfRangeException(nameof(ConnectRetryDelayMs), ConnectRetryDelayMs, "不能为负数。");
+        if (AcceptRetryDelayMs < 0)
+            throw new ArgumentOutOfRangeException(nameof(AcceptRetryDelayMs), AcceptRetryDelayMs, "不能为负数。");
+        if (SocketReceiveBufferSize <= 0)
+            throw new ArgumentOutOfRangeException(nameof(SocketReceiveBufferSize), SocketReceiveBufferSize, "必须为正数。");
+        if (SendQueueCapacity <= 0)
+            throw new ArgumentOutOfRangeException(nameof(SendQueueCapacity), SendQueueCapacity, "必须为正数。");
+        if (EncodeBufferInitialSize <= 0)
+            throw new ArgumentOutOfRangeException(nameof(EncodeBufferInitialSize), EncodeBufferInitialSize, "必须为正数。");
+        if (MaxIncompleteFrameBufferBytes < 0)
+            throw new ArgumentOutOfRangeException(nameof(MaxIncompleteFrameBufferBytes), MaxIncompleteFrameBufferBytes, "不能为负数（0 = 取默认值）。");
+        if (ReceiveQueueCapacity < 0)
+            throw new ArgumentOutOfRangeException(nameof(ReceiveQueueCapacity), ReceiveQueueCapacity, "不能为负数（0 = 不限制）。");
+        if (ReceiveIdleTimeoutMs < 0)
+            throw new ArgumentOutOfRangeException(nameof(ReceiveIdleTimeoutMs), ReceiveIdleTimeoutMs, "不能为负数（0 = 关闭）。");
+        if (TcpKeepAlive && KeepAliveTimeMs <= 0)
+            throw new ArgumentOutOfRangeException(nameof(KeepAliveTimeMs), KeepAliveTimeMs, "TcpKeepAlive 开启时必须为正数。");
+        if (TcpKeepAlive && KeepAliveIntervalMs <= 0)
+            throw new ArgumentOutOfRangeException(nameof(KeepAliveIntervalMs), KeepAliveIntervalMs, "TcpKeepAlive 开启时必须为正数。");
+    }
 }

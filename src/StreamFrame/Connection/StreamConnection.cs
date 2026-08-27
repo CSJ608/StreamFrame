@@ -1,10 +1,11 @@
 using System.Buffers;
-using System.Diagnostics;
 using System.IO.Pipelines;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using StreamFrame.Abstractions;
 
 namespace StreamFrame;
@@ -68,7 +69,12 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
     private readonly SemaphoreSlim _sendLock = new(initialCount: 1);
     private readonly SemaphoreSlim _acceptLock = new(1, 1);
     private readonly CancellationTokenSource _lifetimeCts = new();
+    private readonly ILogger _logger;
     private int _retryInProgress;
+    private int _started;
+
+    /// <summary>等待连接就绪的挂起等待者；进入 Connected 时完成并清空，Dispose 时取消。</summary>
+    private TaskCompletionSource? _whenConnected;
 
     /// <summary>
     /// 创建一条连接。
@@ -78,14 +84,16 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
     /// <param name="ipAddress">主动模式为远端地址；被动模式为监听地址。</param>
     /// <param name="port">端口。</param>
     /// <param name="isActive">true 主动连接，false 被动监听。</param>
-    /// <param name="options">可调参数。</param>
+    /// <param name="options">可调参数（构造时校验，非法取值立即抛异常）。</param>
+    /// <param name="logger">可选日志：连接重试、会话故障、用户回调异常等内部事件输出到日志。</param>
     public StreamConnection(
         IFrameCodec framing,
         ICodec<TMessage> codec,
         IPAddress ipAddress,
         int port,
         bool isActive,
-        StreamConnectionOptions? options = null)
+        StreamConnectionOptions? options = null,
+        ILogger? logger = null)
     {
         _framing = framing ?? throw new ArgumentNullException(nameof(framing));
         _codec = codec ?? throw new ArgumentNullException(nameof(codec));
@@ -93,6 +101,8 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
         Port = port;
         IsActive = isActive;
         _options = options ?? new StreamConnectionOptions();
+        _options.Validate();
+        _logger = logger ?? NullLogger.Instance;
 
         _sendQueue = Channel.CreateBounded<TMessage>(new BoundedChannelOptions(_options.SendQueueCapacity)
         {
@@ -100,12 +110,27 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
             SingleWriter = false,
             AllowSynchronousContinuations = false,
         });
-        _messageRelay = Channel.CreateUnbounded<TMessage>(new UnboundedChannelOptions
+
+        // 消息通道归连接所有、跨会话复用：会话重建偶发新旧解码循环并存，不能声明 SingleWriter。
+        if (_options.ReceiveQueueCapacity > 0)
         {
-            SingleReader = false,
-            SingleWriter = true,
-            AllowSynchronousContinuations = false,
-        });
+            _messageRelay = Channel.CreateBounded<TMessage>(new BoundedChannelOptions(_options.ReceiveQueueCapacity)
+            {
+                SingleReader = false,
+                SingleWriter = false,
+                AllowSynchronousContinuations = false,
+                FullMode = BoundedChannelFullMode.Wait, // 消费慢时解码暂停，TCP 背压传导到对端
+            });
+        }
+        else
+        {
+            _messageRelay = Channel.CreateUnbounded<TMessage>(new UnboundedChannelOptions
+            {
+                SingleReader = false,
+                SingleWriter = false,
+                AllowSynchronousContinuations = false,
+            });
+        }
     }
 
     public bool IsDisposed
@@ -116,8 +141,16 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
         if (IsDisposed)
             throw new ObjectDisposedException(nameof(StreamConnection<TMessage>));
 
-        _ = StartAsync(ct);
+        // 只允许启动一次：并发/重复 Start 会各自建立 socket 并互相覆盖（泄漏连接）
+        if (Interlocked.Exchange(ref _started, 1) != 0)
+            throw new InvalidOperationException("连接已启动；如需重建连接请调用 Reconnect()。");
+
+        StartCore(ct);
     }
+
+    /// <summary>内部启动入口（重连流程复用），不做一次性启动校验。</summary>
+    private void StartCore(CancellationToken ct)
+        => _ = StartAsync(ct);
 
     private async Task StartAsync(CancellationToken ct)
     {
@@ -136,7 +169,8 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
                 catch (Exception ex) when (!ct.IsCancellationRequested && !IsDisposed)
                 {
                     var delay = IsActive ? _options.ConnectRetryDelayMs : _options.AcceptRetryDelayMs;
-                    Debug.WriteLine($"Connect failed: {ex.Message}; retry in {delay}ms.");
+                    _logger.LogInformation("Connect to {Remote} failed: {Message}; retry in {Delay}ms (active={IsActive})",
+                        $"{IpAddress}:{Port}", ex.Message, delay, IsActive);
                     await Task.Delay(delay, ct).ConfigureAwait(false);
                 }
             }
@@ -193,7 +227,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
                 }
                 catch (Exception ex) when (!ct.IsCancellationRequested && !IsDisposed)
                 {
-                    Debug.WriteLine($"Accept failed: {ex.Message}; retry in {_options.AcceptRetryDelayMs}ms.");
+                    _logger.LogWarning(ex, "Accept on {Local} failed; retry in {Delay}ms.", $"{IpAddress}:{Port}", _options.AcceptRetryDelayMs);
                     await Task.Delay(_options.AcceptRetryDelayMs, ct).ConfigureAwait(false);
                 }
             }
@@ -264,7 +298,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Scheduled reconnect failed: {ex.Message}");
+                _logger.LogWarning(ex, "Scheduled reconnect failed.");
             }
         });
     }
@@ -280,7 +314,13 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
         catch (Exception ex)
         {
             // 用户事件处理器抛异常不能中断状态机推进（否则 State 已变而会话未重启）
-            Debug.WriteLine($"ConnectionChanged handler threw: {ex.Message}");
+            _logger.LogWarning(ex, "ConnectionChanged handler threw.");
+        }
+
+        if (newState == ConnectionState.Connected)
+        {
+            // 唤醒所有 WaitForConnectedAsync 等待者；下次离开 Connected 再等时重新创建
+            Interlocked.Exchange(ref _whenConnected, null)?.TrySetResult();
         }
 
         switch (newState)
@@ -307,7 +347,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
                         StopSessionCore();
                     }
 
-                    Start(_lifetimeCts.Token);
+                    StartCore(_lifetimeCts.Token);
                 }
                 finally
                 {
@@ -361,7 +401,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Session loop faulted: {ex.Message}");
+            _logger.LogWarning(ex, "Session loop faulted; scheduling reconnect.");
             ScheduleReconnect(epoch);
         }
     }
@@ -419,7 +459,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Socket shutdown on session stop: {ex.Message}");
+                _logger.LogDebug(ex, "Socket shutdown on session stop failed.");
             }
 
             socket.Dispose();
@@ -545,7 +585,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
         catch (Exception ex)
         {
             // 调试钩子抛异常不能反噬会话（否则会导致重连风暴）
-            Debug.WriteLine($"RawBytesReceived handler threw: {ex.Message}");
+            _logger.LogWarning(ex, "RawBytesReceived handler threw.");
         }
     }
 
@@ -557,7 +597,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"RawBytesSent handler threw: {ex.Message}");
+            _logger.LogWarning(ex, "RawBytesSent handler threw.");
         }
     }
 
@@ -569,12 +609,38 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"FrameError handler threw: {ex.Message}");
+            _logger.LogWarning(ex, "FrameError handler threw.");
         }
     }
 
     public Task SendAsync(TMessage message, CancellationToken ct = default)
         => _sendQueue.Writer.WriteAsync(message, ct).AsTask();
+
+    public Task WaitForConnectedAsync(CancellationToken ct = default)
+    {
+        if (State == ConnectionState.Connected)
+            return Task.CompletedTask;
+
+        var tcs = GetOrCreateWhenConnected();
+        return State == ConnectionState.Connected
+            ? Task.CompletedTask // 获取等待器的间隙恰好连上了
+            : tcs.Task.WaitAsync(ct);
+    }
+
+    /// <summary>获取或创建"等待 Connected"的完成源；Connected 时完成并置空，可重复使用。</summary>
+    private TaskCompletionSource GetOrCreateWhenConnected()
+    {
+        while (true)
+        {
+            var existing = Volatile.Read(ref _whenConnected);
+            if (existing is not null)
+                return existing;
+
+            var created = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            if (Interlocked.CompareExchange(ref _whenConnected, created, null) is null)
+                return created;
+        }
+    }
 
     public IAsyncEnumerable<TMessage> GetMessages(CancellationToken ct = default)
         => _messageRelay.Reader.ReadAllAsync(ct);
@@ -583,6 +649,9 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
     {
         if (Interlocked.Exchange(ref _disposeStage, DisposalComplete) != DisposalNotStarted)
             return;
+
+        // 连接终止：所有连接就绪等待以取消收尾
+        Interlocked.Exchange(ref _whenConnected, null)?.TrySetCanceled();
 
         ConnectionChanged = null;
         FrameError = null;
@@ -606,7 +675,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Socket shutdown on dispose: {ex.Message}");
+                _logger.LogDebug(ex, "Socket shutdown on dispose failed.");
             }
             socket.Dispose();
             _socket = null;
