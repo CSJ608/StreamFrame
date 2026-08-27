@@ -54,7 +54,14 @@ public interface IStreamConnection<TMessage> : IAsyncDisposable
     /// </summary>
     Action<ReadOnlyMemory<byte>>? RawBytesSent { get; set; }
 
-    /// <summary>启动连接（主动连接/被动监听），异常时自动重试直到取消。</summary>
+    /// <summary>
+    /// 启动连接（主动连接/被动监听），连接/监听失败时自动重试。
+    /// </summary>
+    /// <remarks>
+    /// <paramref name="ct"/> 仅约束"建立连接"阶段：连接建立前取消它会停止连接/监听重试。
+    /// 连接建立后的收发与断线自动重连由连接自身管理——取消该 token 不会断开已建立的
+    /// 连接，也不会停止后续重连；要停止一切请调用 DisposeAsync。
+    /// </remarks>
     void Start(CancellationToken ct);
 
     /// <summary>立即进入重连流程。</summary>

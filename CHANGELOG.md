@@ -7,12 +7,15 @@
 
 ### 修复
 - 主动模式连接失败重试不再泄漏 socket：`ConnectAsync` 失败/取消时立即释放本次尝试创建的 socket（此前每次失败重试泄漏一个，等终结器回收）。
+- CHANGELOG 底部版本对比链接补齐 `[1.2.0]` 并修正 `[Unreleased]` 指向（v1.2.0 发版时漏更新）。
 
 ### 变更
 - 发布管线合并为单条流水线 `release.yml`：tag 触发"版本号校验 → 构建 → 测试 → GitHub Release → 推 nuget.org"，测试未通过不会发包（此前发布与推送是两条独立 workflow，测试失败时包仍会被推出）。`workflow_dispatch` 手动触发仅做构建+测试演练，不发布；需重发版本时在对应 tag 的运行记录上 Re-run（推送带 `--skip-duplicate`，幂等）。
 - tag 与两个 csproj 的 `<Version>` 一致性在流水线中显式校验，不一致直接失败（此前会静默发出错误版本号的包）。
+- 明确 `Start(ct)` 的取消令牌语义（仅约束建立连接阶段）：接口 XML 注释与 README 同步说明。
 
 ### 新增
+- LICENSE 文件（MIT 此前只在 README 与包元数据中声明，仓库内无正文）。
 - push / PR 持续集成 `ci.yml`（构建 + 测试），回归不再等到发版才暴露。
 
 ## [1.2.0] - 2026-08-27
@@ -66,7 +69,8 @@
 - 发布自动化：`release.yml`（tag 自动建 GitHub Release）、`publish-nuget.yml`（OIDC Trusted Publishing 推送 nuget.org）。
 - 单元测试 25 个 + 三场景端到端 demo。
 
-[Unreleased]: https://github.com/CSJ608/StreamFrame/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/CSJ608/StreamFrame/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/CSJ608/StreamFrame/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/CSJ608/StreamFrame/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/CSJ608/StreamFrame/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/CSJ608/StreamFrame/releases/tag/v1.0.0
