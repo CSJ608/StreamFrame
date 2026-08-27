@@ -35,9 +35,15 @@ public sealed class BufferWriterStream : Stream
         => throw new NotSupportedException();
 
     public override void Write(byte[] buffer, int offset, int count)
-        => Write(buffer.AsSpan(offset, count));
+        => WriteCore(buffer.AsSpan(offset, count));
 
+#if !NETSTANDARD2_0
+    // Stream 的 Span 虚方法重载自 netstandard2.1 起才有；ns2.0 走上面的 byte[] 重载（同样直写 IBufferWriter）
     public override void Write(ReadOnlySpan<byte> buffer)
+        => WriteCore(buffer);
+#endif
+
+    private void WriteCore(ReadOnlySpan<byte> buffer)
     {
         while (!buffer.IsEmpty)
         {

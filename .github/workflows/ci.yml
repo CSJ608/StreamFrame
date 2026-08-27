@@ -12,7 +12,16 @@ permissions:
 
 jobs:
   build-test:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # 现代 .NET 在 linux 跑；net48（验证 netstandard2.0 资产）需要 Windows 运行时
+          - os: ubuntu-latest
+            frameworks: "net8.0 net10.0"
+          - os: windows-latest
+            frameworks: "net48"
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
 
@@ -26,5 +35,11 @@ jobs:
       - name: Build
         run: dotnet build StreamFrame.slnx -c Release
 
-      - name: Test
-        run: dotnet test StreamFrame.slnx -c Release --no-build
+      - name: Test (${{ matrix.frameworks }})
+        shell: bash
+        env:
+          FRAMEWORKS: ${{ matrix.frameworks }}
+        run: |
+          for fw in $FRAMEWORKS; do
+            dotnet test StreamFrame.slnx -c Release --no-build -f $fw
+          done

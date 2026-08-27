@@ -7,7 +7,7 @@ public class LengthPrefixFramerTests
 {
     private static (byte[] frame, ReadOnlySequence<byte> buffer) EncodeSingle(IFramer codec, byte[] payload)
     {
-        var writer = new ArrayBufferWriter<byte>();
+        var writer = new TestWrittenBufferWriter();
         codec.EncodeFrame(payload, writer);
         return (writer.WrittenSpan.ToArray(), new ReadOnlySequence<byte>(writer.WrittenSpan.ToArray()));
     }
@@ -18,14 +18,14 @@ public class LengthPrefixFramerTests
         var codec = new LengthPrefixFramer();
         var payload = Encoding.UTF8.GetBytes("hello");
 
-        var writer = new ArrayBufferWriter<byte>();
+        var writer = new TestWrittenBufferWriter();
         codec.EncodeFrame(payload, writer);
         var bytes = writer.WrittenSpan.ToArray();
 
         Assert.Equal(9, bytes.Length);
         // 大端 0x00 0x00 0x00 0x05
-        Assert.Equal(new byte[] { 0x00, 0x00, 0x00, 0x05 }, bytes[..4]);
-        Assert.Equal(payload, bytes[4..]);
+        Assert.Equal(new byte[] { 0x00, 0x00, 0x00, 0x05 }, bytes.Take(4).ToArray());
+        Assert.Equal(payload, bytes.Skip(4).ToArray());
     }
 
     [Fact]
@@ -60,7 +60,7 @@ public class LengthPrefixFramerTests
         var p1 = Encoding.UTF8.GetBytes("first");
         var p2 = Encoding.UTF8.GetBytes("second-message");
 
-        var all = new ArrayBufferWriter<byte>();
+        var all = new TestWrittenBufferWriter();
         codec.EncodeFrame(p1, all);
         codec.EncodeFrame(p2, all);
         var buffer = new ReadOnlySequence<byte>(all.WrittenSpan.ToArray());

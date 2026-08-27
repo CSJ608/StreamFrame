@@ -16,7 +16,9 @@ public class FrameDecoderTests
         for (var i = 0; i < bytes.Length; i += chunkSize)
         {
             var length = Math.Min(chunkSize, bytes.Length - i);
-            yield return bytes[i..(i + length)];
+            var chunk = new byte[length];
+            Array.Copy(bytes, i, chunk, 0, length);
+            yield return chunk;
         }
     }
 
@@ -74,8 +76,8 @@ public class FrameDecoderTests
 
     private static async Task WaitForMessagesAsync(DecoderHarness h, int expected, int timeoutMs = 5000)
     {
-        var deadline = Environment.TickCount64 + timeoutMs;
-        while (Environment.TickCount64 < deadline)
+        var deadline = TestClock.TickCount64 + timeoutMs;
+        while (TestClock.TickCount64 < deadline)
         {
             lock (h.Messages)
             {
@@ -98,7 +100,7 @@ public class FrameDecoderTests
         var p2 = "second-message-with-more-bytes";
         var p3 = "third";
 
-        var all = new ArrayBufferWriter<byte>();
+        var all = new TestWrittenBufferWriter();
         framing.EncodeFrame(Encoding.UTF8.GetBytes(p1), all);
         framing.EncodeFrame(Encoding.UTF8.GetBytes(p2), all);
         framing.EncodeFrame(Encoding.UTF8.GetBytes(p3), all);
@@ -125,7 +127,7 @@ public class FrameDecoderTests
         var p2 = "B".PadRight(40, 'C');
         var p3 = "hello world";
 
-        var all = new ArrayBufferWriter<byte>();
+        var all = new TestWrittenBufferWriter();
         framing.EncodeFrame(Encoding.UTF8.GetBytes(p1), all);
         framing.EncodeFrame(Encoding.UTF8.GetBytes(p2), all);
         framing.EncodeFrame(Encoding.UTF8.GetBytes(p3), all);
@@ -150,7 +152,7 @@ public class FrameDecoderTests
         var p1 = "STX-frame-one";
         var p2 = "STX-frame-two-with-longer-payload";
 
-        var all = new ArrayBufferWriter<byte>();
+        var all = new TestWrittenBufferWriter();
         framing.EncodeFrame(Encoding.UTF8.GetBytes(p1), all);
         framing.EncodeFrame(Encoding.UTF8.GetBytes(p2), all);
 
@@ -278,7 +280,7 @@ public class FrameDecoderTests
 
         var bad = Encoding.UTF8.GetBytes("bad");
         var good = Encoding.UTF8.GetBytes("good");
-        var all = new ArrayBufferWriter<byte>();
+        var all = new TestWrittenBufferWriter();
         framing.EncodeFrame(bad, all);   // ThrowingDecodeCodec 只对 "bad" 抛
         framing.EncodeFrame(good, all);
         await WriteAllAsync(h, all.WrittenSpan.ToArray());

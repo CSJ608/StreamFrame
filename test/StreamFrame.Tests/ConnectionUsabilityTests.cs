@@ -171,13 +171,13 @@ public class ConnectionUsabilityTests
         await server.WaitForConnectedAsync().WaitAsync(TimeSpan.FromSeconds(5));
 
         // 一次性灌入 5 帧（容量 2）：解码必须暂停等待消费、随后按序全部送达
-        var buffer = new System.Buffers.ArrayBufferWriter<byte>();
+        var buffer = new TestWrittenBufferWriter();
         foreach (var i in Enumerable.Range(1, 5))
             new LengthPrefixFramer().EncodeFrame(Encoding.UTF8.GetBytes($"msg-{i}"), buffer);
         await client.GetStream().WriteAsync(buffer.WrittenSpan.ToArray());
 
-        var deadline = Environment.TickCount64 + 5000;
-        while (Environment.TickCount64 < deadline)
+        var deadline = TestClock.TickCount64 + 5000;
+        while (TestClock.TickCount64 < deadline)
         {
             lock (received)
             {

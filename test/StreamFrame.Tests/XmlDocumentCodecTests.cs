@@ -13,7 +13,7 @@ public class XmlDocumentCodecTests
         var codec = new XmlDocumentCodec();
         var doc = XDocument.Parse("<Message><Id>42</Id><Name>DeviceA</Name></Message>");
 
-        var writer = new ArrayBufferWriter<byte>();
+        var writer = new TestWrittenBufferWriter();
         codec.Encode(doc, writer);
 
         // 编码结果应包含 XML 内容

@@ -23,7 +23,7 @@ public class StreamingFrameEncodeTests
     /// </summary>
     private static byte[] EncodePlain(IFramer framing, byte[] payload)
     {
-        var buffer = new ArrayBufferWriter<byte>();
+        var buffer = new TestWrittenBufferWriter();
         framing.EncodeFrame(payload, buffer);
         return buffer.WrittenSpan.ToArray();
     }

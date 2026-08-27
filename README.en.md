@@ -154,6 +154,16 @@ Measured with BenchmarkDotNet (details and how to reproduce in [bench/README.md]
 - **Streaming encode**: halves per-frame heap allocation (single vs. double buffer); 25–35% faster for small payloads, on par for large ones;
 - **Frame decoding**: `LengthPrefixFramer` ≈10 ns/frame vs `StxEtxFramer` ≈1.1 µs/frame (byte-by-byte scanning) — prefer length-prefix for high-throughput scenarios.
 
+## Supported frameworks
+
+| Package target | Runtime |
+|---|---|
+| `net10.0` (recommended, LTS until 2028-11) | .NET 10 |
+| `net8.0` (LTS until 2026-11) | .NET 8 |
+| `netstandard2.0` | .NET Framework 4.6.2+, Unity, Mono, ... |
+
+The `netstandard2.0` asset is validated by the **full net48 test suite** (real TCP loopback); TCP KeepAlive parameters are set via `SIO_KEEPALIVE_VALS` on .NET Framework. CI runs all tests on Ubuntu (net8/net10) and Windows (net48).
+
 ## Dependencies
 
 - [System.IO.Pipelines](https://www.nuget.org/packages/System.IO.Pipelines)

@@ -14,13 +14,15 @@ public class StxEtxFramerTests
         var codec = new StxEtxFramer();
         var payload = Encoding.UTF8.GetBytes("hello");
 
-        var writer = new ArrayBufferWriter<byte>();
+        var writer = new TestWrittenBufferWriter();
         codec.EncodeFrame(payload, writer);
         var bytes = writer.WrittenSpan.ToArray();
 
         Assert.Equal(STX, bytes[0]);
-        Assert.Equal(ETX, bytes[^1]);
-        Assert.Equal(payload, bytes[1..^1]);
+        Assert.Equal(ETX, bytes[bytes.Length - 1]);
+        var inner = new byte[bytes.Length - 2];
+        Array.Copy(bytes, 1, inner, 0, inner.Length);
+        Assert.Equal(payload, inner);
     }
 
     [Fact]
@@ -30,7 +32,7 @@ public class StxEtxFramerTests
         // 负载含 0x02，plain 模式必须拒绝
         Assert.Throws<InvalidOperationException>(() =>
         {
-            var writer = new ArrayBufferWriter<byte>();
+            var writer = new TestWrittenBufferWriter();
             codec.EncodeFrame(new byte[] { 0x41, 0x02, 0x42 }, writer);
         });
     }
@@ -41,7 +43,7 @@ public class StxEtxFramerTests
         var codec = new StxEtxFramer();
         var payload = Encoding.UTF8.GetBytes("payload data");
 
-        var writer = new ArrayBufferWriter<byte>();
+        var writer = new TestWrittenBufferWriter();
         codec.EncodeFrame(payload, writer);
         var buffer = new ReadOnlySequence<byte>(writer.WrittenSpan.ToArray());
 
@@ -56,7 +58,7 @@ public class StxEtxFramerTests
         var codec = new StxEtxFramer();
         var payload = Encoding.UTF8.GetBytes("hello");
 
-        var writer = new ArrayBufferWriter<byte>();
+        var writer = new TestWrittenBufferWriter();
         codec.EncodeFrame(payload, writer);
         var buffer = new ReadOnlySequence<byte>(writer.WrittenSpan.ToArray());
 
@@ -72,7 +74,7 @@ public class StxEtxFramerTests
     {
         var codec = new StxEtxFramer();
         var payload = Encoding.UTF8.GetBytes("hi");
-        var writer = new ArrayBufferWriter<byte>();
+        var writer = new TestWrittenBufferWriter();
         codec.EncodeFrame(payload, writer);
 
         // 前缀加孤立 ETX 噪声，再接正常帧
@@ -91,7 +93,7 @@ public class StxEtxFramerTests
     {
         var codec = new StxEtxFramer();
         var payload = Encoding.UTF8.GetBytes("complete");
-        var writer = new ArrayBufferWriter<byte>();
+        var writer = new TestWrittenBufferWriter();
         codec.EncodeFrame(payload, writer);
         var full = writer.WrittenSpan.ToArray();
 
@@ -117,7 +119,7 @@ public class StxEtxFramerTests
 
         // 后面接一个正常短帧
         var shortPayload = Encoding.UTF8.GetBytes("ok");
-        var shortWriter = new ArrayBufferWriter<byte>();
+        var shortWriter = new TestWrittenBufferWriter();
         codec.EncodeFrame(shortPayload, shortWriter);
         bytes.AddRange(shortWriter.WrittenSpan.ToArray());
 

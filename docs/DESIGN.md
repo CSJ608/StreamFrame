@@ -142,6 +142,15 @@ socket --ReceiveAsync--> pipe.Writer --[Pipe]--> FrameDecoder.RunAsync
 
 **原始字节与诊断（1.2.0）**：`RawBytesReceived/Sent` 全量输出（含被定界器丢弃的噪声字节），发送侧按实际写出分片回调；两者与 `ConnectionChanged`、`FrameError` 的用户回调异常均被隔离，不反噬会话。`IFrameDiscardReporting`（可选接口，内置两个 codec 实现）让定界器精确上报重同步丢弃的字节，经 `FrameError(DiscardedByResync)` 交上层调试。
 
+### netstandard2.0 兼容层（2.1.0）
+
+多目标 `netstandard2.0;net8.0;net10.0`：
+- **PolySharp**（PrivateAssets）：Range/Index/init 等语言级 polyfill，不进包。
+- **`Compatibility/NetStandard20Shims.cs`**：`Task.WaitAsync` 等价物；Socket 的 Memory 收发回退到 `SocketTaskExtensions`——System.Net.Sockets 4.3.0 没有带 CancellationToken 的重载，用 3 参重载 + "可取消等待"包装（netfx 本就无法中止已提交的 socket I/O，取消仅放弃等待）；TCP KeepAlive 参数经 `SIO_KEEPALIVE_VALS` 设置（netfx 无 TcpKeepAliveTime/Interval 选项名）。
+- **StxEtx 定界器改为手工扫描**：`SequenceReader<T>` 从未发布 netstandard2.0 包资产。单段缓冲走 Span 快路径（零分配），多段租借临时数组；所有 TFM 共用同一实现（`ReadOnlySequence.FirstSpan` 同理改用 `First.Span`）。
+- ns2.0 目标额外引用 `System.Threading.Channels` + `Microsoft.Bcl.AsyncInterfaces`（现代 .NET 内置于共享框架，NU1510 要求移除显式引用）。
+- **验证矩阵**：测试项目多目标 `net8.0;net10.0;net48`；CI 在 Ubuntu 跑 net8/net10、Windows 跑 net48（真实 .NET Framework 运行时加载 ns2.0 资产执行全量测试）。
+
 ### 不内置（上移驱动层）
 
 - 心跳 / 控制消息（泛型下框架不知消息形态）

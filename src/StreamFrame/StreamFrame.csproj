@@ -1,15 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net8.0;net10.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- netstandard2.0 默认 C# 7.3，统一用最新语言版本（语言级差异由 PolySharp/兼容层抹平） -->
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup>
     <PackageId>StreamFrame</PackageId>
-    <Version>2.0.0</Version>
+    <Version>2.1.0</Version>
     <Description>通用 socket 通讯框架：帧定界（IFramer）与帧内编解码（ICodec&lt;TMessage&gt;）插件化，支持长度前缀 / STX-ETX 定界与 IPv4/IPv6 双栈，可选流式零拷贝发送。</Description>
     <Authors>Marci</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -30,8 +32,17 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
+    <PackageReference Include="PolySharp" Version="1.15.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="System.IO.Pipelines" Version="8.0.0" />
     <!-- System.Threading.Channels 自 .NET Core 3.0 起内置共享框架，现代 .NET 无需引用；netstandard2.0 目标在兼容层另行引入 -->
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Threading.Channels" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>

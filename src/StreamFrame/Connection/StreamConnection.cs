@@ -87,7 +87,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
     private CancellationTokenRegistration _lifetimeRegistration;
 
     /// <summary>等待连接就绪的挂起等待者；进入 Connected 时完成并清空，Dispose 时取消。</summary>
-    private TaskCompletionSource? _whenConnected;
+    private TaskCompletionSource<bool>? _whenConnected;
 
     /// <summary>
     /// 创建一条连接。
@@ -221,7 +221,12 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
         var socket = CreateTcpSocket();
         try
         {
+#if NETSTANDARD2_0
+            // ns2.0 的 SocketTaskExtensions 无带 ct 的重载：IPAddress[] 形式直连（无 DNS）+ 可取消等待
+            await SocketTaskExtensions.ConnectAsync(socket, new[] { IpAddress }, Port).WaitAsync(ct).ConfigureAwait(false);
+#else
             await socket.ConnectAsync(IpAddress, Port, ct).ConfigureAwait(false);
+#endif
         }
         catch
         {
@@ -247,7 +252,13 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
 
                 try
                 {
+#if NETSTANDARD2_0
+                    var listener = _server!;
+                    // FromAsync 无法取消；停机时 listener 被释放，挂起的 accept 以异常收尾
+                    var socket = await Task.Factory.FromAsync(listener.BeginAccept, listener.EndAccept, null).ConfigureAwait(false);
+#else
                     var socket = await _server!.AcceptAsync(ct).ConfigureAwait(false);
+#endif
                     ConfigureSocket(socket);
 
                     // 单客户端模式：accept 到第一个客户端后关闭监听 socket，
@@ -297,8 +308,27 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
             return;
 
         socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+#if NETSTANDARD2_0
+        // netfx 没有TcpKeepAliveTime/Interval 选项名：Windows 上用 SIO_KEEPALIVE_VALS 设置等价参数。
+        // netstandard2.0 资产实际运行环境主要是 .NET Framework（仅 Windows）；失败只记日志，
+        // 保留系统默认 KeepAlive 参数（2 小时）兜底。
+        try
+        {
+            const int SioKeepAliveValues = -1744830460;
+            var values = new byte[12];
+            BitConverter.GetBytes(1).CopyTo(values, 0);                               // onOff = 1
+            BitConverter.GetBytes(_options.KeepAliveTimeMs).CopyTo(values, 4);        // 首次探测前静默 ms
+            BitConverter.GetBytes(_options.KeepAliveIntervalMs).CopyTo(values, 8);    // 探测间隔 ms
+            socket.IOControl(SioKeepAliveValues, values, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "SIO_KEEPALIVE_VALS 设置失败（非 Windows 平台？），回退系统默认 KeepAlive 参数。");
+        }
+#else
         socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveTime, _options.KeepAliveTimeMs);
         socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveInterval, _options.KeepAliveIntervalMs);
+#endif
     }
 
     /// <summary>立即进入重连流程。</summary>
@@ -356,7 +386,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
         if (newState == ConnectionState.Connected)
         {
             // 唤醒所有 WaitForConnectedAsync 等待者；下次离开 Connected 再等时重新创建
-            Interlocked.Exchange(ref _whenConnected, null)?.TrySetResult();
+            Interlocked.Exchange(ref _whenConnected, null)?.TrySetResult(true);
         }
 
         switch (newState)
@@ -561,9 +591,11 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
     {
         // 发送失败（socket 故障/会话失效）不在此吞掉：上抛给会话守护 → 断线重连，
         // 未发送的消息留在连接级队列，由重连后的新 worker 继续发送。
-        await foreach (var message in _sendQueue.Reader.ReadAllAsync(ct).ConfigureAwait(false))
+        var reader = _sendQueue.Reader;
+        while (await reader.WaitToReadAsync(ct).ConfigureAwait(false))
         {
-            await SendFramedAsync(message, ct).ConfigureAwait(false);
+            while (reader.TryRead(out var message))
+                await SendFramedAsync(message, ct).ConfigureAwait(false);
         }
     }
 
@@ -664,7 +696,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
     }
 
     /// <summary>获取或创建"等待 Connected"的完成源；Connected 时完成并置空，可重复使用。</summary>
-    private TaskCompletionSource GetOrCreateWhenConnected()
+    private TaskCompletionSource<bool> GetOrCreateWhenConnected()
     {
         while (true)
         {
@@ -672,19 +704,27 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
             if (existing is not null)
                 return existing;
 
-            var created = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var created = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             if (Interlocked.CompareExchange(ref _whenConnected, created, null) is null)
                 return created;
         }
     }
 
-    public IAsyncEnumerable<TMessage> GetMessages(CancellationToken ct = default)
-        => _messageRelay.Reader.ReadAllAsync(ct);
+    public async IAsyncEnumerable<TMessage> GetMessages(
+        [EnumeratorCancellation] CancellationToken ct = default)
+    {
+        var reader = _messageRelay.Reader;
+        while (await reader.WaitToReadAsync(ct).ConfigureAwait(false))
+        {
+            while (reader.TryRead(out var message))
+                yield return message;
+        }
+    }
 
     public ValueTask DisposeAsync()
     {
         Shutdown();
-        return ValueTask.CompletedTask;
+        return new ValueTask();
     }
 
     /// <summary>

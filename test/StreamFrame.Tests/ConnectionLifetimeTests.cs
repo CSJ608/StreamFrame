@@ -34,8 +34,8 @@ public class ConnectionLifetimeTests
         ConnectionState expected,
         int timeoutMs = 5000)
     {
-        var deadline = Environment.TickCount64 + timeoutMs;
-        while (Environment.TickCount64 < deadline)
+        var deadline = TestClock.TickCount64 + timeoutMs;
+        while (TestClock.TickCount64 < deadline)
         {
             if (connection.State == expected)
                 return;
