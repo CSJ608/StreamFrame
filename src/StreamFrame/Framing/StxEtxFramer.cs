@@ -85,46 +85,68 @@ public sealed class StxEtxFramer : IStreamingFramer, IFrameDiscardReporting
         payload = default;
         var original = buffer;
 
-        var reader = new SequenceReader<byte>(buffer);
-
-        long lastStxOffset = -1;
-        long lastStxPayloadStart = -1;
-
-        while (reader.TryRead(out var b))
+        // 手工扫描（不依赖 SequenceReader——它从未发布 netstandard2.0 包资产）：
+        // 单段缓冲直接扫 Span（零分配）；多段缓冲租借临时数组拼连续后扫。
+        byte[]? rented = null;
+        ReadOnlySpan<byte> span;
+        if (buffer.IsSingleSegment)
         {
-            if (b == STX)
-            {
-                lastStxOffset = reader.Consumed - 1; // STX 位置
-                lastStxPayloadStart = reader.Consumed; // 负载起始位置
-            }
-            else if (b == ETX)
-            {
-                if (lastStxPayloadStart < 0)
-                    continue; // 孤立 ETX，跳过
-
-                var payloadLength = reader.Consumed - 1 - lastStxPayloadStart;
-                if (payloadLength > MaxPayloadBytes)
-                {
-                    // 超长帧：丢弃当前部分帧并继续扫描
-                    lastStxPayloadStart = -1;
-                    lastStxOffset = -1;
-                    continue;
-                }
-
-                payload = buffer.Slice(lastStxPayloadStart, payloadLength);
-                buffer = buffer.Slice(reader.Consumed);
-                discarded = original.Slice(0, lastStxOffset); // 保留点之前的噪声/被中止半帧
-                return true;
-            }
+            span = buffer.First.Span; // FirstSpan（netcore 专属）不可用；单段时 First.Span 等价
+        }
+        else
+        {
+            rented = ArrayPool<byte>.Shared.Rent((int)buffer.Length);
+            buffer.CopyTo(rented);
+            span = rented.AsSpan(0, (int)buffer.Length);
         }
 
-        // 缓冲区耗尽但未收到完整帧：保留自最后一个 STX 起的余量等待后续数据。
-        // 保留点之前的字节（杂散噪声、被更新的 STX 中止的旧半帧）即为本次丢弃。
-        discarded = original.Slice(0, lastStxOffset >= 0 ? lastStxOffset : original.Length);
-        buffer = lastStxOffset >= 0
-            ? buffer.Slice(lastStxOffset)
-            : buffer.Slice(buffer.End);
+        try
+        {
+            long lastStxOffset = -1;
+            long lastStxPayloadStart = -1;
 
-        return false;
+            for (var i = 0; i < span.Length; i++)
+            {
+                var b = span[i];
+                if (b == STX)
+                {
+                    lastStxOffset = i;      // STX 位置
+                    lastStxPayloadStart = i + 1; // 负载起始位置
+                }
+                else if (b == ETX)
+                {
+                    if (lastStxPayloadStart < 0)
+                        continue; // 孤立 ETX，跳过
+
+                    var payloadLength = i - lastStxPayloadStart;
+                    if (payloadLength > MaxPayloadBytes)
+                    {
+                        // 超长帧：丢弃当前部分帧并继续扫描
+                        lastStxPayloadStart = -1;
+                        lastStxOffset = -1;
+                        continue;
+                    }
+
+                    payload = buffer.Slice(lastStxPayloadStart, payloadLength);
+                    buffer = buffer.Slice(i + 1);
+                    discarded = original.Slice(0, lastStxOffset); // 保留点之前的噪声/被中止半帧
+                    return true;
+                }
+            }
+
+            // 缓冲区耗尽但未收到完整帧：保留自最后一个 STX 起的余量等待后续数据。
+            // 保留点之前的字节（杂散噪声、被更新的 STX 中止的旧半帧）即为本次丢弃。
+            discarded = original.Slice(0, lastStxOffset >= 0 ? lastStxOffset : original.Length);
+            buffer = lastStxOffset >= 0
+                ? buffer.Slice(lastStxOffset)
+                : buffer.Slice(buffer.End);
+
+            return false;
+        }
+        finally
+        {
+            if (rented is not null)
+                ArrayPool<byte>.Shared.Return(rented);
+        }
     }
 }

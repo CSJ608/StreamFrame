@@ -41,6 +41,14 @@ dotnet_diagnostic.MA0046.severity = none
 # 选项校验用 nameof(属性) 作为 ArgumentOutOfRangeException 参数名：校验对象是属性而非方法参数
 dotnet_diagnostic.MA0015.severity = none
 
+# 兼容 shim 层：一个文件聚合多个小类型是刻意设计（与 #if 块对应）
+[src/StreamFrame/Compatibility/**.cs]
+dotnet_diagnostic.MA0048.severity = none
+
+# 测试侧兼容层同理
+[test/StreamFrame.Tests/TestCompat*.cs]
+dotnet_diagnostic.MA0048.severity = none
+
 # 测试项目：xUnit 无同步上下文，ConfigureAwait 与比较器重载建议均为噪音
 [test/**.cs]
 dotnet_diagnostic.MA0002.severity = none

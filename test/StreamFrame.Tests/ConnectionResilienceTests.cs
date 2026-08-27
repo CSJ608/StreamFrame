@@ -37,8 +37,8 @@ public class ConnectionResilienceTests
         Func<ConnectionState, bool> predicate,
         int timeoutMs = 5000)
     {
-        var deadline = Environment.TickCount64 + timeoutMs;
-        while (Environment.TickCount64 < deadline)
+        var deadline = TestClock.TickCount64 + timeoutMs;
+        while (TestClock.TickCount64 < deadline)
         {
             if (predicate(connection.State))
                 return;
@@ -93,8 +93,8 @@ public class ConnectionResilienceTests
             await client1.GetStream().WriteAsync(Frame("before-disconnect"));
         }
 
-        var deadline = Environment.TickCount64 + 5000;
-        while (Environment.TickCount64 < deadline)
+        var deadline = TestClock.TickCount64 + 5000;
+        while (TestClock.TickCount64 < deadline)
         {
             lock (received)
             {
@@ -118,8 +118,8 @@ public class ConnectionResilienceTests
             await client2.GetStream().WriteAsync(Frame("after-reconnect"));
         }
 
-        deadline = Environment.TickCount64 + 5000;
-        while (Environment.TickCount64 < deadline)
+        deadline = TestClock.TickCount64 + 5000;
+        while (TestClock.TickCount64 < deadline)
         {
             lock (received)
             {
@@ -186,8 +186,8 @@ public class ConnectionResilienceTests
             await client2.GetStream().WriteAsync(Frame("recovered"));
         }
 
-        var deadline = Environment.TickCount64 + 5000;
-        while (Environment.TickCount64 < deadline)
+        var deadline = TestClock.TickCount64 + 5000;
+        while (TestClock.TickCount64 < deadline)
         {
             lock (received)
             {
@@ -239,8 +239,8 @@ public class ConnectionResilienceTests
         var bytes = Frame("poison").Concat(Frame("good")).ToArray();
         await client.GetStream().WriteAsync(bytes);
 
-        var deadline = Environment.TickCount64 + 5000;
-        while (Environment.TickCount64 < deadline)
+        var deadline = TestClock.TickCount64 + 5000;
+        while (TestClock.TickCount64 < deadline)
         {
             lock (received)
             {
@@ -299,8 +299,8 @@ public class ConnectionResilienceTests
         await client.GetStream().WriteAsync(Frame("first"));
         await client.GetStream().WriteAsync(Frame("second"));
 
-        var deadline = Environment.TickCount64 + 5000;
-        while (Environment.TickCount64 < deadline)
+        var deadline = TestClock.TickCount64 + 5000;
+        while (TestClock.TickCount64 < deadline)
         {
             lock (received)
             {

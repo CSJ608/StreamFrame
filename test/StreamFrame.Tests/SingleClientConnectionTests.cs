@@ -40,7 +40,11 @@ public class SingleClientConnectionTests
         using var timeout = new CancellationTokenSource(timeoutMs);
         try
         {
+#if NET48
+            await client.ConnectAsync(IPAddress.Loopback.ToString(), port); // netfx 无 (IPAddress,int,ct) 重载；回环连接瞬时完成
+#else
             await client.ConnectAsync(IPAddress.Loopback, port, timeout.Token);
+#endif
             return client.Connected;
         }
         catch (Exception) when (timeout.IsCancellationRequested)

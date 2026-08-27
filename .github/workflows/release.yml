@@ -16,7 +16,42 @@ permissions:
   id-token: write    # OIDC Trusted Publishing 换取 nuget.org 短时 API key
 
 jobs:
+  # 测试矩阵：所有 OS×TFM 组合通过后才允许发布
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            frameworks: "net8.0 net10.0"
+          - os: windows-latest
+            frameworks: "net48"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Build
+        run: dotnet build StreamFrame.slnx -c Release
+
+      - name: Test (${{ matrix.frameworks }})
+        shell: bash
+        env:
+          FRAMEWORKS: ${{ matrix.frameworks }}
+        run: |
+          for fw in $FRAMEWORKS; do
+            dotnet test StreamFrame.slnx -c Release --no-build -f $fw
+          done
+
   release:
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -31,7 +66,6 @@ jobs:
             10.0.x
 
       - name: Verify tag matches csproj versions
-        if: startsWith(github.ref, 'refs/tags/')
         run: |
           version="${GITHUB_REF_NAME#v}"
           for proj in src/StreamFrame/StreamFrame.csproj src/StreamFrame.Protocols.Xml/StreamFrame.Protocols.Xml.csproj; do
@@ -56,7 +90,6 @@ jobs:
       # ---------- 以下步骤仅在 tag 推送时执行 ----------
 
       - name: Extract changelog section for this version
-        if: startsWith(github.ref, 'refs/tags/')
         id: notes
         run: |
           version="${GITHUB_REF_NAME#v}"
@@ -73,7 +106,7 @@ jobs:
           fi
 
       - name: Create Release (from CHANGELOG)
-        if: startsWith(github.ref, 'refs/tags/') && steps.notes.outputs.has_notes == 'true'
+        if: steps.notes.outputs.has_notes == 'true'
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
@@ -84,7 +117,7 @@ jobs:
             artifacts/*.snupkg
 
       - name: Create Release (auto-generated notes)
-        if: startsWith(github.ref, 'refs/tags/') && steps.notes.outputs.has_notes != 'true'
+        if: steps.notes.outputs.has_notes != 'true'
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
@@ -95,7 +128,6 @@ jobs:
             artifacts/*.snupkg
 
       - name: Check NUGET_USER variable
-        if: startsWith(github.ref, 'refs/tags/')
         run: |
           if [ -z "${NUGET_USER}" ]; then
             echo "::error::NUGET_USER 为空。Settings → Secrets and variables → Actions → Variables 添加 NUGET_USER（nuget.org 用户名，注意是 Variables 不是 Secrets）。"
@@ -105,14 +137,12 @@ jobs:
           NUGET_USER: ${{ vars.NUGET_USER }}
 
       - name: NuGet Login (OIDC)
-        if: startsWith(github.ref, 'refs/tags/')
         id: login
         uses: NuGet/login@v1
         with:
           user: ${{ vars.NUGET_USER }}
 
       - name: Push to nuget.org
-        if: startsWith(github.ref, 'refs/tags/')
         run: |
           dotnet nuget push "artifacts/*.nupkg" \
             --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \

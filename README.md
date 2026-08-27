@@ -154,6 +154,16 @@ BenchmarkDotNet 实测（详见 [bench/README.md](bench/README.md)，可本地�
 - **流式编码**：每帧堆分配减半（单缓冲 vs 双缓冲），小负载耗时快 25–35%，大负载持平；
 - **切帧吞吐**：`LengthPrefixFramer` ≈10 ns/帧，`StxEtxFramer` ≈1.1 µs/帧（逐字节扫描）——高吞吐场景优先长度前缀。
 
+## 支持框架
+
+| 包目标 | 运行环境 |
+|---|---|
+| `net10.0`（推荐，LTS 至 2028-11） | .NET 10 |
+| `net8.0`（LTS 至 2026-11） | .NET 8 |
+| `netstandard2.0` | .NET Framework 4.6.2+、Unity、Mono 等 |
+
+`netstandard2.0` 资产经 **net48 全量测试套件**（真实 TCP 回环）验证；TCP KeepAlive 参数在 .NET Framework 上通过 `SIO_KEEPALIVE_VALS` 设置。CI 在 Ubuntu（net8/net10）与 Windows（net48）双平台运行全部测试。
+
 ## 依赖
 
 - [System.IO.Pipelines](https://www.nuget.org/packages/System.IO.Pipelines)

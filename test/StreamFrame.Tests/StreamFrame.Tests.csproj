@@ -1,9 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <TargetFrameworks>net8.0;net10.0;net48</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
@@ -11,6 +12,12 @@
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    <PackageReference Include="PolySharp" Version="1.15.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; build_transitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <!-- 让 linux CI 也能编译 net48 目标（测试仅在 Windows 运行时执行） -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
     <PackageReference Include="Meziantou.Analyzer" Version="3.0.187">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>

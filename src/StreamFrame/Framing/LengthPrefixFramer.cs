@@ -84,7 +84,7 @@ public sealed class LengthPrefixFramer : IStreamingFramer, IFrameDiscardReportin
     {
         var header = buffer.Slice(0, LengthPrefixSize);
         if (header.IsSingleSegment)
-            return BinaryPrimitives.ReadInt32BigEndian(header.FirstSpan);
+            return BinaryPrimitives.ReadInt32BigEndian(header.First.Span);
 
         Span<byte> tmp = stackalloc byte[LengthPrefixSize];
         header.CopyTo(tmp);

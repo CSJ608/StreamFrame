@@ -5,11 +5,24 @@
 
 ## [Unreleased]
 
-### 变更
-- CI Actions 升级到 Node 24 运行时：`actions/checkout@v7`、`actions/setup-dotnet@v6`、`softprops/action-gh-release@v3`（消除 Node 20 弃用告警）。
+### 新增
+- 暂无
+
+### 修复
+- 暂无
+
+## [2.1.0] - 2026-08-27
 
 ### 新增
-- 多目标框架（第一阶段）：`net8.0;net10.0`——net10 为当前 LTS（支持至 2028-11），CI 双框架全量测试；net9+ 目标采用 `System.Threading.Lock`。
+- **多目标框架：`netstandard2.0;net8.0;net10.0`**——打开 .NET Framework 4.6.2+/Unity/Mono 受众（设备通讯/WMS 场景存量巨大）。ns2.0 资产经 net48 全量测试（真实 TCP 回环）验证；CI 矩阵 Ubuntu（net8/net10）+ Windows（net48）；发布流水线改为"测试矩阵全过 → 再发布"。兼容要点：PolySharp 语言 polyfill、Socket TaskExtensions 回退 + 可取消等待、KeepAlive 经 SIO_KEEPALIVE_VALS、StxEtx 定界器改手工扫描（SequenceReader 无 ns2.0 包资产）。net9+ 目标采用 `System.Threading.Lock`。
+- 帧定界基准测试 `bench/StreamFrame.Benchmarks`（BenchmarkDotNet）：LengthPrefix/StxEtx 的流式 vs 纯函数编码对比与切帧吞吐，为"流式零拷贝"说法提供可复现数据。
+- 项目 LOGO（`docs/logo/`，SVG 母版 + PNG），README 双语版接入展示、两个 NuGet 包启用包图标（随本版本发布生效）。
+- README 新增 CI 构建状态徽章与"支持框架"矩阵；main 分支保护（必须走 PR 且 CI 通过、禁 force push/删除、强制线性历史）。
+- 英文版 README（`README.en.md`，与中文版互链），便于国际用户检索与阅读。
+
+### 变更
+- CI Actions 升级到 Node 24 运行时：`actions/checkout@v7`、`actions/setup-dotnet@v6`、`softprops/action-gh-release@v3`（消除 Node 20 弃用告警）。
+- `GetMessages`/发送 worker 改用 `WaitToReadAsync+TryRead` 等价循环（ns2.0 的 Channels 包无 `ReadAllAsync`；各目标行为一致）。
 - 帧定界基准测试 `bench/StreamFrame.Benchmarks`（BenchmarkDotNet）：LengthPrefix/StxEtx 的流式 vs 纯函数编码对比与切帧吞吐，为"流式零拷贝"说法提供可复现数据。
 - 项目 LOGO（`docs/logo/`，SVG 母版 + PNG），README 双语版接入展示、两个 NuGet 包启用包图标（随下个版本发布生效）。
 - README 新增 CI 构建状态徽章；main 分支保护（必须走 PR 且 CI 通过、禁 force push/删除、强制线性历史）。
@@ -98,7 +111,8 @@
 - 发布自动化：`release.yml`（tag 自动建 GitHub Release）、`publish-nuget.yml`（OIDC Trusted Publishing 推送 nuget.org）。
 - 单元测试 25 个 + 三场景端到端 demo。
 
-[Unreleased]: https://github.com/CSJ608/StreamFrame/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/CSJ608/StreamFrame/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/CSJ608/StreamFrame/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/CSJ608/StreamFrame/compare/v1.2.0...v2.0.0
 [1.2.0]: https://github.com/CSJ608/StreamFrame/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/CSJ608/StreamFrame/compare/v1.0.1...v1.1.0
