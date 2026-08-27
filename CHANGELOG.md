@@ -6,6 +6,7 @@
 ## [Unreleased]
 
 ### 新增
+- CI 覆盖率报告：Ubuntu 矩阵（net8/net10）测试时收集 XPlat Code Coverage，写入 job Summary（总体 + 按程序集明细），原始 cobertura XML 以 artifact 保留 14 天；当前基线约行覆盖 85% / 分支 81%。本地可用 `dotnet test -f net8.0 --collect:"XPlat Code Coverage"` 复现。
 - 心跳保活示例（demo 场景 4）：周期心跳 + 接收空闲超时的完整范式——有心跳时连接稳定（零状态事件），停止心跳后空闲判定触发重连；README 活性探测小节同步补充代码片段。
 
 ### 修复

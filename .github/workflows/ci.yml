@@ -16,11 +16,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # 现代 .NET 在 linux 跑；net48（验证 netstandard2.0 资产）需要 Windows 运行时
+          # 现代 .NET 在 linux 跑（附带覆盖率收集）；net48（验证 netstandard2.0 资产）需要 Windows 运行时
           - os: ubuntu-latest
             frameworks: "net8.0 net10.0"
+            coverage: true
           - os: windows-latest
             frameworks: "net48"
+            coverage: false
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
@@ -39,7 +41,64 @@ jobs:
         shell: bash
         env:
           FRAMEWORKS: ${{ matrix.frameworks }}
+          COLLECT_COVERAGE: ${{ matrix.coverage }}
         run: |
           for fw in $FRAMEWORKS; do
-            dotnet test StreamFrame.slnx -c Release --no-build -f $fw
+            if [ "$COLLECT_COVERAGE" = "true" ]; then
+              dotnet test StreamFrame.slnx -c Release --no-build -f $fw \
+                --collect:"XPlat Code Coverage" --results-directory "coverage/$fw"
+            else
+              dotnet test StreamFrame.slnx -c Release --no-build -f $fw
+            fi
           done
+
+      # 覆盖率摘要写入 job Summary（自包含，不依赖外部服务）；原始 cobertura XML 附为 artifact
+      - name: Coverage summary
+        if: matrix.coverage
+        shell: bash
+        run: |
+          python3 - <<'PYEOF'
+          import glob, os, xml.etree.ElementTree as ET
+
+          def fmt(rate):
+              return f"{rate * 100:.1f}%"
+
+          lines = ["", "## 测试覆盖率（XPlat Code Coverage）", "",
+                   "| 目标 | Line | Branch | 覆盖行/总行 |", "|---|---|---|---|"]
+
+          for tfm_dir in sorted(glob.glob("coverage/*")):
+              tfm = os.path.basename(tfm_dir)
+              reports = glob.glob(os.path.join(tfm_dir, "**", "coverage.cobertura.xml"), recursive=True)
+              if not reports:
+                  continue
+              # 同一 TFM 只应有一份（单一测试项目）；防御性取第一份
+              root = ET.parse(reports[0]).getroot()
+              line_rate = float(root.get("line-rate", "0"))
+              branch_rate = float(root.get("branch-rate", "0"))
+              all_lines = list(root.iter("line"))
+              covered_lines = sum(1 for l in all_lines if int(l.get("hits", "0")) > 0)
+              lines.append(f"| {tfm} | {fmt(line_rate)} | {fmt(branch_rate)} | {covered_lines}/{len(all_lines)} |")
+
+              if tfm.endswith("net8.0"):
+                  detail = ["", f"<details><summary>按程序集（{tfm}）</summary>", "",
+                            "| 程序集 | Line | Branch |", "|---|---|---|"]
+                  for pkg in root.iter("package"):
+                      detail.append(f"| {pkg.get('name', '?')} | "
+                                    f"{fmt(float(pkg.get('line-rate', '0')))} | "
+                                    f"{fmt(float(pkg.get('branch-rate', '0')))} |")
+                  detail += ["", "</details>", ""]
+                  lines += detail
+
+          summary = "\n".join(lines) + "\n"
+          print(summary)
+          with open(os.environ.get("GITHUB_STEP_SUMMARY", "/dev/stdout"), "a", encoding="utf-8") as f:
+              f.write(summary)
+          PYEOF
+
+      - name: Upload coverage artifacts
+        if: matrix.coverage
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-${{ github.run_number }}
+          path: coverage/
+          retention-days: 14

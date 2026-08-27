@@ -192,8 +192,9 @@ BenchmarkDotNet 实测（详见 [bench/README.md](bench/README.md)，可本地�
 ```bash
 dotnet build StreamFrame.slnx
 dotnet test
-dotnet run --project samples/StreamFrame.Demo          # 三场景端到端 demo
+dotnet run --project samples/StreamFrame.Demo          # 四场景端到端 demo
 dotnet run -c Release --project bench/StreamFrame.Benchmarks   # 性能基准（约 5-10 分钟）
+dotnet test -f net8.0 --collect:"XPlat Code Coverage"  # 覆盖率（CI 亦自动收集并写入运行摘要）
 ```
 
 ## 项目结构
