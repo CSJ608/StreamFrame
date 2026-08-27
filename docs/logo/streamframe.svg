@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <!-- StreamFrame：字节流（青色波）贯穿帧（白色环） -->
+  <!-- StreamFrame：字节流（青色波，右倾显动感）贯穿帧（白色环） -->
   <rect width="128" height="128" rx="28" fill="#4338CA"/>
-  <path d="M10 64 Q37 48 64 64 Q91 80 118 64" fill="none" stroke="#22D3EE" stroke-width="9" stroke-linecap="round"/>
-  <rect x="32" y="32" width="64" height="64" rx="15" fill="#FFFFFF"/>
-  <rect x="45" y="45" width="38" height="38" rx="7" fill="#4338CA"/>
+  <path d="M12 56.7 Q35 42.5 66 65.3 Q91 84.2 116 71.2" fill="none" stroke="#20C8E2" stroke-width="9" stroke-linecap="round"/>
+  <rect x="32" y="32" width="64" height="64" rx="16" fill="#FFFFFF"/>
+  <rect x="45" y="45" width="38" height="38" rx="8" fill="#4338CA"/>
 </svg>
