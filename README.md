@@ -3,6 +3,8 @@
 [![NuGet](https://img.shields.io/nuget/v/StreamFrame.svg)](https://www.nuget.org/packages/StreamFrame)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/StreamFrame)](https://www.nuget.org/stats/packages/StreamFrame?groupby=Version)
 
+[English](README.en.md) | 简体中文
+
 **通用 socket 通讯框架**：把"帧边界判定"与"帧内数据编解码"插件化，适用于通过 socket 进行数据互换的场景（设备通讯、物流 WMS 对接等）。把场景间的共性（连接管理、重连、读写、粘包/半包、消息分发）收敛到框架核心，把差异性（framing、codec）抽象成可插拔的驱动。
 
 ## 为什么用它
@@ -169,6 +171,7 @@ src/StreamFrame/                  # 核心库（无业务依赖）
 src/StreamFrame.Protocols.Xml/    # XML 报文驱动（示例 codec）
 test/StreamFrame.Tests/           # xUnit 单测
 samples/StreamFrame.Demo/         # 控制台端到端 demo
+bench/StreamFrame.Benchmarks/     # 性能基准
 ```
 
 ## 许可
