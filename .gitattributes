@@ -1,0 +1,13 @@
+# 行尾与二进制规范化：跨平台/跨贡献者行为确定
+* text=auto
+
+# 平台脚本固定行尾
+*.sh text eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 二进制文件（不参与行尾/差异归一）
+*.png binary
+*.ico binary
+*.nupkg binary
+*.snupkg binary
