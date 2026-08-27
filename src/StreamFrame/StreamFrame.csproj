@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -13,6 +13,7 @@
     <Description>通用 socket 通讯框架：帧定界（IFramer）与帧内编解码（ICodec&lt;TMessage&gt;）插件化，支持长度前缀 / STX-ETX 定界与 IPv4/IPv6 双栈，可选流式零拷贝发送。</Description>
     <Authors>Marci</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/CSJ608/StreamFrame</RepositoryUrl>
@@ -35,6 +36,7 @@
 
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\docs\logo\icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>

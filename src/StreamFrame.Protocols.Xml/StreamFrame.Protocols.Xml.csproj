@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\docs\logo\icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,6 +29,7 @@
     <Description>StreamFrame 的 XML 报文示例驱动：XmlDocumentCodec（XmlSerializer / XmlWriter 编解码）。</Description>
     <Authors>Marci</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/CSJ608/StreamFrame</RepositoryUrl>

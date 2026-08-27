@@ -1,5 +1,10 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/CSJ608/StreamFrame/main/docs/logo/icon-512.png" width="120" alt="StreamFrame logo" />
+</p>
+
 # StreamFrame
 
+[![CI](https://github.com/CSJ608/StreamFrame/actions/workflows/ci.yml/badge.svg)](https://github.com/CSJ608/StreamFrame/actions/workflows/ci.yml)
 [![NuGet](https://img.shields.io/nuget/v/StreamFrame.svg)](https://www.nuget.org/packages/StreamFrame)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/StreamFrame)](https://www.nuget.org/stats/packages/StreamFrame?groupby=Version)
 
