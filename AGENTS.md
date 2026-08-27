@@ -9,7 +9,7 @@
 3. 同步更新 `CHANGELOG.md` 的 `Unreleased` 段（按 新增 / 修复 / 变更 分类）
 4. 推送分支 → 开 PR → 等 `ci.yml` 绿 → rebase 合并并删除分支；**不直接推 main**
 
-> main 已启用分支保护（GitHub 设置）：必须走 PR、`build-test` 必须通过且分支最新、禁 force push/删除、强制线性历史——直推 main 会被 GitHub 拒绝，规则在 Settings → Branches 可调。
+> main 已启用分支保护（GitHub 设置）：必须走 PR、`build-test` 必须通过且分支最新、禁 force push/删除、强制线性历史——直推 main 会被 GitHub 拒绝，规则在 Settings → Branches 可调。注意：CI 是 OS×TFM 矩阵，必需检查的完整名带矩阵后缀（如 `build-test (windows-latest, net48)`）；调整矩阵（增删 OS/框架）后需同步更新分支保护的必需检查名，否则 PR 会被判缺检查而无法合并。
 
 ## 提交前必须通过
 
