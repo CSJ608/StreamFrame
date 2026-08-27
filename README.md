@@ -143,9 +143,25 @@ var conn = new StreamConnection<XDocument>(..., logger: loggerFactory.CreateLogg
 
 不传则无日志输出（零依赖可用）。
 
-### 活性探测建议
+### 活性探测与心跳范式
 
-生产环境建议开启 `TcpKeepAlive = true`；有周期性报文的协议可再加 `ReceiveIdleTimeoutMs`（如心跳周期的 3 倍），双保险兜底半开连接。
+生产环境建议开启 `TcpKeepAlive = true`；应用层心跳配合 `ReceiveIdleTimeoutMs`（取心跳周期的 3 倍，容忍偶尔丢 1-2 次）是更强的组合——框架不内置心跳（消息形态由协议决定），范式如下，完整可运行示例见 demo 场景 4：
+
+```csharp
+var options = new StreamConnectionOptions { ReceiveIdleTimeoutMs = 1500 };
+
+// 一侧周期发心跳；另一侧收到任何消息回 PONG（双向都有字节即可重置双方空闲计时）
+_ = Task.Run(async () =>
+{
+    while (!cts.IsCancellationRequested)
+    {
+        await client.SendAsync("PING", cts.Token);
+        await Task.Delay(TimeSpan.FromMilliseconds(500), cts.Token); // 周期 ≈ 超时的 1/3
+    }
+});
+```
+
+对端"猝死"（断电/拔线，无 FIN/RST）时静默超限 → 会话判定死亡 → 自动重连；对端不可达时重连持续失败，状态停留在 `Connecting`/`Retry`。
 
 ## 性能
 
@@ -176,8 +192,9 @@ BenchmarkDotNet 实测（详见 [bench/README.md](bench/README.md)，可本地�
 ```bash
 dotnet build StreamFrame.slnx
 dotnet test
-dotnet run --project samples/StreamFrame.Demo          # 三场景端到端 demo
+dotnet run --project samples/StreamFrame.Demo          # 四场景端到端 demo
 dotnet run -c Release --project bench/StreamFrame.Benchmarks   # 性能基准（约 5-10 分钟）
+dotnet test -f net8.0 --collect:"XPlat Code Coverage"  # 覆盖率（CI 亦自动收集并写入运行摘要）
 ```
 
 ## 项目结构

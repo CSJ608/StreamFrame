@@ -600,7 +600,15 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
         linked.CancelAfter(_options.ReceiveIdleTimeoutMs);
         try
         {
-            return await socket.ReceiveAsync(memory, SocketFlags.None, linked.Token).ConfigureAwait(false);
+            var count = await socket.ReceiveAsync(memory, SocketFlags.None, linked.Token).ConfigureAwait(false);
+            if (count == 0 && linked.IsCancellationRequested)
+            {
+                // 部分平台（Windows）把取消中的接收折算成 0 字节完成而非抛取消异常——
+                // 不加区分会误判为对端正常关闭（FIN），语义应为空闲超时会话故障
+                throw new SessionFaultException($"接收空闲超过 {_options.ReceiveIdleTimeoutMs}ms，判定连接死亡。");
+            }
+
+            return count;
         }
         catch (OperationCanceledException) when (!ct.IsCancellationRequested)
         {
