@@ -229,6 +229,9 @@ static async Task RunReconnectScenarioAsync(CancellationToken ct)
         }
     }, ct);
 
+    WireFrameErrors(server, "Srv3");
+    WireFrameErrors(client, "Cli3");
+
     // 等服务端起来并连上，最多等 4 秒
     var connectDeadline = DateTime.UtcNow.AddSeconds(4);
     while (!seen.Contains(nameof(ConnectionState.Connected)) && DateTime.UtcNow < connectDeadline && !ct.IsCancellationRequested)
@@ -242,6 +245,25 @@ static async Task RunReconnectScenarioAsync(CancellationToken ct)
     await Task.Delay(400, ct);
 
     Assert(serverGot == 1, $"服务端应收到重连后的 1 条消息，实际 {serverGot}");
+
+    // ---- 第二段：已建立的会话断线 → 重连 → 消息仍送达 ----
+    // （1.1.0 的假活缺陷正发生在这里：第一次断线会永久关闭服务端消息通道）
+    Console.WriteLine("\n主动端强制重连，模拟链路中断…");
+    client.Reconnect();
+
+    var bothConnected = DateTime.UtcNow.AddSeconds(5);
+    while ((client.State != ConnectionState.Connected || server.State != ConnectionState.Connected)
+           && DateTime.UtcNow < bothConnected && !ct.IsCancellationRequested)
+    {
+        await Task.Delay(100, ct);
+    }
+    Assert(client.State == ConnectionState.Connected && server.State == ConnectionState.Connected,
+        $"重连后双方应回到 Connected（client={client.State}, server={server.State}）");
+
+    await client.SendAsync("survives-reconnect", ct);
+    await Task.Delay(500, ct);
+
+    Assert(serverGot == 2, $"断线重连后服务端应累计收到 2 条消息，实际 {serverGot}");
 
     Console.WriteLine("场景 3 通过 ✓");
     await server.DisposeAsync();
@@ -257,6 +279,12 @@ static void WireLogging<T>(IStreamConnection<T> conn, string tag)
     conn.RawBytesReceived = bytes => Console.WriteLine($"[{tag}] RX HEX: {Convert.ToHexString(bytes.Span)}");
     conn.RawBytesSent = bytes => Console.WriteLine($"[{tag}] TX HEX: {Convert.ToHexString(bytes.Span)}");
 }
+
+/// <summary>演示帧层诊断事件：坏帧/被丢弃的噪声字节/未完成帧超限都带字节与原因。</summary>
+static void WireFrameErrors<T>(IStreamConnection<T> conn, string tag)
+    => conn.FrameError += (_, e) => Console.WriteLine(
+        $"[{tag}] 帧诊断 {e.Kind}: {Convert.ToHexString(e.Bytes.Span)}" +
+        (e.Exception is null ? string.Empty : $" ({e.Exception.Message})"));
 
 static void Assert(bool condition, string message)
 {

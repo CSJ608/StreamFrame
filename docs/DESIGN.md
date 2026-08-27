@@ -119,6 +119,12 @@ socket --ReceiveAsync--> pipe.Writer --[Pipe]--> FrameDecoder.RunAsync
 
 `Connecting → Connected → Retry`。`Start` 失败按 `ConnectRetryDelayMs`/`AcceptRetryDelayMs` 自动重试；运行中断线统一走 `Retry`（`Interlocked` 重入保护防并发双重重连）→ 停会话 → 重新 Start。
 
+**会话模型（1.2.0）**：一次 TCP 连接 = 一个会话（Pipe + 接收/解码/发送三任务，各自带守护）。会话因对端断开、socket 故障、帧解码失败（`DecodeErrorPolicy.Disconnect`）、未完成帧超限、发送失败或接收空闲超时而终结时，守护任务经 `ScheduleReconnect` 调度重建——不能在任务内联调用 `Reconnect`（StopSession 会等待调用方自身，自等待 2s）。每个会话持有单调递增的 epoch；故障重连只在 epoch 仍为最新时执行，迟到的过期故障不会误杀已重建的新会话。
+
+**消息通道所有权（1.2.0）**：`_messageRelay` 归连接所有、跨会话复用，仅 Dispose 时完成——`GetMessages` 是跨重连的稳定消息流。`FrameDecoder` 不完成通道（1.1.0 在此把取消异常写进通道完成状态，导致重连后消息永不到达的假活）。解码循环的 `ReadAsync` 不绑定取消令牌（取消中的 ReadAsync 会把 Pipe 留在"读取进行中"状态，无法再 TryRead）；退出由 `writer.CompleteAsync` / `CancelPendingRead` 驱动，退出前投递所有已缓冲的完整帧——"已收到的字节必达"。
+
+**原始字节与诊断（1.2.0）**：`RawBytesReceived/Sent` 全量输出（含被定界器丢弃的噪声字节），发送侧按实际写出分片回调；两者与 `ConnectionChanged`、`FrameError` 的用户回调异常均被隔离，不反噬会话。`IFrameDiscardReporting`（可选接口，内置两个 codec 实现）让定界器精确上报重同步丢弃的字节，经 `FrameError(DiscardedByResync)` 交上层调试。
+
 ### 不内置（上移驱动层）
 
 - 心跳 / 控制消息（泛型下框架不知消息形态）
@@ -129,11 +135,12 @@ socket --ReceiveAsync--> pipe.Writer --[Pipe]--> FrameDecoder.RunAsync
 
 ## 测试
 
-`test/StreamFrame.Tests/`，无需真实 socket：
-- Framing 专项：长度越界/负数/超 Max、孤立 ETX、新 STX 丢弃旧半包、超长帧
+`test/StreamFrame.Tests/`：
+- Framing 专项：长度越界/负数/超 Max、孤立 ETX、新 STX 丢弃旧半包、超长帧、丢弃字节精确上报
 - 流式编码：Begin/EndFrame 与纯函数 EncodeFrame **字节输出一致性**、长度头回填正确、超长拒绝
-- 解码循环：整帧粘包、按 23 字节小块分片喂（半包）
+- 解码循环：整帧粘包、按 23 字节小块分片喂（半包）、解码失败双策略、未完成帧超限、通道不被 decoder 完成
 - XML codec：往返、DTD 拒绝（XXE 防御）
+- 连接端到端（真实 TCP 回环）：断线重连后消息送达、解码失败断线/跳帧、调试钩子抛异常会话存活、接收空闲超时、发送失败重连、未完成帧超限断线
 - 端到端：`samples/StreamFrame.Demo` 演示 XML+LengthPrefix、文本+STX/ETX、断线重连三场景
 
 运行：`dotnet build StreamFrame.slnx`、`dotnet test`、`dotnet run --project samples/StreamFrame.Demo`

@@ -17,7 +17,7 @@ namespace StreamFrame.Abstractions;
 /// 实现 <see cref="IStreamingFrameCodec"/>：BeginFrame 写 STX、EndFrame 写 ETX，
 /// 与 <see cref="IFrameCodec.EncodeFrame"/> 字节输出完全一致。
 /// </summary>
-public sealed class StxEtxFrameCodec : IStreamingFrameCodec
+public sealed class StxEtxFrameCodec : IStreamingFrameCodec, IFrameDiscardReporting
 {
     private const byte STX = 0x02;
     private const byte ETX = 0x03;
@@ -78,8 +78,12 @@ public sealed class StxEtxFrameCodec : IStreamingFrameCodec
     }
 
     public bool TryDecodeFrame(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> payload)
+        => TryDecodeFrame(ref buffer, out payload, out _);
+
+    public bool TryDecodeFrame(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> payload, out ReadOnlySequence<byte> discarded)
     {
         payload = default;
+        var original = buffer;
 
         var reader = new SequenceReader<byte>(buffer);
 
@@ -109,14 +113,17 @@ public sealed class StxEtxFrameCodec : IStreamingFrameCodec
 
                 payload = buffer.Slice(lastStxPayloadStart, payloadLength);
                 buffer = buffer.Slice(reader.Consumed);
+                discarded = original.Slice(0, lastStxOffset); // 保留点之前的噪声/被中止半帧
                 return true;
             }
         }
 
-        // 缓冲区耗尽但未收到完整帧
+        // 缓冲区耗尽但未收到完整帧：保留自最后一个 STX 起的余量等待后续数据。
+        // 保留点之前的字节（杂散噪声、被更新的 STX 中止的旧半帧）即为本次丢弃。
+        discarded = original.Slice(0, lastStxOffset >= 0 ? lastStxOffset : original.Length);
         buffer = lastStxOffset >= 0
-            ? buffer.Slice(lastStxOffset) // 回到最后一个 STX 位置等待更多数据
-            : buffer.Slice(buffer.End);   // 消费全部噪声字节
+            ? buffer.Slice(lastStxOffset)
+            : buffer.Slice(buffer.End);
 
         return false;
     }

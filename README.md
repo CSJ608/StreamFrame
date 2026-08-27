@@ -86,9 +86,48 @@ public interface ICodec<TMessage>
 ### 连接（IStreamConnection&lt;T&gt;）— 传输层
 
 - **客户端/服务端双模式**：`isActive: true` 主动连远端，`false` 被动监听
-- **自动重连**：`Connecting → Connected → Retry` 状态机
-- **事件**：`ConnectionChanged` 状态变化、`RawBytesReceived/Sent` 原始字节（HEX 调试）
+- **自动重连**：`Connecting → Connected → Retry` 状态机；`GetMessages` 是跨重连的稳定消息流——断线重连后已收消息不丢、枚举不中断
+- **健壮性**：帧内容解码失败、未完成帧超限、发送失败、接收空闲超时都会判定会话失效并自动重建（不再产生"连接看似存活、消息静默消失"的假活）
+- **活性探测（可选）**：TCP KeepAlive 与接收空闲超时，兜底半开连接（对端断电/拔线）
+- **事件**：`ConnectionChanged` 状态变化、`FrameError` 帧层诊断、`RawBytesReceived/Sent` 原始字节（HEX 调试）
 - **发送背压**：有界发送队列，队列满时 `SendAsync` 自动等待
+
+## 诊断与调试
+
+### FrameError — 帧层诊断事件
+
+对端发来坏数据时，`FrameError` 事件把**出问题的字节**和**原因**直接交给上层，不用再拿 HEX 流人工对齐：
+
+```csharp
+client.FrameError += (_, e) =>
+{
+    // e.Kind: DecodeFailed（帧完整但内容解析失败）
+    //         DiscardedByResync（被定界器当作噪声丢弃的字节）
+    //         IncompleteFrameOverflow（未完成帧缓冲超限）
+    // e.Bytes: 已拷贝，可安全长期留存
+    // e.Exception: DecodeFailed 时的原始异常
+    Console.WriteLine($"[{e.Kind}] {Convert.ToHexString(e.Bytes.Span)} {e.Exception?.Message}");
+};
+```
+
+帧内容解码失败的策略由 `StreamConnectionOptions.DecodeErrorPolicy` 决定：
+
+| 策略 | 行为 |
+|---|---|
+| `Disconnect`（默认） | 断线重连——协议内容错乱后流状态通常不可信 |
+| `SkipFrame` | 丢弃坏帧继续，适合噪声多的线路 |
+
+### RawBytesReceived / RawBytesSent — 原始字节流
+
+socket 层全量输出（含被丢弃的噪声字节），发送侧按实际写出的分片回调（部分发送失败时已上线字节也可见）。**内存契约**：回调参数是内部缓冲的切片，仅在回调同步执行期间有效，需要留存必须自行拷贝；回调抛异常会被隔离，不影响会话。
+
+### 未完成帧防护
+
+对端声明一个超长帧却永远不补齐（或 STX/ETX 流中只有 STX 没有闭合），会无限占用缓冲。`MaxIncompleteFrameBufferBytes`（默认 = 帧上限 + 4KB）给"等不齐的半帧"设了硬上限，超限即断线并通过 `FrameError` 上报。
+
+### 活性探测建议
+
+生产环境建议开启 `TcpKeepAlive = true`；有周期性报文的协议可再加 `ReceiveIdleTimeoutMs`（如心跳周期的 3 倍），双保险兜底半开连接。
 
 ## 依赖
 

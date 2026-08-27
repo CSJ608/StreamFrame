@@ -11,6 +11,29 @@
 ### 修复
 - 暂无
 
+## [1.2.0] - 2026-08-27
+
+### 修复
+- **会话假活（严重）**：消息通道不再被解码循环在会话停止时关闭——此前任何一次断线重连（或一条解码失败的报文）都会永久关闭通道，之后连接看似健康（Connected、字节仍在收发），业务消息却永远不再送达。`GetMessages` 现在是跨重连的稳定消息流，仅在 `DisposeAsync` 后正常结束。
+- **已收消息不再丢失**：对端"发完数据立即断开"时，解码循环退出前会投递所有已缓冲的完整帧（此前会话停止的取消可能抢在投递之前）。
+- **会话拆除不再泄漏旧 socket**：每次重连都会关闭上一个连接的 socket（此前等终结器收场）。
+- **迟到的过期故障不再误杀新会话**：会话故障的重连按会话编号（epoch）判定是否仍有效。
+- **发送失败不再静默**：发送 worker 遇到 socket 故障会上抛并触发重连（此前只吞异常退出，队列随后塞满、`SendAsync` 永久阻塞）。
+- **用户回调异常全部隔离**：`ConnectionChanged` / `RawBytesReceived` / `RawBytesSent` / `FrameError` 的处理器抛异常不再中断状态机或拆会话（此前 `RawBytesReceived` 抛异常会引发重连风暴）。
+
+### 变更
+- 帧内容解码失败（codec 抛异常）默认断线重连（此前解码循环静默死亡、连接假活）；可用 `DecodeErrorPolicy.SkipFrame` 改为丢弃坏帧继续。
+- `GetMessages` 不再因会话中断/解码失败向枚举方抛异常（错误改经 `FrameError` 事件上报）。
+- `RawBytesSent` 改为按 socket 实际写出的分片回调（此前整帧成功才回调，部分发送不可见）。
+- `IStreamConnection<TMessage>` 新增 `FrameError` 事件（自实现该接口的第三方驱动需适配）。
+
+### 新增
+- `FrameError` 帧层诊断事件：解码失败、被定界器丢弃的噪声字节、未完成帧超限，均携带已拷贝字节（可安全留存）与原因。
+- `IFrameDiscardReporting` 可选接口：定界器精确上报重同步丢弃的字节；`LengthPrefixFrameCodec` / `StxEtxFrameCodec` 已实现。
+- `MaxIncompleteFrameBufferBytes` 选项：未完成帧缓冲硬上限（默认 = 帧上限 + 4KB），封堵"声明超长帧永不补齐 / 只有 STX 没有 ETX"的无界内存占用。
+- 活性探测选项：`TcpKeepAlive` + `KeepAliveTimeMs` / `KeepAliveIntervalMs`、`ReceiveIdleTimeoutMs`（默认全部关闭，行为与 1.1.0 一致）。
+- 连接端到端测试 7 项 + 解码循环测试 4 项（重连送达、解码失败双策略、未完成帧超限、丢弃上报、钩子异常隔离、空闲超时、发送失败重连）。
+
 ## [1.1.0] - 2026-08-04
 
 ### 变更

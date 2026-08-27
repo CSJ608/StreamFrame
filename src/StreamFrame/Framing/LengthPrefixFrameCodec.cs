@@ -8,7 +8,7 @@ namespace StreamFrame.Abstractions;
 /// 实现 <see cref="IStreamingFrameCodec"/>：支持单缓冲原地编码（BeginFrame 预留长度位，
 /// EndFrame 回填长度），与 <see cref="IFrameCodec.EncodeFrame"/> 字节输出完全一致。
 /// </summary>
-public sealed class LengthPrefixFrameCodec : IStreamingFrameCodec
+public sealed class LengthPrefixFrameCodec : IStreamingFrameCodec, IFrameDiscardReporting
 {
     public const int LengthPrefixSize = 4;
     public const int DefaultMaxPayloadBytes = 16 * 1024 * 1024;
@@ -52,8 +52,12 @@ public sealed class LengthPrefixFrameCodec : IStreamingFrameCodec
     }
 
     public bool TryDecodeFrame(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> payload)
+        => TryDecodeFrame(ref buffer, out payload, out _);
+
+    public bool TryDecodeFrame(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> payload, out ReadOnlySequence<byte> discarded)
     {
         payload = default;
+        discarded = default;
         if (buffer.Length < LengthPrefixSize)
             return false;
 
@@ -62,6 +66,7 @@ public sealed class LengthPrefixFrameCodec : IStreamingFrameCodec
         // 非法长度（负数 / 超上限）：丢弃长度头，尝试从下一字节重新同步。
         if ((uint)length > (uint)MaxPayloadBytes)
         {
+            discarded = buffer.Slice(0, LengthPrefixSize);
             buffer = buffer.Slice(LengthPrefixSize);
             return false;
         }

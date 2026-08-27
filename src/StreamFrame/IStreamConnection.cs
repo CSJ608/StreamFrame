@@ -27,10 +27,31 @@ public interface IStreamConnection<TMessage> : IAsyncDisposable
     /// <summary>连接状态变更事件。</summary>
     event EventHandler<ConnectionState>? ConnectionChanged;
 
-    /// <summary>从 Socket 收到原始字节时触发（HEX 日志等调试用途）。</summary>
+    /// <summary>
+    /// 帧层诊断事件：帧内容解码失败（<see cref="FrameErrorKind.DecodeFailed"/>）、被定界器
+    /// 丢弃的噪声字节（<see cref="FrameErrorKind.DiscardedByResync"/>）、未完成帧缓冲超限
+    /// （<see cref="FrameErrorKind.IncompleteFrameOverflow"/>）。
+    /// 事件携带的 <see cref="FrameErrorEventArgs.Bytes"/> 是已拷贝的字节，回调后可安全留存。
+    /// </summary>
+    event EventHandler<FrameErrorEventArgs>? FrameError;
+
+    /// <summary>
+    /// 从 Socket 收到原始字节时触发（HEX 日志等调试用途）。每个接收块都会触发，
+    /// 包括后来被帧定界器丢弃的噪声字节。
+    ///
+    /// 内存契约：回调参数是接收管线内部缓冲的切片，仅在回调同步执行期间有效，
+    /// 随后会被复用/覆盖；需要留存（异步落盘、事后 dump）必须自行拷贝。
+    /// 回调内抛出的异常会被隔离，不会影响会话。
+    /// </summary>
     Action<ReadOnlyMemory<byte>>? RawBytesReceived { get; set; }
 
-    /// <summary>向 Socket 发送原始字节时触发（HEX 日志等调试用途）。</summary>
+    /// <summary>
+    /// 向 Socket 写入原始字节时触发（HEX 日志等调试用途）。按 socket 实际写出的分片触发，
+    /// 发送中途失败时已成功写出的部分同样可见。
+    ///
+    /// 内存契约：与 <see cref="RawBytesReceived"/> 相同，仅在回调同步执行期间有效。
+    /// 回调内抛出的异常会被隔离，不会影响会话。
+    /// </summary>
     Action<ReadOnlyMemory<byte>>? RawBytesSent { get; set; }
 
     /// <summary>启动连接（主动连接/被动监听），异常时自动重试直到取消。</summary>
