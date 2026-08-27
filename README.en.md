@@ -152,7 +152,8 @@ For production, enable `TcpKeepAlive = true`; for protocols with periodic traffi
 Measured with BenchmarkDotNet (details and how to reproduce in [bench/README.md](bench/README.md)):
 
 - **Streaming encode**: halves per-frame heap allocation (single vs. double buffer); 25–35% faster for small payloads, on par for large ones;
-- **Frame decoding**: `LengthPrefixFramer` ≈10 ns/frame vs `StxEtxFramer` ≈1.1 µs/frame (byte-by-byte scanning) — prefer length-prefix for high-throughput scenarios.
+- **Frame decoding**: `LengthPrefixFramer` ≈10 ns/frame vs `StxEtxFramer` ≈1.1 µs/frame (byte-by-byte scanning) — prefer length-prefix for high-throughput scenarios;
+- **End-to-end** (real TCP loopback): one-way throughput ≈246k msgs/s (1KB messages, LengthPrefix), round-trip latency ≈63 µs; the XML codec costs 2–16 µs per message (400B–4KB) — serialization dominates, not framing.
 
 ## Supported frameworks
 

@@ -6,7 +6,7 @@
 ## [Unreleased]
 
 ### 新增
-- 暂无
+- 基准测试扩容：`CodecBenchmarks`（XmlDocumentCodec 典型报文编解码开销）与 `EndToEndBenchmarks`（真实 TCP 回环的单向吞吐（双 framer）与往返延迟）；基准项目纳入解决方案（IDE 可见，随解决方案构建；`dotnet test` 依 IsTestProject 机制自动跳过）。
 
 ### 修复
 - 暂无

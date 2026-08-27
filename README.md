@@ -152,7 +152,8 @@ var conn = new StreamConnection<XDocument>(..., logger: loggerFactory.CreateLogg
 BenchmarkDotNet 实测（详见 [bench/README.md](bench/README.md)，可本地复现）：
 
 - **流式编码**：每帧堆分配减半（单缓冲 vs 双缓冲），小负载耗时快 25–35%，大负载持平；
-- **切帧吞吐**：`LengthPrefixFramer` ≈10 ns/帧，`StxEtxFramer` ≈1.1 µs/帧（逐字节扫描）——高吞吐场景优先长度前缀。
+- **切帧吞吐**：`LengthPrefixFramer` ≈10 ns/帧，`StxEtxFramer` ≈1.1 µs/帧（逐字节扫描）——高吞吐场景优先长度前缀；
+- **端到端**（真实 TCP 回环）：单向吞吐 ≈24 万条/秒（1KB 消息，LengthPrefix），往返延迟 ≈63 µs；XML codec 每条报文 2–16 µs（400B–4KB）——序列化开销远大于定界层。
 
 ## 支持框架
 
