@@ -38,12 +38,12 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="System.IO.Pipelines" Version="8.0.0" />
+    <PackageReference Include="System.IO.Pipelines" Version="10.0.11" />
     <!-- System.Threading.Channels 自 .NET Core 3.0 起内置共享框架，现代 .NET 无需引用；netstandard2.0 目标在兼容层另行引入 -->
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="System.Threading.Channels" Version="8.0.0" />
+    <PackageReference Include="System.Threading.Channels" Version="10.0.11" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.11" />
   </ItemGroup>
 
