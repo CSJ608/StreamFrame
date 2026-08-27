@@ -5,6 +5,9 @@
 
 ## [Unreleased]
 
+### 变更
+- CI Actions 升级到 Node 24 运行时：`actions/checkout@v7`、`actions/setup-dotnet@v6`、`softprops/action-gh-release@v3`（消除 Node 20 弃用告警）。
+
 ### 新增
 - 暂无
 
