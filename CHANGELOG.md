@@ -6,6 +6,7 @@
 ## [Unreleased]
 
 ### 新增
+- 仓库自动化与社区基建：Dependabot（NuGet + Actions 每周检查，minor/patch 合并提 PR）、CodeQL 安全扫描（push/PR + 每周）、issue 表单模板（Bug 报告/功能建议）、CONTRIBUTING.md、GitHub Discussions。
 - **重连指数退避（可选）**：`MaxRetryDelayMs`（默认 0 = 不启用，行为不变）——连续失败按基础间隔 ×2 倍增封顶、±20% 抖动、连接成功自动复位；重试日志携带尝试次数。对端长时间宕机时不再以固定间隔永久敲击。
 - 连接侧 socket 按目标地址族创建（IPv4 字面量用纯 IPv4 socket，监听侧保持双栈）。
 - **XML 文档随 NuGet 包发布**（`GenerateDocumentationFile`）：此前全量中文 XML 注释从未进包，用户在 IDE 中没有 IntelliSense；现以 `<inheritdoc />` 补齐全部接口实现成员的文档引用，并由 `TreatWarningsAsErrors` 强制今后不出现未文档化的公共 API。

@@ -1,0 +1,26 @@
+# 依赖自动更新（NuGet 包 + GitHub Actions）
+version: 2
+updates:
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      # 小版本合并为一个 PR，主版本单独评估
+      minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    labels:
+      - dependencies
+    commit-message:
+      prefix: "build"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - dependencies
+    commit-message:
+      prefix: "ci"
