@@ -193,8 +193,9 @@ The `netstandard2.0` asset is validated by the **full net48 test suite** (real T
 ```bash
 dotnet build StreamFrame.slnx
 dotnet test
-dotnet run --project samples/StreamFrame.Demo          # 3-scenario end-to-end demo
+dotnet run --project samples/StreamFrame.Demo          # 4-scenario end-to-end demo
 dotnet run -c Release --project bench/StreamFrame.Benchmarks   # benchmarks (~5-10 min)
+dotnet test -f net8.0 --collect:"XPlat Code Coverage"  # coverage (CI also collects & summarizes)
 ```
 
 ## Project layout
