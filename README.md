@@ -87,6 +87,7 @@ public interface ICodec<TMessage>
 
 - **客户端/服务端双模式**：`isActive: true` 主动连远端，`false` 被动监听
 - **自动重连**：`Connecting → Connected → Retry` 状态机；`GetMessages` 是跨重连的稳定消息流——断线重连后已收消息不丢、枚举不中断
+- **启动与停止**：`Start(ct)` 的 `ct` 只约束建立连接阶段（连接/监听重试到它取消为止）；连接建立后的收发与自动重连由连接自身管理，取消它不影响已建立的连接——要停止一切请 `DisposeAsync`
 - **健壮性**：帧内容解码失败、未完成帧超限、发送失败、接收空闲超时都会判定会话失效并自动重建（不再产生"连接看似存活、消息静默消失"的假活）
 - **活性探测（可选）**：TCP KeepAlive 与接收空闲超时，兜底半开连接（对端断电/拔线）
 - **事件**：`ConnectionChanged` 状态变化、`FrameError` 帧层诊断、`RawBytesReceived/Sent` 原始字节（HEX 调试）
