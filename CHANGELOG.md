@@ -10,11 +10,16 @@
 - CHANGELOG 底部版本对比链接补齐 `[1.2.0]` 并修正 `[Unreleased]` 指向（v1.2.0 发版时漏更新）。
 
 ### 变更
+- `Start` 重入防护：重复调用抛 `InvalidOperationException`（此前并发/重复 Start 会各自建立 socket 并互相覆盖，泄漏连接）；重建连接请用 `Reconnect()`。
 - 发布管线合并为单条流水线 `release.yml`：tag 触发"版本号校验 → 构建 → 测试 → GitHub Release → 推 nuget.org"，测试未通过不会发包（此前发布与推送是两条独立 workflow，测试失败时包仍会被推出）。`workflow_dispatch` 手动触发仅做构建+测试演练，不发布；需重发版本时在对应 tag 的运行记录上 Re-run（推送带 `--skip-duplicate`，幂等）。
 - tag 与两个 csproj 的 `<Version>` 一致性在流水线中显式校验，不一致直接失败（此前会静默发出错误版本号的包）。
 - 明确 `Start(ct)` 的取消令牌语义（仅约束建立连接阶段）：接口 XML 注释与 README 同步说明。
 
 ### 新增
+- `WaitForConnectedAsync`：等待连接进入 Connected（已连接立即完成；取消或 Dispose 以取消结束），替代轮询状态或 `Task.Delay` 盲等；demo 全部改用该 API。
+- 可选 `ILogger` 构造参数：连接重试、会话故障、用户回调异常等内部事件输出到日志（此前 `Debug.WriteLine` 在 Release 构建中完全不可见，生产排障只能靠猜）。
+- `ReceiveQueueCapacity` 选项：接收消息通道可设上限（默认 0 不限制）；消费慢时解码暂停读取、TCP 背压自然传导到对端，封堵慢消费者导致的内存无限增长。
+- 选项构造校验：非法取值（负延迟、0 队列容量等）在构造时抛清晰的 `ArgumentOutOfRangeException`（此前在运行中的重连/收发路径深处抛难定位的异常）。
 - LICENSE 文件（MIT 此前只在 README 与包元数据中声明，仓库内无正文）。
 - push / PR 持续集成 `ci.yml`（构建 + 测试），回归不再等到发版才暴露。
 

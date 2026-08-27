@@ -88,10 +88,11 @@ public interface ICodec<TMessage>
 - **客户端/服务端双模式**：`isActive: true` 主动连远端，`false` 被动监听
 - **自动重连**：`Connecting → Connected → Retry` 状态机；`GetMessages` 是跨重连的稳定消息流——断线重连后已收消息不丢、枚举不中断
 - **启动与停止**：`Start(ct)` 的 `ct` 只约束建立连接阶段（连接/监听重试到它取消为止）；连接建立后的收发与自动重连由连接自身管理，取消它不影响已建立的连接——要停止一切请 `DisposeAsync`
+- **等待连接就绪**：`await conn.WaitForConnectedAsync(ct)`——已连接立即完成，未连接时等到下次连接成功（或取消/Dispose），不用轮询状态、不用 `Task.Delay` 盲等
 - **健壮性**：帧内容解码失败、未完成帧超限、发送失败、接收空闲超时都会判定会话失效并自动重建（不再产生"连接看似存活、消息静默消失"的假活）
 - **活性探测（可选）**：TCP KeepAlive 与接收空闲超时，兜底半开连接（对端断电/拔线）
 - **事件**：`ConnectionChanged` 状态变化、`FrameError` 帧层诊断、`RawBytesReceived/Sent` 原始字节（HEX 调试）
-- **发送背压**：有界发送队列，队列满时 `SendAsync` 自动等待
+- **发送背压**：有界发送队列，队列满时 `SendAsync` 自动等待；接收侧默认无上限缓冲，可用 `ReceiveQueueCapacity` 设上限——消费慢时解码暂停、TCP 背压自然传导到对端，防内存无限增长
 
 ## 诊断与调试
 
@@ -126,6 +127,16 @@ socket 层全量输出（含被丢弃的噪声字节），发送侧按实际写�
 
 对端声明一个超长帧却永远不补齐（或 STX/ETX 流中只有 STX 没有闭合），会无限占用缓冲。`MaxIncompleteFrameBufferBytes`（默认 = 帧上限 + 4KB）给"等不齐的半帧"设了硬上限，超限即断线并通过 `FrameError` 上报。
 
+### 日志（可选）
+
+构造连接时传入 `ILogger`，内部事件（连接重试、会话故障、用户回调异常等）输出到日志，生产环境不再静默：
+
+```csharp
+var conn = new StreamConnection<XDocument>(..., logger: loggerFactory.CreateLogger("StreamFrame"));
+```
+
+不传则无日志输出（零依赖可用）。
+
 ### 活性探测建议
 
 生产环境建议开启 `TcpKeepAlive = true`；有周期性报文的协议可再加 `ReceiveIdleTimeoutMs`（如心跳周期的 3 倍），双保险兜底半开连接。
@@ -134,6 +145,7 @@ socket 层全量输出（含被丢弃的噪声字节），发送侧按实际写�
 
 - [System.IO.Pipelines](https://www.nuget.org/packages/System.IO.Pipelines)
 - [System.Threading.Channels](https://www.nuget.org/packages/System.Threading.Channels)
+- [Microsoft.Extensions.Logging.Abstractions](https://www.nuget.org/packages/Microsoft.Extensions.Logging.Abstractions)（仅日志抽象，不引入具体日志框架）
 
 ## 测试与示例
 

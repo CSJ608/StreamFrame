@@ -54,10 +54,9 @@ public interface IStreamConnection<TMessage> : IAsyncDisposable
     /// </summary>
     Action<ReadOnlyMemory<byte>>? RawBytesSent { get; set; }
 
-    /// <summary>
-    /// 启动连接（主动连接/被动监听），连接/监听失败时自动重试。
-    /// </summary>
+    /// <summary>启动连接（主动连接/被动监听），连接/监听失败时自动重试。</summary>
     /// <remarks>
+    /// 只能调用一次；重复调用抛 <see cref="InvalidOperationException"/>，重建连接请用 <see cref="Reconnect"/>。
     /// <paramref name="ct"/> 仅约束"建立连接"阶段：连接建立前取消它会停止连接/监听重试。
     /// 连接建立后的收发与断线自动重连由连接自身管理——取消该 token 不会断开已建立的
     /// 连接，也不会停止后续重连；要停止一切请调用 DisposeAsync。
@@ -66,6 +65,13 @@ public interface IStreamConnection<TMessage> : IAsyncDisposable
 
     /// <summary>立即进入重连流程。</summary>
     void Reconnect();
+
+    /// <summary>
+    /// 等待连接进入 <see cref="ConnectionState.Connected"/>：已连接时立即完成；否则等到
+    /// 下一次连接成功、<paramref name="ct"/> 取消或连接 Dispose（任务以取消结束）。
+    /// 替代轮询 <see cref="State"/> 或 Task.Delay 式等待。
+    /// </summary>
+    Task WaitForConnectedAsync(CancellationToken ct = default);
 
     /// <summary>发送一条业务消息。仅入队，由发送 worker 编码加帧后写出；队列满时背压等待。</summary>
     Task SendAsync(TMessage message, CancellationToken ct = default);
