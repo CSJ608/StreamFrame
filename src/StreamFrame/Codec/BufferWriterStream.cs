@@ -1,6 +1,6 @@
 using System.Buffers;
 
-namespace StreamFrame.Abstractions;
+namespace StreamFrame;
 
 /// <summary>
 /// 将 <see cref="IBufferWriter{T}"/> 暴露为 <see cref="Stream"/>，供 <see cref="System.Xml.XmlWriter"/>、

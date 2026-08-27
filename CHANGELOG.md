@@ -5,6 +5,15 @@
 
 ## [Unreleased]
 
+### 破坏性变更（将随 2.0.0 发布）
+- **命名统一，消灭两个"codec"的混淆**：帧定界侧改名——`IFrameCodec`→`IFramer`、`IStreamingFrameCodec`→`IStreamingFramer`、`LengthPrefixFrameCodec`→`LengthPrefixFramer`、`StxEtxFrameCodec`→`StxEtxFramer`；"codec"一词从此只指帧内编解码 `ICodec<TMessage>`。
+- **命名空间收敛**：删除 `StreamFrame.Abstractions`，所有公共类型统一进根命名空间 `StreamFrame`——用户只需一个 `using StreamFrame;`（此前具体实现类住在 "Abstractions" 命名空间里，名不副实）。
+- **`Start(ct)` 的 `ct` 升级为生命周期令牌**：取消它会停止连接/重连并拆线（`Disconnected` 终态、`GetMessages` 自然结束、之后需新建连接），与 `DisposeAsync` 共用同一条幂等停机路径。1.x 中取消已连接的连接毫无作用且未如实文档化。
+- **`ConnectionState` 新增 `Disconnected` 终态**：停机时广播；1.x 取消/停机后状态停留在 `Connecting`。
+- **`DeviceIpAddress`→`RemoteIpAddress`（`string?`）**：语义修正——主动模式为配置的远端地址，被动模式为已连接客户端地址（未连接为 `null`，不再返回魔法值 `"NA"`）；双栈下 IPv4 客户端地址归一显示为 IPv4。
+- **`IStreamConnection<TMessage>` 新增 `WaitForConnectedAsync`**（接口实现者需适配；此前 1.2.0 的 `FrameError` 已属破坏，一并归入 2.0）。
+- **socket 改为 IPv6 双栈**（同一 socket 同时支持 IPv4/IPv6；监听 `IPAddress.Any` 自动按双栈处理）。1.x 仅 IPv4。
+
 ### 修复
 - 主动模式连接失败重试不再泄漏 socket：`ConnectAsync` 失败/取消时立即释放本次尝试创建的 socket（此前每次失败重试泄漏一个，等终结器回收）。
 - CHANGELOG 底部版本对比链接补齐 `[1.2.0]` 并修正 `[Unreleased]` 指向（v1.2.0 发版时漏更新）。

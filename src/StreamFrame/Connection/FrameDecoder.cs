@@ -1,7 +1,6 @@
 using System.Buffers;
 using System.IO.Pipelines;
 using System.Threading.Channels;
-using StreamFrame.Abstractions;
 
 namespace StreamFrame;
 
@@ -23,7 +22,7 @@ internal sealed class FrameDecoder<TMessage>
     private const int OverflowSnapshotBytes = 8192;
 
     private readonly PipeReader _reader;
-    private readonly IFrameCodec _framing;
+    private readonly IFramer _framing;
     private readonly ICodec<TMessage> _codec;
     private readonly Channel<TMessage> _relay;
     private readonly int _maxIncompleteFrameBytes;
@@ -32,7 +31,7 @@ internal sealed class FrameDecoder<TMessage>
 
     public FrameDecoder(
         PipeReader reader,
-        IFrameCodec framing,
+        IFramer framing,
         ICodec<TMessage> codec,
         Channel<TMessage> relay,
         int maxIncompleteFrameBytes,

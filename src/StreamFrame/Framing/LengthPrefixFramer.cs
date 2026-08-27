@@ -1,21 +1,21 @@
 using System.Buffers;
 using System.Buffers.Binary;
 
-namespace StreamFrame.Abstractions;
+namespace StreamFrame;
 
 /// <summary>
 /// 4 字节大端长度前缀 + 负载 的帧定界。负载最大 16 MiB。
-/// 实现 <see cref="IStreamingFrameCodec"/>：支持单缓冲原地编码（BeginFrame 预留长度位，
-/// EndFrame 回填长度），与 <see cref="IFrameCodec.EncodeFrame"/> 字节输出完全一致。
+/// 实现 <see cref="IStreamingFramer"/>：支持单缓冲原地编码（BeginFrame 预留长度位，
+/// EndFrame 回填长度），与 <see cref="IFramer.EncodeFrame"/> 字节输出完全一致。
 /// </summary>
-public sealed class LengthPrefixFrameCodec : IStreamingFrameCodec, IFrameDiscardReporting
+public sealed class LengthPrefixFramer : IStreamingFramer, IFrameDiscardReporting
 {
     public const int LengthPrefixSize = 4;
     public const int DefaultMaxPayloadBytes = 16 * 1024 * 1024;
 
     public int MaxPayloadBytes { get; }
 
-    public LengthPrefixFrameCodec(int maxPayloadBytes = DefaultMaxPayloadBytes)
+    public LengthPrefixFramer(int maxPayloadBytes = DefaultMaxPayloadBytes)
     {
         if (maxPayloadBytes <= 0)
             throw new ArgumentOutOfRangeException(nameof(maxPayloadBytes));

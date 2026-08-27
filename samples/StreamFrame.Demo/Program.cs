@@ -3,7 +3,6 @@ using System.Net;
 using System.Text;
 using System.Xml.Linq;
 using StreamFrame;
-using StreamFrame.Abstractions;
 using StreamFrame.Protocols.Xml;
 
 // 本 demo 演示 StreamFrame 的三种帧/编解码组合：
@@ -34,7 +33,7 @@ static async Task RunXmlLengthPrefixScenarioAsync(CancellationToken ct)
     Console.WriteLine("=== 场景 1：XML 消息 + LengthPrefix 帧（4 字节大端长度头） ===");
 
     var server = new StreamConnection<XDocument>(
-        new LengthPrefixFrameCodec(),
+        new LengthPrefixFramer(),
         new XmlDocumentCodec(),
         IPAddress.Loopback,
         port,
@@ -42,7 +41,7 @@ static async Task RunXmlLengthPrefixScenarioAsync(CancellationToken ct)
         new StreamConnectionOptions { ConnectRetryDelayMs = 1000 });
 
     var client = new StreamConnection<XDocument>(
-        new LengthPrefixFrameCodec(),
+        new LengthPrefixFramer(),
         new XmlDocumentCodec(),
         IPAddress.Loopback,
         port,
@@ -107,7 +106,7 @@ static async Task RunStxEtxTextScenarioAsync(CancellationToken ct)
     Console.WriteLine("\n=== 场景 2：纯文本 + STX/ETX 包裹帧 ===");
 
     var server = new StreamConnection<string>(
-        new StxEtxFrameCodec(),
+        new StxEtxFramer(),
         new Utf8TextCodec(),
         IPAddress.Loopback,
         port,
@@ -115,7 +114,7 @@ static async Task RunStxEtxTextScenarioAsync(CancellationToken ct)
         new StreamConnectionOptions { ConnectRetryDelayMs = 1000 });
 
     var client = new StreamConnection<string>(
-        new StxEtxFrameCodec(),
+        new StxEtxFramer(),
         new Utf8TextCodec(),
         IPAddress.Loopback,
         port,
@@ -168,7 +167,7 @@ static async Task RunReconnectScenarioAsync(CancellationToken ct)
 
     // 主动端：连接一个不存在的端口 → 反复重连（ConnectRetryDelayMs=800ms）
     var client = new StreamConnection<string>(
-        new LengthPrefixFrameCodec(),
+        new LengthPrefixFramer(),
         new Utf8TextCodec(),
         IPAddress.Loopback,
         port,
@@ -211,12 +210,12 @@ static async Task RunReconnectScenarioAsync(CancellationToken ct)
 
     // 此刻启动服务端，主动端应在下一次重试时连上（最多等 4 秒）
     var server = new StreamConnection<string>(
-        new LengthPrefixFrameCodec(),
+        new LengthPrefixFramer(),
         new Utf8TextCodec(),
         IPAddress.Loopback,
         port,
         isActive: false,
-        new StreamConnectionOptions { ConnectRetryDelayMs = 500 });
+        new StreamConnectionOptions { ConnectRetryDelayMs = 500, AcceptRetryDelayMs = 500 });
     server.Start(ct);
 
     var serverGot = 0;
@@ -254,8 +253,8 @@ static async Task RunReconnectScenarioAsync(CancellationToken ct)
     try
     {
         await Task.WhenAll(
-            client.WaitForConnectedAsync(ct).WaitAsync(TimeSpan.FromSeconds(5), ct),
-            server.WaitForConnectedAsync(ct).WaitAsync(TimeSpan.FromSeconds(5), ct));
+            client.WaitForConnectedAsync(ct).WaitAsync(TimeSpan.FromSeconds(8), ct),
+            server.WaitForConnectedAsync(ct).WaitAsync(TimeSpan.FromSeconds(8), ct));
     }
     catch (TimeoutException)
     {

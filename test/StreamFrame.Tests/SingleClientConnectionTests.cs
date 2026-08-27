@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Channels;
 using StreamFrame;
-using StreamFrame.Abstractions;
 
 namespace StreamFrame.Tests;
 
@@ -23,7 +22,7 @@ public class SingleClientConnectionTests
 
     private static StreamConnection<string> CreateServer(int port, bool acceptFirstClientOnly = true)
         => new(
-            new LengthPrefixFrameCodec(),
+            new LengthPrefixFramer(),
             StringCodec.Instance,
             IPAddress.Loopback,
             port,

@@ -1,7 +1,6 @@
 using System.Buffers;
 using System.Buffers.Binary;
 using System.Text;
-using StreamFrame.Abstractions;
 
 namespace StreamFrame.Tests;
 
@@ -10,7 +9,7 @@ public class StreamingFrameEncodeTests
     /// <summary>
     /// 用流式 Begin/EndFrame 编码一段 payload，返回字节。
     /// </summary>
-    private static byte[] EncodeStreaming(IStreamingFrameCodec framing, byte[] payload)
+    private static byte[] EncodeStreaming(IStreamingFramer framing, byte[] payload)
     {
         using var writer = new TestWrittenBufferWriter();
         framing.BeginFrame(writer);
@@ -22,7 +21,7 @@ public class StreamingFrameEncodeTests
     /// <summary>
     /// 用纯函数 EncodeFrame 编码同一段 payload，返回字节。
     /// </summary>
-    private static byte[] EncodePlain(IFrameCodec framing, byte[] payload)
+    private static byte[] EncodePlain(IFramer framing, byte[] payload)
     {
         var buffer = new ArrayBufferWriter<byte>();
         framing.EncodeFrame(payload, buffer);
@@ -32,7 +31,7 @@ public class StreamingFrameEncodeTests
     [Fact]
     public void LengthPrefix_StreamingMatchesPlain()
     {
-        var framing = new LengthPrefixFrameCodec();
+        var framing = new LengthPrefixFramer();
         foreach (var payload in new[]
                  {
                      Array.Empty<byte>(),
@@ -47,7 +46,7 @@ public class StreamingFrameEncodeTests
     [Fact]
     public void StxEtx_StreamingMatchesPlain()
     {
-        var framing = new StxEtxFrameCodec();
+        var framing = new StxEtxFramer();
         foreach (var payload in new[]
                  {
                      Encoding.UTF8.GetBytes("A"),
@@ -62,7 +61,7 @@ public class StreamingFrameEncodeTests
     [Fact]
     public void LengthPrefix_StreamingEndFrame_BackfillsCorrectLength()
     {
-        var framing = new LengthPrefixFrameCodec();
+        var framing = new LengthPrefixFramer();
         var payload = Encoding.UTF8.GetBytes("test-payload");
 
         using var writer = new TestWrittenBufferWriter();
@@ -80,7 +79,7 @@ public class StreamingFrameEncodeTests
     [Fact]
     public void LengthPrefix_StreamingRejectsOverlongPayload()
     {
-        var framing = new LengthPrefixFrameCodec(maxPayloadBytes: 8);
+        var framing = new LengthPrefixFramer(maxPayloadBytes: 8);
         using var writer = new TestWrittenBufferWriter();
         framing.BeginFrame(writer);
         writer.Write(new byte[9]);
@@ -90,7 +89,7 @@ public class StreamingFrameEncodeTests
     [Fact]
     public void StxEtx_StreamingRejectsPayloadContainingStxOrEtx()
     {
-        var framing = new StxEtxFrameCodec();
+        var framing = new StxEtxFramer();
         using var writer = new TestWrittenBufferWriter();
         framing.BeginFrame(writer);
         writer.Write(new byte[] { 0x41, 0x02, 0x42 });

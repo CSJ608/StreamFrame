@@ -1,6 +1,6 @@
 using System.Buffers;
 
-namespace StreamFrame.Abstractions;
+namespace StreamFrame;
 
 /// <summary>
 /// 字节缓冲写入器：内容写满后可通过 <see cref="WrittenSpan"/> 读取或原地修改。

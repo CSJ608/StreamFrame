@@ -3,7 +3,6 @@ using System.IO.Pipelines;
 using System.Text;
 using System.Threading.Channels;
 using StreamFrame;
-using StreamFrame.Abstractions;
 
 namespace StreamFrame.Tests;
 
@@ -33,7 +32,7 @@ public class FrameDecoderTests
     }
 
     private static DecoderHarness CreateDecoder(
-        IFrameCodec framing,
+        IFramer framing,
         DecodeErrorPolicy policy = DecodeErrorPolicy.Disconnect,
         int? maxIncompleteFrameBytes = null,
         ICodec<string>? codec = null)
@@ -90,7 +89,7 @@ public class FrameDecoderTests
     [Fact]
     public async Task LengthPrefix_GluedFrames_AllDecoded()
     {
-        var framing = new LengthPrefixFrameCodec();
+        var framing = new LengthPrefixFramer();
         using var h = CreateDecoder(framing);
         StartDrain(h);
         var decodeTask = h.Decoder.RunAsync(CancellationToken.None);
@@ -117,7 +116,7 @@ public class FrameDecoderTests
     [Fact]
     public async Task LengthPrefix_ChunkedFrames_HandlesHalfAndGluedPackets()
     {
-        var framing = new LengthPrefixFrameCodec();
+        var framing = new LengthPrefixFramer();
         using var h = CreateDecoder(framing);
         StartDrain(h);
         var decodeTask = h.Decoder.RunAsync(CancellationToken.None);
@@ -143,7 +142,7 @@ public class FrameDecoderTests
     [Fact]
     public async Task StxEtx_Chunked_AllDecoded()
     {
-        var framing = new StxEtxFrameCodec();
+        var framing = new StxEtxFramer();
         using var h = CreateDecoder(framing);
         StartDrain(h);
         var decodeTask = h.Decoder.RunAsync(CancellationToken.None);
@@ -168,7 +167,7 @@ public class FrameDecoderTests
     public async Task Decoder_DoesNotCompleteRelay_OnStreamEnd()
     {
         // 通道归连接所有（跨会话复用），decoder 退出后 relay 必须仍可写、仍可读
-        var framing = new LengthPrefixFrameCodec();
+        var framing = new LengthPrefixFramer();
         using var h = CreateDecoder(framing);
         StartDrain(h);
         var decodeTask = h.Decoder.RunAsync(CancellationToken.None);
@@ -187,7 +186,7 @@ public class FrameDecoderTests
     [Fact]
     public async Task InvalidLengthHeader_ReportedAsDiscard()
     {
-        var framing = new LengthPrefixFrameCodec();
+        var framing = new LengthPrefixFramer();
         using var h = CreateDecoder(framing);
         StartDrain(h);
         var decodeTask = h.Decoder.RunAsync(CancellationToken.None);
@@ -207,7 +206,7 @@ public class FrameDecoderTests
     [Fact]
     public async Task StxEtx_NoiseAndAbortedPartial_ReportedAsDiscard()
     {
-        var framing = new StxEtxFrameCodec();
+        var framing = new StxEtxFramer();
         using var h = CreateDecoder(framing);
         StartDrain(h);
         var decodeTask = h.Decoder.RunAsync(CancellationToken.None);
@@ -232,7 +231,7 @@ public class FrameDecoderTests
     [Fact]
     public async Task IncompleteFrame_OverLimit_FaultsAndReports()
     {
-        var framing = new LengthPrefixFrameCodec();
+        var framing = new LengthPrefixFramer();
         using var h = CreateDecoder(framing, maxIncompleteFrameBytes: 16);
         var decodeTask = h.Decoder.RunAsync(CancellationToken.None);
 
@@ -251,7 +250,7 @@ public class FrameDecoderTests
     [Fact]
     public async Task DecodeError_DisconnectPolicy_FaultsDecoder()
     {
-        var framing = new LengthPrefixFrameCodec();
+        var framing = new LengthPrefixFramer();
         using var h = CreateDecoder(framing, policy: DecodeErrorPolicy.Disconnect, codec: new ThrowingDecodeCodec());
         var decodeTask = h.Decoder.RunAsync(CancellationToken.None);
 
@@ -272,7 +271,7 @@ public class FrameDecoderTests
     [Fact]
     public async Task DecodeError_SkipFramePolicy_ContinuesWithNextFrame()
     {
-        var framing = new LengthPrefixFrameCodec();
+        var framing = new LengthPrefixFramer();
         using var h = CreateDecoder(framing, policy: DecodeErrorPolicy.SkipFrame, codec: new ThrowingDecodeCodec());
         StartDrain(h);
         var decodeTask = h.Decoder.RunAsync(CancellationToken.None);

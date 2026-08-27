@@ -1,13 +1,13 @@
 using System.Buffers;
 
-namespace StreamFrame.Abstractions;
+namespace StreamFrame;
 
 /// <summary>
 /// 数据帧定界策略：负责把业务负载（payload）编成线上帧，以及从字节流中切出完整帧。
 ///
 /// 发送与接收共用同一实现，保证一条连接上帧格式永远一致。
 /// </summary>
-public interface IFrameCodec
+public interface IFramer
 {
     /// <summary>单帧负载允许的最大字节数，用于防御超长帧撑爆缓冲区。</summary>
     int MaxPayloadBytes { get; }

@@ -6,7 +6,6 @@ using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using StreamFrame.Abstractions;
 
 namespace StreamFrame;
 
@@ -40,10 +39,17 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
     public IPAddress IpAddress { get; }
     public int Port { get; }
 
-    public string DeviceIpAddress
+    /// <summary>对端 IP 地址：主动模式为配置的远端地址；被动模式为已连接客户端的地址（未连接时为 null）。
+    /// 双栈 socket 收到的 IPv4 客户端地址归一显示为 IPv4（::ffff:127.0.0.1 → 127.0.0.1）。</summary>
+    public string? RemoteIpAddress
         => IsActive
             ? IpAddress.ToString()
-            : (_socket?.RemoteEndPoint as IPEndPoint)?.Address.ToString() ?? "NA";
+            : FormatRemoteAddress((_socket?.RemoteEndPoint as IPEndPoint)?.Address);
+
+    private static string? FormatRemoteAddress(IPAddress? address)
+        => address is null
+            ? null
+            : (address.IsIPv4MappedToIPv6 ? address.MapToIPv4() : address).ToString();
 
     private const int DisposalNotStarted = 0;
     private const int DisposalComplete = 1;
@@ -52,7 +58,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
     private Socket? _socket;
     private Socket? _server;
 
-    private readonly IFrameCodec _framing;
+    private readonly IFramer _framing;
     private readonly ICodec<TMessage> _codec;
     private readonly StreamConnectionOptions _options;
 
@@ -68,10 +74,13 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
     private readonly Channel<TMessage> _messageRelay;
     private readonly SemaphoreSlim _sendLock = new(initialCount: 1);
     private readonly SemaphoreSlim _acceptLock = new(1, 1);
-    private readonly CancellationTokenSource _lifetimeCts = new();
     private readonly ILogger _logger;
     private int _retryInProgress;
     private int _started;
+
+    /// <summary>连接生命周期令牌源：Start 时与用户令牌链接；取消（用户取消或 Dispose）即拆线停机。</summary>
+    private CancellationTokenSource? _lifetimeCts;
+    private CancellationTokenRegistration _lifetimeRegistration;
 
     /// <summary>等待连接就绪的挂起等待者；进入 Connected 时完成并清空，Dispose 时取消。</summary>
     private TaskCompletionSource? _whenConnected;
@@ -87,7 +96,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
     /// <param name="options">可调参数（构造时校验，非法取值立即抛异常）。</param>
     /// <param name="logger">可选日志：连接重试、会话故障、用户回调异常等内部事件输出到日志。</param>
     public StreamConnection(
-        IFrameCodec framing,
+        IFramer framing,
         ICodec<TMessage> codec,
         IPAddress ipAddress,
         int port,
@@ -134,18 +143,28 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
     }
 
     public bool IsDisposed
-        => Interlocked.CompareExchange(ref _disposeStage, DisposalComplete, DisposalComplete) == DisposalComplete;
+        => Volatile.Read(ref _disposeStage) == DisposalComplete;
 
-    public void Start(CancellationToken ct)
+    private void ThrowIfDisposed()
     {
         if (IsDisposed)
             throw new ObjectDisposedException(nameof(StreamConnection<TMessage>));
+    }
+
+    public void Start(CancellationToken ct)
+    {
+        ThrowIfDisposed();
 
         // 只允许启动一次：并发/重复 Start 会各自建立 socket 并互相覆盖（泄漏连接）
         if (Interlocked.Exchange(ref _started, 1) != 0)
             throw new InvalidOperationException("连接已启动；如需重建连接请调用 Reconnect()。");
 
-        StartCore(ct);
+        // ct 是连接的生命周期令牌：取消它会停止连接/重连并拆线（进入 Disconnected 终态）
+        _lifetimeCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        _lifetimeRegistration = _lifetimeCts.Token.Register(
+            static self => ((StreamConnection<TMessage>)self!).Shutdown(), this);
+
+        StartCore(_lifetimeCts.Token);
     }
 
     /// <summary>内部启动入口（重连流程复用），不做一次性启动校验。</summary>
@@ -181,9 +200,21 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
         }
     }
 
+    /// <summary>IPv6 双栈 socket：同一 socket 同时支持 IPv4 与 IPv6 的连接/监听。</summary>
+    private static Socket CreateTcpSocket()
+    {
+        var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+        socket.DualMode = true;
+        return socket;
+    }
+
+    /// <summary>双栈监听地址归一：0.0.0.0 绑定到 IPv6 的 ::（v4 流量经映射地址到达）。</summary>
+    private static IPAddress NormalizeListenAddress(IPAddress address)
+        => address.Equals(IPAddress.Any) ? IPAddress.IPv6Any : address;
+
     private async Task<Socket> ConnectAsync(CancellationToken ct)
     {
-        var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        var socket = CreateTcpSocket();
         try
         {
             await socket.ConnectAsync(IpAddress, Port, ct).ConfigureAwait(false);
@@ -246,11 +277,9 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
             _server = null;
         }
 
-        _server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
-        {
-            Blocking = false,
-        };
-        _server.Bind(new IPEndPoint(IpAddress, Port));
+        _server = CreateTcpSocket();
+        _server.Blocking = false;
+        _server.Bind(new IPEndPoint(NormalizeListenAddress(IpAddress), Port));
         _server.Listen(0);
     }
 
@@ -270,7 +299,10 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
 
     /// <summary>立即进入重连流程。</summary>
     public void Reconnect()
-        => CommunicationStateChanging(ConnectionState.Retry);
+    {
+        ThrowIfDisposed();
+        CommunicationStateChanging(ConnectionState.Retry);
+    }
 
     /// <summary>
     /// 会话任务内部的故障重连入口。<paramref name="observedEpoch"/> 是故障发生时所属会话的
@@ -347,7 +379,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
                         StopSessionCore();
                     }
 
-                    StartCore(_lifetimeCts.Token);
+                    StartCore(_lifetimeCts!.Token);
                 }
                 finally
                 {
@@ -534,7 +566,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
     private async Task SendFramedAsync(TMessage message, CancellationToken ct)
     {
         // 流式编码：单缓冲、零 memcpy（BeginFrame 占位 → codec 直接写 → EndFrame 回填/收尾）
-        if (_options.UseStreamingEncode && _framing is IStreamingFrameCodec streaming)
+        if (_options.UseStreamingEncode && _framing is IStreamingFramer streaming)
         {
             using var frame = new PooledBufferWriter(_options.EncodeBufferInitialSize);
             streaming.BeginFrame(frame);
@@ -645,25 +677,43 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
     public IAsyncEnumerable<TMessage> GetMessages(CancellationToken ct = default)
         => _messageRelay.Reader.ReadAllAsync(ct);
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
+    {
+        Shutdown();
+        return ValueTask.CompletedTask;
+    }
+
+    /// <summary>
+    /// 终态拆线（幂等）：DisposeAsync 与"Start 的取消令牌被取消"共用同一停机路径。
+    /// 先广播 <see cref="ConnectionState.Disconnected"/>，再停止重连循环、拆除会话、
+    /// 完成收发通道（GetMessages 自然结束、后续 SendAsync 抛 ChannelClosedException）。
+    /// </summary>
+    private void Shutdown()
     {
         if (Interlocked.Exchange(ref _disposeStage, DisposalComplete) != DisposalNotStarted)
             return;
 
+        try
+        {
+            // 广播终态（用户处理器抛异常由 CommunicationStateChanging 隔离，不影响拆线）
+            CommunicationStateChanging(ConnectionState.Disconnected);
+        }
+        finally
+        {
+            ConnectionChanged = null;
+            FrameError = null;
+        }
+
         // 连接终止：所有连接就绪等待以取消收尾
         Interlocked.Exchange(ref _whenConnected, null)?.TrySetCanceled();
 
-        ConnectionChanged = null;
-        FrameError = null;
-
-        _lifetimeCts.Cancel();
-        _lifetimeCts.Dispose();
-
+        _lifetimeRegistration.Dispose();
+        _lifetimeCts?.Cancel(); // 停止连接/监听重试循环
         _sendQueue.Writer.TryComplete();
 
         StopSession();
 
-        // 消息通道归连接所有：Dispose 是它唯一的完成点（正常完成，枚举端自然结束）
+        // 消息通道归连接所有：停机是它唯一的完成点（正常完成，枚举端自然结束）
         _messageRelay.Writer.TryComplete();
 
         if (_socket is { } socket)
@@ -675,7 +725,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
             }
             catch (Exception ex)
             {
-                _logger.LogDebug(ex, "Socket shutdown on dispose failed.");
+                _logger.LogDebug(ex, "Socket shutdown on disconnect failed.");
             }
             socket.Dispose();
             _socket = null;
@@ -686,62 +736,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
 
         _sendLock.Dispose();
         _acceptLock.Dispose();
-    }
-}
-
-/// <summary>
-/// 按初始大小租用 ArrayPool 缓冲、可动态扩容的 IWrittenBufferWriter，用于编码中间字节。
-/// GetSpan 保证返回至少 sizeHint 长的段（不足时先扩容），写入的数据可立即通过 WrittenSpan 读取。
-/// </summary>
-internal sealed class PooledBufferWriter : IWrittenBufferWriter, IDisposable
-{
-    private byte[] _buffer;
-    private int _written;
-
-    public PooledBufferWriter(int capacity)
-        => _buffer = ArrayPool<byte>.Shared.Rent(Math.Max(capacity, 1));
-
-    public ReadOnlyMemory<byte> WrittenMemory => _buffer.AsMemory(0, _written);
-    public Span<byte> WrittenSpan => _buffer.AsSpan(0, _written);
-    public int WrittenCount => _written;
-
-    public void Advance(int count)
-    {
-        if (count < 0 || _written + count > _buffer.Length)
-            throw new ArgumentOutOfRangeException(nameof(count));
-        _written += count;
-    }
-
-    public Memory<byte> GetMemory(int sizeHint = 0)
-    {
-        EnsureCapacity(sizeHint);
-        return _buffer.AsMemory(_written);
-    }
-
-    public Span<byte> GetSpan(int sizeHint = 0)
-    {
-        EnsureCapacity(sizeHint);
-        return _buffer.AsSpan(_written);
-    }
-
-    private void EnsureCapacity(int sizeHint)
-    {
-        // 剩余空间必须至少容纳 max(sizeHint, 1) 字节——GetSpan 不允许返回空 span
-        // （BuffersExtensions.Write 内部以 GetSpan(0) 多段循环拷贝，依赖非空返回值）。
-        var required = _written + Math.Max(sizeHint, 1);
-        if (required <= _buffer.Length)
-            return;
-
-        var newSize = Math.Max(required, _buffer.Length * 2);
-        var newBuffer = ArrayPool<byte>.Shared.Rent(newSize);
-        Array.Copy(_buffer, newBuffer, _written);
-        ArrayPool<byte>.Shared.Return(_buffer);
-        _buffer = newBuffer;
-    }
-
-    public void Dispose()
-    {
-        ArrayPool<byte>.Shared.Return(_buffer);
-        _buffer = Array.Empty<byte>();
+        _lifetimeCts?.Dispose();
+        _lifetimeCts = null;
     }
 }

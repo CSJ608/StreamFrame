@@ -13,4 +13,7 @@ public enum ConnectionState
 
     /// <summary>连接中断，进入重连流程。</summary>
     Retry,
+
+    /// <summary>连接已终止且不再重连：Dispose，或 Start 的取消令牌被取消。终态。</summary>
+    Disconnected,
 }

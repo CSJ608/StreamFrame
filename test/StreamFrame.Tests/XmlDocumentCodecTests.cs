@@ -1,7 +1,6 @@
 using System.Buffers;
 using System.Text;
 using System.Xml.Linq;
-using StreamFrame.Abstractions;
 using StreamFrame.Protocols.Xml;
 
 namespace StreamFrame.Tests;
