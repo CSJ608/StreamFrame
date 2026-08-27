@@ -1,0 +1,16 @@
+name: 功能建议
+description: 新 framer / codec / 连接能力 / 文档等
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 你想解决什么问题？
+      description: 先描述场景与痛点，而不是想要的 API——也许有更贴合现有设计的做法
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 你的设想（可选）
+      description: 期望的 API 或行为；涉及协议的话请给出报文格式示例

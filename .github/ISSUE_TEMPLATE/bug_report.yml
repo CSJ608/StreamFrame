@@ -1,0 +1,34 @@
+name: 报告 Bug
+description: 某个行为不符合预期
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 发生了什么？
+      description: 期望行为与实际行为的对比，最好附最小复现代码/报文
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: StreamFrame 版本
+      placeholder: 如 2.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: tfm
+    attributes:
+      label: 运行环境
+      options:
+        - .NET 10
+        - .NET 8
+        - .NET Framework 4.6.2+ / Mono / Unity（netstandard2.0 资产）
+        - 其它
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志 / FrameError / 状态轨迹（可选）
+      description: 传入 ILogger 的日志、FrameError 事件输出、ConnectionChanged 状态序列都有助于定位
