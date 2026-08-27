@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/bench/">
+    <Project Path="bench/StreamFrame.Benchmarks/StreamFrame.Benchmarks.csproj" />
+  </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/StreamFrame.Demo/StreamFrame.Demo.csproj" />
   </Folder>

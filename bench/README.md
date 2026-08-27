@@ -5,15 +5,18 @@
 ## 运行
 
 ```bash
-dotnet run -c Release --project bench/StreamFrame.Benchmarks
+dotnet run -c Release --project bench/StreamFrame.Benchmarks                       # 全部（约 15 分钟）
+dotnet run -c Release --project bench/StreamFrame.Benchmarks -- --filter "*EndToEnd*"   # 只跑端到端
 ```
 
-（约 5–10 分钟；`--filter` 可只跑部分用例。）
+> 该版本的 BenchmarkDotNet 不支持重复 `--filter`（一次只能一个模式），多个类请分次运行。
+> 基准项目已纳入解决方案（IDE 可见）；`dotnet test` 依 `IsTestProject` 机制自动跳过。
 
 ## 测什么
 
-- **编码两路径对比**：`Streaming`（`BeginFrame → 写负载 → EndFrame`，单缓冲，发送侧默认路径）vs `Plain`（负载先进缓冲 A，`EncodeFrame` 再整体拷贝进帧缓冲 B，两段缓冲含一次 memcpy）。负载为 64B / 1KB / 64KB 的 XML 风格文本。
-- **切帧吞吐**：从 100 × 1KB 粘包缓冲中循环 `TryDecodeFrame`。
+- **帧定界微基准**（`FramingBenchmarks`）：`Streaming`（`BeginFrame → 写负载 → EndFrame`，单缓冲，发送侧默认路径）vs `Plain`（负载先进缓冲 A，`EncodeFrame` 再整体拷贝进帧缓冲 B）× 64B/1KB/64KB；以及切帧吞吐（100 × 1KB 粘包）。
+- **Codec 基准**（`CodecBenchmarks`）：官方 XML 驱动 `XmlDocumentCodec` 对典型设备报文（~400B 单值上报 / ~4KB 批量明细）的编解码开销。
+- **端到端基准**（`EndToEndBenchmarks`）：真实 TCP 回环上的完整连接（收发队列 + Pipe + 定界 + codec + socket）——单向吞吐（连发 1 万条 1KB 消息，双 framer）与往返延迟（逐条乒乓 2000 次）。
 
 ## 结果
 
@@ -37,7 +40,24 @@ dotnet run -c Release --project bench/StreamFrame.Benchmarks
 ¹ 恰好压在 `EncodeBufferInitialSize`（默认 1024）的缓冲增长边界上：流式路径触发一次扩容租借，
 抵消了省下的那次拷贝。负载远大于初始缓冲后两条路径的拷贝量趋同（几何扩容摊销）。
 
-测试环境：Windows（本地开发机），.NET 8，BenchmarkDotNet 0.15.8，SimpleJob(warmup 3 / iteration 15)。
+### Codec（XmlDocumentCodec）
+
+| 操作 | 报文 | 耗时 | 分配 |
+|---|---|---:|---:|
+| Decode | ~400B | 3.0 µs | 16.7 KB |
+| Decode | ~4KB | 15.6 µs | 29.0 KB |
+| Encode | ~400B | 1.9 µs | 7.8 KB |
+| Encode | ~4KB | 10.9 µs | 10.4 KB |
+
+### 端到端（真实 TCP 回环，1KB 文本消息）
+
+| 指标 | LengthPrefix | StxEtx |
+|---|---:|---:|
+| 单向吞吐（每消息折算） | 4.06 µs ≈ **24.6 万条/秒** | 4.65 µs ≈ 21.5 万条/秒 |
+| 往返延迟（乒乓串行） | 62.8 µs | 71.1 µs |
+| 每消息堆分配（吞吐模式） | 6.5 KB | 6.9 KB |
+
+测试环境：Windows（本地开发机），.NET 8，BenchmarkDotNet 0.15.8，SimpleJob(warmup 3 / iteration 15；e2e 为 2/10)。
 数值仅供量级参考，请以自己环境的复现为准。
 
 ## 读数要点

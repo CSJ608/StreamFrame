@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\StreamFrame\StreamFrame.csproj" />
+    <ProjectReference Include="..\..\src\StreamFrame.Protocols.Xml\StreamFrame.Protocols.Xml.csproj" />
   </ItemGroup>
 
 </Project>
