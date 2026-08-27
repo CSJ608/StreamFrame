@@ -10,11 +10,16 @@ namespace StreamFrame;
 /// </summary>
 public sealed class LengthPrefixFramer : IStreamingFramer, IFrameDiscardReporting
 {
+    /// <summary>长度头字节数（4，大端）。</summary>
     public const int LengthPrefixSize = 4;
+    /// <summary>默认负载上限（16 MiB）。</summary>
     public const int DefaultMaxPayloadBytes = 16 * 1024 * 1024;
 
+    /// <inheritdoc />
     public int MaxPayloadBytes { get; }
 
+    /// <summary>创建长度前缀定界器。</summary>
+    /// <param name="maxPayloadBytes">单帧负载上限，默认 16 MiB。</param>
     public LengthPrefixFramer(int maxPayloadBytes = DefaultMaxPayloadBytes)
     {
         if (maxPayloadBytes <= 0)
@@ -23,6 +28,7 @@ public sealed class LengthPrefixFramer : IStreamingFramer, IFrameDiscardReportin
         MaxPayloadBytes = maxPayloadBytes;
     }
 
+    /// <inheritdoc />
     public void EncodeFrame(ReadOnlySpan<byte> payload, IBufferWriter<byte> writer)
     {
         if (payload.Length > MaxPayloadBytes)
@@ -34,6 +40,7 @@ public sealed class LengthPrefixFramer : IStreamingFramer, IFrameDiscardReportin
         writer.Write(payload);
     }
 
+    /// <inheritdoc />
     public void BeginFrame(IWrittenBufferWriter writer)
     {
         var header = writer.GetSpan(LengthPrefixSize);
@@ -41,6 +48,7 @@ public sealed class LengthPrefixFramer : IStreamingFramer, IFrameDiscardReportin
         writer.Advance(LengthPrefixSize);
     }
 
+    /// <inheritdoc />
     public void EndFrame(IWrittenBufferWriter writer)
     {
         var payloadLength = writer.WrittenCount - LengthPrefixSize;
@@ -51,9 +59,11 @@ public sealed class LengthPrefixFramer : IStreamingFramer, IFrameDiscardReportin
         BinaryPrimitives.WriteInt32BigEndian(header, payloadLength);
     }
 
+    /// <inheritdoc />
     public bool TryDecodeFrame(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> payload)
         => TryDecodeFrame(ref buffer, out payload, out _);
 
+    /// <inheritdoc />
     public bool TryDecodeFrame(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> payload, out ReadOnlySequence<byte> discarded)
     {
         payload = default;

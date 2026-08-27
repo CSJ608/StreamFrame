@@ -3,7 +3,7 @@ using System.Buffers;
 namespace StreamFrame.Protocols.Xml;
 
 /// <summary>
-/// 将 <see cref="ReadOnlySequence{T}"/> 暴露为只读 <see cref="Stream"/>，供 <see cref="XmlReader"/> 读取。
+/// 将 <see cref="ReadOnlySequence{T}"/> 暴露为只读 <see cref="Stream"/>，供 <see cref="System.Xml.XmlReader"/> 读取。
 /// </summary>
 internal sealed class SequenceToStream : Stream
 {

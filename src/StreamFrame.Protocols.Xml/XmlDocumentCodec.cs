@@ -15,6 +15,7 @@ public sealed class XmlDocumentCodec : ICodec<XDocument>
     /// <summary>帧内负载的上限，防御异常输入。</summary>
     public int MaxDocumentBytes { get; init; } = 16 * 1024 * 1024;
 
+    /// <inheritdoc />
     public XDocument Decode(in ReadOnlySequence<byte> frame, CancellationToken ct = default)
     {
         if (frame.Length > MaxDocumentBytes)
@@ -31,6 +32,7 @@ public sealed class XmlDocumentCodec : ICodec<XDocument>
         return XDocument.Load(reader, LoadOptions.None);
     }
 
+    /// <inheritdoc />
     public void Encode(XDocument message, IBufferWriter<byte> writer, CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();

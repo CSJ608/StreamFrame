@@ -6,9 +6,9 @@ namespace StreamFrame;
 /// 帧定界器的可选能力：精确上报被当作噪声/垃圾丢弃的字节。
 ///
 /// 与 <see cref="IFramer.TryDecodeFrame"/> 语义完全一致，仅额外通过
-/// <paramref name="discarded"/> 返回本次调用中被定界器跳过的字节（如非法长度头重同步
+/// TryDecodeFrame 的 <c>discarded</c> 参数返回本次调用中被定界器跳过的字节（如非法长度头重同步
 /// 丢弃的头字节、STX/ETX 流中的杂散字节、被新 STX 中止的旧半帧内容）。
-/// 正常切帧时 <paramref name="discarded"/> 为空。
+/// 正常切帧时 <c>discarded</c> 为空。
 ///
 /// 连接层检测到本接口后，会把这些字节通过 FrameError 事件（Kind=DiscardedByResync）
 /// 交给上层调试；不实现本接口的第三方 codec 不受影响，只是没有丢弃上报。

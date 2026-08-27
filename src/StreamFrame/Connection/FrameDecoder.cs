@@ -8,7 +8,7 @@ namespace StreamFrame;
 /// 解码循环：从 PipeReader 消费字节流，按帧定界切帧、codec 解码，产出业务消息到通道。
 /// 半包靠 AdvanceTo 保留未消费字节；粘包靠循环切尽所有完整帧。
 ///
-/// 生命周期约定一：本类型不负责 <paramref name="relay"/> 的完成——通道归连接所有，
+/// 生命周期约定一：本类型不负责消息通道（relay）的完成——通道归连接所有，
 /// 跨会话复用，仅在连接 Dispose 时完成。会话级失败（解码失败、不完整帧超限）以
 /// <see cref="SessionFaultException"/> 上抛，由连接层决定断线重连。
 ///

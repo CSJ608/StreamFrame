@@ -9,6 +9,10 @@ namespace StreamFrame;
 /// </summary>
 public sealed class FrameErrorEventArgs : EventArgs
 {
+    /// <summary>创建帧诊断事件参数。</summary>
+    /// <param name="kind">事件类别。</param>
+    /// <param name="bytes">已拷贝的事件字节（可安全留存）。</param>
+    /// <param name="exception">DecodeFailed 时的原始异常；其它类别为 null。</param>
     public FrameErrorEventArgs(FrameErrorKind kind, ReadOnlyMemory<byte> bytes, Exception? exception = null)
     {
         Kind = kind;

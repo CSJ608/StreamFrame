@@ -22,10 +22,14 @@ public sealed class StxEtxFramer : IStreamingFramer, IFrameDiscardReporting
     private const byte STX = 0x02;
     private const byte ETX = 0x03;
 
+    /// <summary>默认负载上限（16 MiB）。</summary>
     public const int DefaultMaxPayloadBytes = 16 * 1024 * 1024;
 
+    /// <inheritdoc />
     public int MaxPayloadBytes { get; }
 
+    /// <summary>创建 STX/ETX 定界器。</summary>
+    /// <param name="maxPayloadBytes">单帧负载上限，默认 16 MiB。</param>
     public StxEtxFramer(int maxPayloadBytes = DefaultMaxPayloadBytes)
     {
         if (maxPayloadBytes <= 0)
@@ -34,6 +38,7 @@ public sealed class StxEtxFramer : IStreamingFramer, IFrameDiscardReporting
         MaxPayloadBytes = maxPayloadBytes;
     }
 
+    /// <inheritdoc />
     public void EncodeFrame(ReadOnlySpan<byte> payload, IBufferWriter<byte> writer)
     {
         if (payload.Length > MaxPayloadBytes)
@@ -51,6 +56,7 @@ public sealed class StxEtxFramer : IStreamingFramer, IFrameDiscardReporting
         writer.Advance(payload.Length + 2);
     }
 
+    /// <inheritdoc />
     public void BeginFrame(IWrittenBufferWriter writer)
     {
         var destination = writer.GetSpan(1);
@@ -58,6 +64,7 @@ public sealed class StxEtxFramer : IStreamingFramer, IFrameDiscardReporting
         writer.Advance(1);
     }
 
+    /// <inheritdoc />
     public void EndFrame(IWrittenBufferWriter writer)
     {
         var payloadLength = writer.WrittenCount - 1; // 减掉 BeginFrame 写入的 STX
@@ -77,9 +84,11 @@ public sealed class StxEtxFramer : IStreamingFramer, IFrameDiscardReporting
         writer.Advance(1);
     }
 
+    /// <inheritdoc />
     public bool TryDecodeFrame(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> payload)
         => TryDecodeFrame(ref buffer, out payload, out _);
 
+    /// <inheritdoc />
     public bool TryDecodeFrame(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> payload, out ReadOnlySequence<byte> discarded)
     {
         payload = default;
