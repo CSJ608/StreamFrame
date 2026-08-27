@@ -8,10 +8,13 @@ StreamFrame 的发布流程：打 `v*` 标签 → GitHub Actions **单条流水�
 登录 nuget.org → Account → API Keys → **Trusted Publishers** 标签 → Register Publisher：
 - **GitHub Account**: `CSJ608`
 - **GitHub Repository**: `StreamFrame`
+- **Workflow**: `release.yml`
 - **Environment**: 留空
 - **Subject Identifier**: `repo:CSJ608/StreamFrame:ref:refs/tags/v*`
 
-> 该 subject 仅信任以 `v` 开头的 tag 推送，防止任意分支推送覆盖包。若为个人账号，nuget.org 会要求验证仓库所有权。subject 只绑定仓库与 tag ref，与 workflow 文件名无关——调整流水线结构不影响本配置。
+> 该 subject 仅信任以 `v` 开头的 tag 推送，防止任意分支推送覆盖包。若为个人账号，nuget.org 会要求验证仓库所有权。
+>
+> **注意：策略绑定 workflow 文件名。** OIDC 令牌携带 workflow 路径，改名/合并 workflow 后必须同步编辑 nuget.org 上的 Trusted Publisher 策略（v2.0.0 发布时曾因策略仍指向旧的 `publish-nuget.yml` 而在 `NuGet Login` 步骤 401）。流水线其余步骤不受影响，修正策略后 Re-run 失败的运行即可完成推送（`--skip-duplicate` 幂等）。
 
 ### 2. GitHub 仓库变量 `NUGET_USER`（浏览器，一次）
 仓库 → Settings → Secrets and variables → Actions → **Variables** → New repository variable：
