@@ -1,14 +1,19 @@
-# 打标签 v* 时：构建 + 测试 + 打包，创建 GitHub Release 并附 nupkg/snupkg。
-# Release 正文优先从 CHANGELOG.md 提取当前版本段落；找不到时回退到 GitHub 自动生成。
+# 打标签 v* 时的一条完整发布流水线：
+#   版本号校验 → 构建 → 测试 → GitHub Release → 推 nuget.org
+# 推 NuGet 是最后一步且不可撤回，此前任何一步（尤其测试）失败都不会发包。
+# workflow_dispatch 手动触发仅做构建+测试演练，不创建 Release、不发包；
+# 需要重发某个版本时，在对应 tag 的运行记录上 Re-run 即可（推送带 --skip-duplicate，幂等）。
 name: release
 
 on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: write    # 创建 GitHub Release
+  id-token: write    # OIDC Trusted Publishing 换取 nuget.org 短时 API key
 
 jobs:
   release:
@@ -23,6 +28,18 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
+      - name: Verify tag matches csproj versions
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          for proj in src/StreamFrame/StreamFrame.csproj src/StreamFrame.Protocols.Xml/StreamFrame.Protocols.Xml.csproj; do
+            csproj_version=$(grep -oPm1 '(?<=<Version>)[^<]+' "$proj")
+            if [ "$csproj_version" != "$version" ]; then
+              echo "::error::$proj 的 <Version>=$csproj_version 与 tag v$version 不一致，请先同步版本号再打 tag。"
+              exit 1
+            fi
+          done
+
       - name: Build
         run: dotnet build StreamFrame.slnx -c Release
 
@@ -34,14 +51,13 @@ jobs:
           dotnet pack src/StreamFrame/StreamFrame.csproj -c Release --no-build -o artifacts
           dotnet pack src/StreamFrame.Protocols.Xml/StreamFrame.Protocols.Xml.csproj -c Release --no-build -o artifacts
 
-      - name: Extract tag version
-        id: tag
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+      # ---------- 以下步骤仅在 tag 推送时执行 ----------
 
       - name: Extract changelog section for this version
+        if: startsWith(github.ref, 'refs/tags/')
         id: notes
         run: |
-          version="${{ steps.tag.outputs.version }}"
+          version="${GITHUB_REF_NAME#v}"
           # 用 index() 固定字符串匹配版本头，避开正则转义；遇到下一个 "## [" 停止。
           awk -v header="## [$version]" '
             found == 0 && index($0, header) == 1 { found = 1; next }
@@ -55,7 +71,7 @@ jobs:
           fi
 
       - name: Create Release (from CHANGELOG)
-        if: steps.notes.outputs.has_notes == 'true'
+        if: startsWith(github.ref, 'refs/tags/') && steps.notes.outputs.has_notes == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
@@ -66,7 +82,7 @@ jobs:
             artifacts/*.snupkg
 
       - name: Create Release (auto-generated notes)
-        if: steps.notes.outputs.has_notes != 'true'
+        if: startsWith(github.ref, 'refs/tags/') && steps.notes.outputs.has_notes != 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
@@ -75,3 +91,28 @@ jobs:
           files: |
             artifacts/*.nupkg
             artifacts/*.snupkg
+
+      - name: Check NUGET_USER variable
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          if [ -z "${NUGET_USER}" ]; then
+            echo "::error::NUGET_USER 为空。Settings → Secrets and variables → Actions → Variables 添加 NUGET_USER（nuget.org 用户名，注意是 Variables 不是 Secrets）。"
+            exit 1
+          fi
+        env:
+          NUGET_USER: ${{ vars.NUGET_USER }}
+
+      - name: NuGet Login (OIDC)
+        if: startsWith(github.ref, 'refs/tags/')
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ vars.NUGET_USER }}
+
+      - name: Push to nuget.org
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          dotnet nuget push "artifacts/*.nupkg" \
+            --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
+            --source https://www.nuget.org/api/v2/package \
+            --skip-duplicate
