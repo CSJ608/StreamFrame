@@ -12,6 +12,13 @@ public sealed class StreamConnectionOptions
     /// <summary>被动模式下 accept 失败的等待重试间隔（毫秒）。</summary>
     public int AcceptRetryDelayMs { get; set; } = 2000;
 
+    /// <summary>
+    /// 连接/监听重试等待的封顶（毫秒）。默认 0 = 不启用退避（固定间隔，与历史行为一致）。
+    /// 设为大于基础间隔的值后：连续失败按基础间隔指数倍增（×2）封顶至此值并叠加 ±20% 抖动，
+    /// 连接成功后自动复位——对端长时间宕机时避免以固定间隔永久敲击。
+    /// </summary>
+    public int MaxRetryDelayMs { get; set; }
+
     /// <summary>Socket 接收缓冲区大小（字节）。</summary>
     public int SocketReceiveBufferSize { get; set; } = 65536;
 
@@ -87,6 +94,8 @@ public sealed class StreamConnectionOptions
             throw new ArgumentOutOfRangeException(nameof(ConnectRetryDelayMs), ConnectRetryDelayMs, "不能为负数。");
         if (AcceptRetryDelayMs < 0)
             throw new ArgumentOutOfRangeException(nameof(AcceptRetryDelayMs), AcceptRetryDelayMs, "不能为负数。");
+        if (MaxRetryDelayMs < 0)
+            throw new ArgumentOutOfRangeException(nameof(MaxRetryDelayMs), MaxRetryDelayMs, "不能为负数（0 = 不启用退避）。");
         if (SocketReceiveBufferSize <= 0)
             throw new ArgumentOutOfRangeException(nameof(SocketReceiveBufferSize), SocketReceiveBufferSize, "必须为正数。");
         if (SendQueueCapacity <= 0)

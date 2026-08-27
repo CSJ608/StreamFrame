@@ -87,6 +87,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
     private readonly SemaphoreSlim _acceptLock = new(1, 1);
     private readonly ILogger _logger;
     private int _retryInProgress;
+    private readonly RetryDelayScheduler _retryScheduler;
     private int _started;
 
     /// <summary>连接生命周期令牌源：Start 时与用户令牌链接；取消（用户取消或 Dispose）即拆线停机。</summary>
@@ -151,6 +152,10 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
                 AllowSynchronousContinuations = false,
             });
         }
+
+        _retryScheduler = new RetryDelayScheduler(
+            isActive ? _options.ConnectRetryDelayMs : _options.AcceptRetryDelayMs,
+            _options.MaxRetryDelayMs);
     }
 
     /// <summary>连接是否已停机（Dispose 或 Start 令牌取消）。停机后不可再用，需新建连接。</summary>
@@ -195,14 +200,15 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
                 try
                 {
                     _socket = IsActive ? await ConnectAsync(ct).ConfigureAwait(false) : await AcceptAsync(ct).ConfigureAwait(false);
+                    _retryScheduler.Reset();
                     CommunicationStateChanging(ConnectionState.Connected);
                     connected = true;
                 }
                 catch (Exception ex) when (!ct.IsCancellationRequested && !IsDisposed)
                 {
-                    var delay = IsActive ? _options.ConnectRetryDelayMs : _options.AcceptRetryDelayMs;
-                    _logger.LogInformation("Connect to {Remote} failed: {Message}; retry in {Delay}ms (active={IsActive})",
-                        $"{IpAddress}:{Port}", ex.Message, delay, IsActive);
+                    var delay = _retryScheduler.NextDelayMs();
+                    _logger.LogInformation("Connect to {Remote} failed (attempt {Attempt}): {Message}; retry in {Delay}ms (active={IsActive})",
+                        $"{IpAddress}:{Port}", _retryScheduler.Attempt, ex.Message, delay, IsActive);
                     await Task.Delay(delay, ct).ConfigureAwait(false);
                 }
             }
@@ -227,7 +233,11 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
 
     private async Task<Socket> ConnectAsync(CancellationToken ct)
     {
-        var socket = CreateTcpSocket();
+        // 连接侧按目标地址族建 socket：目标是 IPv4 字面量时用纯 IPv4 socket
+        // （双栈 socket 对 v4 映射地址的连接在部分 Windows 环境下有额外延迟，且双栈对指定 v4 目标无收益）
+        var socket = IpAddress.AddressFamily == AddressFamily.InterNetwork
+            ? new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
+            : CreateTcpSocket();
         try
         {
 #if NETSTANDARD2_0
@@ -282,8 +292,10 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
                 }
                 catch (Exception ex) when (!ct.IsCancellationRequested && !IsDisposed)
                 {
-                    _logger.LogWarning(ex, "Accept on {Local} failed; retry in {Delay}ms.", $"{IpAddress}:{Port}", _options.AcceptRetryDelayMs);
-                    await Task.Delay(_options.AcceptRetryDelayMs, ct).ConfigureAwait(false);
+                    var delay = _retryScheduler.NextDelayMs();
+                    _logger.LogWarning(ex, "Accept on {Local} failed (attempt {Attempt}); retry in {Delay}ms.",
+                        $"{IpAddress}:{Port}", _retryScheduler.Attempt, delay);
+                    await Task.Delay(delay, ct).ConfigureAwait(false);
                 }
             }
         }

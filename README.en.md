@@ -92,7 +92,7 @@ public interface ICodec<TMessage>
 ### Connection (`IStreamConnection<T>`) — the transport
 
 - **Client/server dual mode**: `isActive: true` connects out, `false` listens; IPv4/IPv6 dual-stack (listening on `IPAddress.Any` is normalized to dual-stack; IPv4 client addresses are displayed as plain IPv4)
-- **Auto-reconnect**: `Connecting → Connected → Retry` state machine; `GetMessages` is a stable stream across reconnections — received messages are not lost and enumeration does not break when the connection drops and recovers
+- **Auto-reconnect**: `Connecting → Connected → Retry` state machine; optional exponential backoff (`MaxRetryDelayMs`, doubling with cap + ±20% jitter, auto-reset on success); `GetMessages` is a stable stream across reconnections — received messages are not lost and enumeration does not break when the connection drops and recovers
 - **Start & stop**: the `ct` passed to `Start(ct)` is the connection's **lifetime token** — cancelling it stops connection/reconnection and tears the link down (state enters the terminal `Disconnected`, `GetMessages` completes naturally; create a new connection afterwards). `DisposeAsync` does the same. After shutdown, `SendAsync` throws `ChannelClosedException`
 - **Waiting for readiness**: `await conn.WaitForConnectedAsync(ct)` — completes immediately when connected; otherwise waits for the next successful connection (or cancellation/dispose). No state polling, no `Task.Delay` guessing
 - **Robustness**: payload decode failures, incomplete-frame overflows, send failures, and receive idle timeouts all invalidate the session and rebuild it automatically (no more "connection looks alive while messages silently vanish")
