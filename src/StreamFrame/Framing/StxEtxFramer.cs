@@ -1,12 +1,12 @@
 using System.Buffers;
 
-namespace StreamFrame.Abstractions;
+namespace StreamFrame;
 
 /// <summary>
 /// STX/ETX 成对包裹的帧定界：0x02 (STX) 起、0x03 (ETX) 止，负载不做转义。
 ///
 /// 注意：plain 模式要求负载不得包含 0x02/0x03，否则会被误判为帧边界。
-/// 适合 XML / 纯文本等已知安全的负载；二进制负载请改用 <see cref="LengthPrefixFrameCodec"/>。
+/// 适合 XML / 纯文本等已知安全的负载；二进制负载请改用 <see cref="LengthPrefixFramer"/>。
 ///
 /// 边界处理（与 SamSung 一致）：
 /// <list type="bullet">
@@ -14,10 +14,10 @@ namespace StreamFrame.Abstractions;
 /// <item>无前导 STX 的孤立 ETX 被视为噪声字节跳过。</item>
 /// <item>到达缓冲区末尾但无闭合 ETX 时回到最后一个 STX 处等待后续数据。</item>
 /// </list>
-/// 实现 <see cref="IStreamingFrameCodec"/>：BeginFrame 写 STX、EndFrame 写 ETX，
-/// 与 <see cref="IFrameCodec.EncodeFrame"/> 字节输出完全一致。
+/// 实现 <see cref="IStreamingFramer"/>：BeginFrame 写 STX、EndFrame 写 ETX，
+/// 与 <see cref="IFramer.EncodeFrame"/> 字节输出完全一致。
 /// </summary>
-public sealed class StxEtxFrameCodec : IStreamingFrameCodec, IFrameDiscardReporting
+public sealed class StxEtxFramer : IStreamingFramer, IFrameDiscardReporting
 {
     private const byte STX = 0x02;
     private const byte ETX = 0x03;
@@ -26,7 +26,7 @@ public sealed class StxEtxFrameCodec : IStreamingFrameCodec, IFrameDiscardReport
 
     public int MaxPayloadBytes { get; }
 
-    public StxEtxFrameCodec(int maxPayloadBytes = DefaultMaxPayloadBytes)
+    public StxEtxFramer(int maxPayloadBytes = DefaultMaxPayloadBytes)
     {
         if (maxPayloadBytes <= 0)
             throw new ArgumentOutOfRangeException(nameof(maxPayloadBytes));
@@ -42,7 +42,7 @@ public sealed class StxEtxFrameCodec : IStreamingFrameCodec, IFrameDiscardReport
         if (payload.IndexOfAny(STX, ETX) >= 0)
             throw new InvalidOperationException(
                 "Plain STX/ETX framing cannot carry payload bytes 0x02/0x03. " +
-                "Use LengthPrefixFrameCodec for binary payloads.");
+                "Use LengthPrefixFramer for binary payloads.");
 
         var destination = writer.GetSpan(payload.Length + 2);
         destination[0] = STX;
@@ -70,7 +70,7 @@ public sealed class StxEtxFrameCodec : IStreamingFrameCodec, IFrameDiscardReport
         if (payload.IndexOfAny(STX, ETX) >= 0)
             throw new InvalidOperationException(
                 "Plain STX/ETX framing cannot carry payload bytes 0x02/0x03. " +
-                "Use LengthPrefixFrameCodec for binary payloads.");
+                "Use LengthPrefixFramer for binary payloads.");
 
         var destination = writer.GetSpan(1);
         destination[0] = ETX;

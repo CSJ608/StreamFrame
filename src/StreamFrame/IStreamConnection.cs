@@ -1,5 +1,4 @@
 using System.Net;
-using StreamFrame.Abstractions;
 
 namespace StreamFrame;
 
@@ -21,8 +20,8 @@ public interface IStreamConnection<TMessage> : IAsyncDisposable
     /// <summary>主动模式：远端端口；被动模式：监听端口。</summary>
     int Port { get; }
 
-    /// <summary>对端地址（被动模式下为已连接客户端的地址）。</summary>
-    string DeviceIpAddress { get; }
+    /// <summary>对端 IP 地址：主动模式为配置的远端地址；被动模式为已连接客户端的地址（未连接时为 null）。</summary>
+    string? RemoteIpAddress { get; }
 
     /// <summary>连接状态变更事件。</summary>
     event EventHandler<ConnectionState>? ConnectionChanged;
@@ -57,9 +56,9 @@ public interface IStreamConnection<TMessage> : IAsyncDisposable
     /// <summary>启动连接（主动连接/被动监听），连接/监听失败时自动重试。</summary>
     /// <remarks>
     /// 只能调用一次；重复调用抛 <see cref="InvalidOperationException"/>，重建连接请用 <see cref="Reconnect"/>。
-    /// <paramref name="ct"/> 仅约束"建立连接"阶段：连接建立前取消它会停止连接/监听重试。
-    /// 连接建立后的收发与断线自动重连由连接自身管理——取消该 token 不会断开已建立的
-    /// 连接，也不会停止后续重连；要停止一切请调用 DisposeAsync。
+    /// <paramref name="ct"/> 是连接的<b>生命周期令牌</b>：取消它会停止连接/重连并拆除会话
+    /// （状态进入 <see cref="ConnectionState.Disconnected"/> 终态，GetMessages 自然结束），
+    /// 此后连接不可再使用，需新建连接。要等待连接可用请用 <see cref="WaitForConnectedAsync"/>。
     /// </remarks>
     void Start(CancellationToken ct);
 
@@ -76,6 +75,9 @@ public interface IStreamConnection<TMessage> : IAsyncDisposable
     /// <summary>发送一条业务消息。仅入队，由发送 worker 编码加帧后写出；队列满时背压等待。</summary>
     Task SendAsync(TMessage message, CancellationToken ct = default);
 
-    /// <summary>以异步流方式消费收到的业务消息。</summary>
-    IAsyncEnumerable<TMessage> GetMessages(CancellationToken ct);
+    /// <summary>
+    /// 以异步流方式消费收到的业务消息。跨重连的稳定消息流：断线重连后枚举不中断，
+    /// 仅在连接停机（Dispose 或 Start 令牌取消）时正常结束。
+    /// </summary>
+    IAsyncEnumerable<TMessage> GetMessages(CancellationToken ct = default);
 }

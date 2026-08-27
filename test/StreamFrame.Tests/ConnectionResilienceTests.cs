@@ -4,7 +4,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using StreamFrame;
-using StreamFrame.Abstractions;
 
 namespace StreamFrame.Tests;
 
@@ -55,7 +54,7 @@ public class ConnectionResilienceTests
         StreamConnectionOptions? options = null,
         ICodec<string>? codec = null)
         => new(
-            new LengthPrefixFrameCodec(),
+            new LengthPrefixFramer(),
             codec ?? StringCodec.Instance,
             IPAddress.Loopback,
             port,

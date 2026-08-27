@@ -40,7 +40,7 @@ public sealed class StreamConnectionOptions
 
     /// <summary>
     /// 是否使用流式帧编码（单缓冲、零 memcpy）。仅在 framing 实现
-    /// <see cref="IStreamingFrameCodec"/> 时生效；否则自动回退到"序列化→帧"两段缓冲。
+    /// <see cref="IStreamingFramer"/> 时生效；否则自动回退到"序列化→帧"两段缓冲。
     /// </summary>
     public bool UseStreamingEncode { get; set; } = true;
 

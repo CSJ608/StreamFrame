@@ -1,6 +1,6 @@
 using System.Buffers;
 
-namespace StreamFrame.Abstractions;
+namespace StreamFrame;
 
 /// <summary>
 /// 帧内数据编解码：负责把一帧负载（payload）解析为业务消息、以及把业务消息编码为帧内负载字节。

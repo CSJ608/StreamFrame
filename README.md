@@ -35,12 +35,11 @@ dotnet add package StreamFrame.Protocols.Xml
 using System.Net;
 using System.Xml.Linq;
 using StreamFrame;
-using StreamFrame.Abstractions;
 using StreamFrame.Protocols.Xml;
 
 // 服务端（被动监听）
 var server = new StreamConnection<XDocument>(
-    new LengthPrefixFrameCodec(),          // 4 字节大端长度头；也可用 StxEtxFrameCodec
+    new LengthPrefixFramer(),              // 4 字节大端长度头；也可用 StxEtxFramer
     new XmlDocumentCodec(),                // 换成自己的 ICodec<T> 即可支持自定义协议
     IPAddress.Any, 5100, isActive: false);
 server.Start(ct);
@@ -53,7 +52,7 @@ await foreach (var doc in server.GetMessages(ct))
 
 // 客户端（主动连接）
 var client = new StreamConnection<XDocument>(
-    new LengthPrefixFrameCodec(),
+    new LengthPrefixFramer(),
     new XmlDocumentCodec(),
     IPAddress.Parse("127.0.0.1"), 5100, isActive: true);
 client.Start(ct);
@@ -62,14 +61,14 @@ await client.SendAsync(XDocument.Parse("<Message><Id>1</Id></Message>"), ct);
 
 ## 概念
 
-### 帧定界（IFrameCodec）— 怎么从字节流里切出一帧
+### 帧定界（IFramer）— 怎么从字节流里切出一帧
 
 | 实现 | 定界方式 | 适用 |
 |---|---|---|
-| `LengthPrefixFrameCodec` | 4 字节**大端**长度头 + 负载 | 通用，二进制安全 |
-| `StxEtxFrameCodec` | STX `0x02` … ETX `0x03` 包裹 | XML / 纯文本等已知安全的负载 |
+| `LengthPrefixFramer` | 4 字节**大端**长度头 + 负载 | 通用，二进制安全 |
+| `StxEtxFramer` | STX `0x02` … ETX `0x03` 包裹 | XML / 纯文本等已知安全的负载 |
 
-两种默认实现都支持**流式单缓冲编码**（可选，消除发送侧 memcpy）。想自定义帧格式时实现 `IFrameCodec` 即可。
+两种默认实现都支持**流式单缓冲编码**（可选，消除发送侧 memcpy）。想自定义帧格式时实现 `IFramer` 即可。
 
 ### 编解码（ICodec&lt;T&gt;）— 怎么解析/写入帧内数据
 
@@ -85,9 +84,9 @@ public interface ICodec<TMessage>
 
 ### 连接（IStreamConnection&lt;T&gt;）— 传输层
 
-- **客户端/服务端双模式**：`isActive: true` 主动连远端，`false` 被动监听
+- **客户端/服务端双模式**：`isActive: true` 主动连远端，`false` 被动监听；IPv4/IPv6 双栈（监听 `IPAddress.Any` 自动按双栈处理，IPv4 客户端地址归一显示为 IPv4）
 - **自动重连**：`Connecting → Connected → Retry` 状态机；`GetMessages` 是跨重连的稳定消息流——断线重连后已收消息不丢、枚举不中断
-- **启动与停止**：`Start(ct)` 的 `ct` 只约束建立连接阶段（连接/监听重试到它取消为止）；连接建立后的收发与自动重连由连接自身管理，取消它不影响已建立的连接——要停止一切请 `DisposeAsync`
+- **启动与停止**：`Start(ct)` 的 `ct` 是连接的**生命周期令牌**——取消它会停止连接/重连并拆线（状态进入 `Disconnected` 终态，`GetMessages` 自然结束，之后需新建连接）；`DisposeAsync` 与之等效。停机后 `SendAsync` 抛 `ChannelClosedException`
 - **等待连接就绪**：`await conn.WaitForConnectedAsync(ct)`——已连接立即完成，未连接时等到下次连接成功（或取消/Dispose），不用轮询状态、不用 `Task.Delay` 盲等
 - **健壮性**：帧内容解码失败、未完成帧超限、发送失败、接收空闲超时都会判定会话失效并自动重建（不再产生"连接看似存活、消息静默消失"的假活）
 - **活性探测（可选）**：TCP KeepAlive 与接收空闲超时，兜底半开连接（对端断电/拔线）

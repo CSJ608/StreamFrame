@@ -1,10 +1,9 @@
 using System.Buffers;
 using System.Text;
-using StreamFrame.Abstractions;
 
 namespace StreamFrame.Tests;
 
-public class StxEtxFrameCodecTests
+public class StxEtxFramerTests
 {
     private const byte STX = 0x02;
     private const byte ETX = 0x03;
@@ -12,7 +11,7 @@ public class StxEtxFrameCodecTests
     [Fact]
     public void Encode_WrapsPayload()
     {
-        var codec = new StxEtxFrameCodec();
+        var codec = new StxEtxFramer();
         var payload = Encoding.UTF8.GetBytes("hello");
 
         var writer = new ArrayBufferWriter<byte>();
@@ -27,7 +26,7 @@ public class StxEtxFrameCodecTests
     [Fact]
     public void Encode_RejectsPayloadContainingStxOrEtx()
     {
-        var codec = new StxEtxFrameCodec();
+        var codec = new StxEtxFramer();
         // 负载含 0x02，plain 模式必须拒绝
         Assert.Throws<InvalidOperationException>(() =>
         {
@@ -39,7 +38,7 @@ public class StxEtxFrameCodecTests
     [Fact]
     public void Decode_ExtractsPayload()
     {
-        var codec = new StxEtxFrameCodec();
+        var codec = new StxEtxFramer();
         var payload = Encoding.UTF8.GetBytes("payload data");
 
         var writer = new ArrayBufferWriter<byte>();
@@ -54,7 +53,7 @@ public class StxEtxFrameCodecTests
     [Fact]
     public void Decode_HalfPacket_ReturnsFalse_AndKeepsFromStx()
     {
-        var codec = new StxEtxFrameCodec();
+        var codec = new StxEtxFramer();
         var payload = Encoding.UTF8.GetBytes("hello");
 
         var writer = new ArrayBufferWriter<byte>();
@@ -71,7 +70,7 @@ public class StxEtxFrameCodecTests
     [Fact]
     public void Decode_LoneEtx_IsSkippedAsNoise()
     {
-        var codec = new StxEtxFrameCodec();
+        var codec = new StxEtxFramer();
         var payload = Encoding.UTF8.GetBytes("hi");
         var writer = new ArrayBufferWriter<byte>();
         codec.EncodeFrame(payload, writer);
@@ -90,7 +89,7 @@ public class StxEtxFrameCodecTests
     [Fact]
     public void Decode_NewStx_DiscardsPreviousHalfPacket()
     {
-        var codec = new StxEtxFrameCodec();
+        var codec = new StxEtxFramer();
         var payload = Encoding.UTF8.GetBytes("complete");
         var writer = new ArrayBufferWriter<byte>();
         codec.EncodeFrame(payload, writer);
@@ -110,7 +109,7 @@ public class StxEtxFrameCodecTests
     [Fact]
     public void Decode_OverlongFrame_IsDropped()
     {
-        var codec = new StxEtxFrameCodec(maxPayloadBytes: 16);
+        var codec = new StxEtxFramer(maxPayloadBytes: 16);
         // STX + 20 字节负载 + ETX
         var bytes = new List<byte> { STX };
         bytes.AddRange(Enumerable.Repeat((byte)0x41, 20));

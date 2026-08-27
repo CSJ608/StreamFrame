@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using StreamFrame;
-using StreamFrame.Abstractions;
 
 namespace StreamFrame.Tests;
 
@@ -26,7 +25,7 @@ public class ConnectionUsabilityTests
         bool isActive,
         StreamConnectionOptions? options = null)
         => new(
-            new LengthPrefixFrameCodec(),
+            new LengthPrefixFramer(),
             StringCodec.Instance,
             IPAddress.Loopback,
             port,
@@ -174,7 +173,7 @@ public class ConnectionUsabilityTests
         // 一次性灌入 5 帧（容量 2）：解码必须暂停等待消费、随后按序全部送达
         var buffer = new System.Buffers.ArrayBufferWriter<byte>();
         foreach (var i in Enumerable.Range(1, 5))
-            new LengthPrefixFrameCodec().EncodeFrame(Encoding.UTF8.GetBytes($"msg-{i}"), buffer);
+            new LengthPrefixFramer().EncodeFrame(Encoding.UTF8.GetBytes($"msg-{i}"), buffer);
         await client.GetStream().WriteAsync(buffer.WrittenSpan.ToArray());
 
         var deadline = Environment.TickCount64 + 5000;

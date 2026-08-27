@@ -2,7 +2,6 @@ using System.Buffers;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
-using StreamFrame.Abstractions;
 
 namespace StreamFrame.Protocols.Xml;
 
