@@ -5,6 +5,9 @@
 
 ## [Unreleased]
 
+### 变更
+- 依赖升级（Dependabot）：`Microsoft.Extensions.Logging.Abstractions` 8.0.1→10.0.11、`Microsoft.Bcl.AsyncInterfaces` 8.0.0→10.0.11（传递依赖对齐，均含 net8.0/net10.0/net462/netstandard2.0 资产，net48 全量测试实测通过）；`PolySharp` 1.16.0、`Meziantou.Analyzer` 3.0.189；测试工具链 `coverlet.collector` 10.0.1、`Microsoft.NET.Test.Sdk` 18.9.0、`xunit` 2.9.3、`xunit.runner.visualstudio` 2.8.2（均不进包）。
+
 ### 新增
 - 仓库自动化与社区基建：Dependabot（NuGet + Actions 每周检查，minor/patch 合并提 PR）、CodeQL 安全扫描（push/PR + 每周）、issue 表单模板（Bug 报告/功能建议）、CONTRIBUTING.md、GitHub Discussions。
 - **重连指数退避（可选）**：`MaxRetryDelayMs`（默认 0 = 不启用，行为不变）——连续失败按基础间隔 ×2 倍增封顶、±20% 抖动、连接成功自动复位；重试日志携带尝试次数。对端长时间宕机时不再以固定间隔永久敲击。
