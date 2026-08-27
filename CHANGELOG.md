@@ -9,7 +9,7 @@
 - CI Actions 升级到 Node 24 运行时：`actions/checkout@v7`、`actions/setup-dotnet@v6`、`softprops/action-gh-release@v3`（消除 Node 20 弃用告警）。
 
 ### 新增
-- 暂无
+- 帧定界基准测试 `bench/StreamFrame.Benchmarks`（BenchmarkDotNet）：LengthPrefix/StxEtx 的流式 vs 纯函数编码对比与切帧吞吐，为"流式零拷贝"说法提供可复现数据。
 
 ### 修复
 - 暂无

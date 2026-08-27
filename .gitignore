@@ -16,3 +16,7 @@ packages/
 
 ## Logs
 *.log
+
+## BenchmarkDotNet
+BenchmarkDotNet.Artifacts/
+bench-results.txt
