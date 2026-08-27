@@ -5,6 +5,14 @@
 
 ## [Unreleased]
 
+### 新增
+- 暂无
+
+### 修复
+- 暂无
+
+## [2.2.0] - 2026-08-27
+
 ### 变更
 - 依赖升级（Dependabot）：`Microsoft.Extensions.Logging.Abstractions` 8.0.1→10.0.11、`Microsoft.Bcl.AsyncInterfaces` 8.0.0→10.0.11（传递依赖对齐，均含 net8.0/net10.0/net462/netstandard2.0 资产，net48 全量测试实测通过）；`PolySharp` 1.16.0、`Meziantou.Analyzer` 3.0.189；测试工具链 `coverlet.collector` 10.0.1、`Microsoft.NET.Test.Sdk` 18.9.0、`xunit` 2.9.3、`xunit.runner.visualstudio` 2.8.2（均不进包）。
 
@@ -118,7 +126,8 @@
 - 发布自动化：`release.yml`（tag 自动建 GitHub Release）、`publish-nuget.yml`（OIDC Trusted Publishing 推送 nuget.org）。
 - 单元测试 25 个 + 三场景端到端 demo。
 
-[Unreleased]: https://github.com/CSJ608/StreamFrame/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/CSJ608/StreamFrame/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/CSJ608/StreamFrame/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/CSJ608/StreamFrame/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/CSJ608/StreamFrame/compare/v1.2.0...v2.0.0
 [1.2.0]: https://github.com/CSJ608/StreamFrame/compare/v1.1.0...v1.2.0
