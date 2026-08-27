@@ -7,6 +7,8 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <!-- netstandard2.0 默认 C# 7.3，统一用最新语言版本（语言级差异由 PolySharp/兼容层抹平） -->
     <LangVersion>latest</LangVersion>
+    <!-- 生成 XML 文档并随 NuGet 包发布（用户 IntelliSense） -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup>

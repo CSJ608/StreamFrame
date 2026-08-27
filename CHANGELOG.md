@@ -6,6 +6,7 @@
 ## [Unreleased]
 
 ### 新增
+- **XML 文档随 NuGet 包发布**（`GenerateDocumentationFile`）：此前全量中文 XML 注释从未进包，用户在 IDE 中没有 IntelliSense；现以 `<inheritdoc />` 补齐全部接口实现成员的文档引用，并由 `TreatWarningsAsErrors` 强制今后不出现未文档化的公共 API。
 - 基准测试扩容：`CodecBenchmarks`（XmlDocumentCodec 典型报文编解码开销）与 `EndToEndBenchmarks`（真实 TCP 回环的单向吞吐（双 framer）与往返延迟）；基准项目纳入解决方案（IDE 可见，随解决方案构建；`dotnet test` 依 IsTestProject 机制自动跳过）。
 
 ### 修复

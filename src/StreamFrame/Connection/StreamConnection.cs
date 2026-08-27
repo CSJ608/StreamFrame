@@ -26,17 +26,24 @@ namespace StreamFrame;
 /// </summary>
 public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
 {
+    /// <inheritdoc />
     public event EventHandler<ConnectionState>? ConnectionChanged;
 
     /// <summary>帧层诊断事件：解码失败、被定界器丢弃的字节、不完整帧超限。字节已拷贝、可留存。</summary>
     public event EventHandler<FrameErrorEventArgs>? FrameError;
 
+    /// <inheritdoc />
     public Action<ReadOnlyMemory<byte>>? RawBytesReceived { get; set; }
+    /// <inheritdoc />
     public Action<ReadOnlyMemory<byte>>? RawBytesSent { get; set; }
 
+    /// <inheritdoc />
     public ConnectionState State { get; private set; }
+    /// <inheritdoc />
     public bool IsActive { get; }
+    /// <inheritdoc />
     public IPAddress IpAddress { get; }
+    /// <inheritdoc />
     public int Port { get; }
 
     /// <summary>对端 IP 地址：主动模式为配置的远端地址；被动模式为已连接客户端的地址（未连接时为 null）。
@@ -146,6 +153,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
         }
     }
 
+    /// <summary>连接是否已停机（Dispose 或 Start 令牌取消）。停机后不可再用，需新建连接。</summary>
     public bool IsDisposed
         => Volatile.Read(ref _disposeStage) == DisposalComplete;
 
@@ -155,6 +163,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
             throw new ObjectDisposedException(nameof(StreamConnection<TMessage>));
     }
 
+    /// <inheritdoc />
     public void Start(CancellationToken ct)
     {
         ThrowIfDisposed();
@@ -681,9 +690,11 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
         }
     }
 
+    /// <inheritdoc />
     public Task SendAsync(TMessage message, CancellationToken ct = default)
         => _sendQueue.Writer.WriteAsync(message, ct).AsTask();
 
+    /// <inheritdoc />
     public Task WaitForConnectedAsync(CancellationToken ct = default)
     {
         if (State == ConnectionState.Connected)
@@ -710,6 +721,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
         }
     }
 
+    /// <inheritdoc />
     public async IAsyncEnumerable<TMessage> GetMessages(
         [EnumeratorCancellation] CancellationToken ct = default)
     {
@@ -721,6 +733,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
         }
     }
 
+    /// <inheritdoc />
     public ValueTask DisposeAsync()
     {
         Shutdown();
