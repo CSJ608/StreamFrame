@@ -92,7 +92,7 @@ public interface ICodec<TMessage>
 ### 连接（IStreamConnection&lt;T&gt;）— 传输层
 
 - **客户端/服务端双模式**：`isActive: true` 主动连远端，`false` 被动监听；IPv4/IPv6 双栈（监听 `IPAddress.Any` 自动按双栈处理，IPv4 客户端地址归一显示为 IPv4）
-- **自动重连**：`Connecting → Connected → Retry` 状态机；`GetMessages` 是跨重连的稳定消息流——断线重连后已收消息不丢、枚举不中断
+- **自动重连**：`Connecting → Connected → Retry` 状态机；可选指数退避（`MaxRetryDelayMs`，连续失败倍增封顶 + ±20% 抖动，连接成功自动复位）；`GetMessages` 是跨重连的稳定消息流——断线重连后已收消息不丢、枚举不中断
 - **启动与停止**：`Start(ct)` 的 `ct` 是连接的**生命周期令牌**——取消它会停止连接/重连并拆线（状态进入 `Disconnected` 终态，`GetMessages` 自然结束，之后需新建连接）；`DisposeAsync` 与之等效。停机后 `SendAsync` 抛 `ChannelClosedException`
 - **等待连接就绪**：`await conn.WaitForConnectedAsync(ct)`——已连接立即完成，未连接时等到下次连接成功（或取消/Dispose），不用轮询状态、不用 `Task.Delay` 盲等
 - **健壮性**：帧内容解码失败、未完成帧超限、发送失败、接收空闲超时都会判定会话失效并自动重建（不再产生"连接看似存活、消息静默消失"的假活）

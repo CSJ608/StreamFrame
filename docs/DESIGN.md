@@ -128,7 +128,7 @@ socket --ReceiveAsync--> pipe.Writer --[Pipe]--> FrameDecoder.RunAsync
 
 ### 生命周期
 
-`Connecting → Connected → Retry → … → Disconnected`。`Start` 失败按 `ConnectRetryDelayMs`/`AcceptRetryDelayMs` 自动重试；运行中断线统一走 `Retry`（`Interlocked` 重入保护防并发双重重连）→ 停会话 → 重新 Start。
+`Connecting → Connected → Retry → … → Disconnected`。`Start` 失败按 `ConnectRetryDelayMs`/`AcceptRetryDelayMs` 自动重试（`RetryDelayScheduler`：设 `MaxRetryDelayMs` 后连续失败按 ×2 倍增封顶并叠加 ±20% 抖动，连接成功复位——默认 0 不启用，行为与历史一致）；运行中断线统一走 `Retry`（`Interlocked` 重入保护防并发双重重连）→ 停会话 → 重新 Start。
 
 **生命周期令牌（2.0）**：`Start(ct)` 把 `ct` 链接进 `_lifetimeCts`；取消 `ct`（或 DisposeAsync）走同一条幂等 `Shutdown` 路径——广播 `Disconnected` 终态 → 停止重连循环 → 拆会话 → 完成收发通道（`GetMessages` 自然结束、后续 `SendAsync` 抛 `ChannelClosedException`）。`Start` 仅可调用一次（重入抛 `InvalidOperationException`），重连内部走 `StartCore`。
 

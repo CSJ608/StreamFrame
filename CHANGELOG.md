@@ -6,6 +6,8 @@
 ## [Unreleased]
 
 ### 新增
+- **重连指数退避（可选）**：`MaxRetryDelayMs`（默认 0 = 不启用，行为不变）——连续失败按基础间隔 ×2 倍增封顶、±20% 抖动、连接成功自动复位；重试日志携带尝试次数。对端长时间宕机时不再以固定间隔永久敲击。
+- 连接侧 socket 按目标地址族创建（IPv4 字面量用纯 IPv4 socket，监听侧保持双栈）。
 - **XML 文档随 NuGet 包发布**（`GenerateDocumentationFile`）：此前全量中文 XML 注释从未进包，用户在 IDE 中没有 IntelliSense；现以 `<inheritdoc />` 补齐全部接口实现成员的文档引用，并由 `TreatWarningsAsErrors` 强制今后不出现未文档化的公共 API。
 - 基准测试扩容：`CodecBenchmarks`（XmlDocumentCodec 典型报文编解码开销）与 `EndToEndBenchmarks`（真实 TCP 回环的单向吞吐（双 framer）与往返延迟）；基准项目纳入解决方案（IDE 可见，随解决方案构建；`dotnet test` 依 IsTestProject 机制自动跳过）。
 
