@@ -18,8 +18,8 @@ public class XmlDocumentCodecTests
 
         // 编码结果应包含 XML 内容
         var xmlText = Encoding.UTF8.GetString(writer.WrittenSpan);
-        Assert.Contains("<Message>", xmlText);
-        Assert.Contains("DeviceA", xmlText);
+        Assert.Contains("<Message>", xmlText, StringComparison.Ordinal);
+        Assert.Contains("DeviceA", xmlText, StringComparison.Ordinal);
 
         // 解码还原
         var decoded = codec.Decode(new ReadOnlySequence<byte>(writer.WrittenSpan.ToArray()));

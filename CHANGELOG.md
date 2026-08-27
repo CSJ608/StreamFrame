@@ -25,6 +25,7 @@
 - 明确 `Start(ct)` 的取消令牌语义（仅约束建立连接阶段）：接口 XML 注释与 README 同步说明。
 
 ### 新增
+- 代码质量棘轮：引入 Meziantou.Analyzer（SDK 自带 NetAnalyzers 之上的补充规则）与 `.editorconfig`，现存告警清零并把库项目的 `TreatWarningsAsErrors` 打开（告警即构建失败）；`FrameErrorKind`/`DecodeErrorPolicy` 拆分为独立文件（一类型一文件）。
 - `WaitForConnectedAsync`：等待连接进入 Connected（已连接立即完成；取消或 Dispose 以取消结束），替代轮询状态或 `Task.Delay` 盲等；demo 全部改用该 API。
 - 可选 `ILogger` 构造参数：连接重试、会话故障、用户回调异常等内部事件输出到日志（此前 `Debug.WriteLine` 在 Release 构建中完全不可见，生产排障只能靠猜）。
 - `ReceiveQueueCapacity` 选项：接收消息通道可设上限（默认 0 不限制）；消费慢时解码暂停读取、TCP 背压自然传导到对端，封堵慢消费者导致的内存无限增长。

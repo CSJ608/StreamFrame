@@ -1,0 +1,52 @@
+root = true
+
+# 基础格式
+[*]
+charset = utf-8
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.cs]
+indent_style = space
+indent_size = 4
+
+[*.{csproj,slnx,yml,yaml,json,xml,props,targets}]
+indent_style = space
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+# ---------------------------------------------------------------------------
+# .NET 分析器（SDK 内置 NetAnalyzers + Meziantou.Analyzer）
+# ---------------------------------------------------------------------------
+[*.{cs,vb}]
+
+# 安全类问题一律视为错误
+dotnet_analyzer_diagnostic.category-Security.severity = error
+
+# 逐条调优：与本项目刻意设计冲突的规则降为建议，其余保持默认（警告为主）
+# 库代码大量"捕获一切异常并转为重连/隔离"是刻意设计（会话守护/回调隔离）
+dotnet_diagnostic.CA1031.severity = suggestion
+
+# ILogger 扩展调用未走 LoggerMessage 源生成（性能优化建议，非正确性）
+dotnet_diagnostic.CA1848.severity = suggestion
+dotnet_diagnostic.MA0032.severity = none   # Use TimeSpan.Zero\TimeSpan.FromMilliseconds 等风格建议
+dotnet_diagnostic.MA0051.severity = suggestion # 方法过长（StreamConnection 状态机刻意集中）
+
+# 事件签名 EventHandler<ConnectionState> 用非 EventArgs 载荷：.NET 4.5+ 支持且对用户更直接，
+# 不引入 EventArgs 包装类型
+dotnet_diagnostic.MA0046.severity = none
+
+# 选项校验用 nameof(属性) 作为 ArgumentOutOfRangeException 参数名：校验对象是属性而非方法参数
+dotnet_diagnostic.MA0015.severity = none
+
+# 测试项目：xUnit 无同步上下文，ConfigureAwait 与比较器重载建议均为噪音
+[test/**.cs]
+dotnet_diagnostic.MA0002.severity = none
+dotnet_diagnostic.MA0004.severity = none
+dotnet_diagnostic.MA0006.severity = none
+
+# demo 控制台程序无需 ConfigureAwait 语义
+[samples/**.cs]
+dotnet_diagnostic.MA0004.severity = none
