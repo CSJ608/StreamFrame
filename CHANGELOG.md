@@ -5,7 +5,15 @@
 
 ## [Unreleased]
 
-### 破坏性变更（将随 2.0.0 发布）
+### 新增
+- 暂无
+
+### 修复
+- 暂无
+
+## [2.0.0] - 2026-08-27
+
+### 破坏性变更
 - **命名统一，消灭两个"codec"的混淆**：帧定界侧改名——`IFrameCodec`→`IFramer`、`IStreamingFrameCodec`→`IStreamingFramer`、`LengthPrefixFrameCodec`→`LengthPrefixFramer`、`StxEtxFrameCodec`→`StxEtxFramer`；"codec"一词从此只指帧内编解码 `ICodec<TMessage>`。
 - **命名空间收敛**：删除 `StreamFrame.Abstractions`，所有公共类型统一进根命名空间 `StreamFrame`——用户只需一个 `using StreamFrame;`（此前具体实现类住在 "Abstractions" 命名空间里，名不副实）。
 - **`Start(ct)` 的 `ct` 升级为生命周期令牌**：取消它会停止连接/重连并拆线（`Disconnected` 终态、`GetMessages` 自然结束、之后需新建连接），与 `DisposeAsync` 共用同一条幂等停机路径。1.x 中取消已连接的连接毫无作用且未如实文档化。
@@ -22,7 +30,6 @@
 - `Start` 重入防护：重复调用抛 `InvalidOperationException`（此前并发/重复 Start 会各自建立 socket 并互相覆盖，泄漏连接）；重建连接请用 `Reconnect()`。
 - 发布管线合并为单条流水线 `release.yml`：tag 触发"版本号校验 → 构建 → 测试 → GitHub Release → 推 nuget.org"，测试未通过不会发包（此前发布与推送是两条独立 workflow，测试失败时包仍会被推出）。`workflow_dispatch` 手动触发仅做构建+测试演练，不发布；需重发版本时在对应 tag 的运行记录上 Re-run（推送带 `--skip-duplicate`，幂等）。
 - tag 与两个 csproj 的 `<Version>` 一致性在流水线中显式校验，不一致直接失败（此前会静默发出错误版本号的包）。
-- 明确 `Start(ct)` 的取消令牌语义（仅约束建立连接阶段）：接口 XML 注释与 README 同步说明。
 
 ### 新增
 - 代码质量棘轮：引入 Meziantou.Analyzer（SDK 自带 NetAnalyzers 之上的补充规则）与 `.editorconfig`，现存告警清零并把库项目的 `TreatWarningsAsErrors` 打开（告警即构建失败）；`FrameErrorKind`/`DecodeErrorPolicy` 拆分为独立文件（一类型一文件）。
@@ -84,7 +91,8 @@
 - 发布自动化：`release.yml`（tag 自动建 GitHub Release）、`publish-nuget.yml`（OIDC Trusted Publishing 推送 nuget.org）。
 - 单元测试 25 个 + 三场景端到端 demo。
 
-[Unreleased]: https://github.com/CSJ608/StreamFrame/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/CSJ608/StreamFrame/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/CSJ608/StreamFrame/compare/v1.2.0...v2.0.0
 [1.2.0]: https://github.com/CSJ608/StreamFrame/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/CSJ608/StreamFrame/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/CSJ608/StreamFrame/compare/v1.0.0...v1.0.1
