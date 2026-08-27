@@ -62,7 +62,11 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
     private readonly ICodec<TMessage> _codec;
     private readonly StreamConnectionOptions _options;
 
+#if NET9_0_OR_GREATER
+    private readonly Lock _sessionGate = new(); // System.Threading.Lock（net9+，比 monitor 锁更轻量）
+#else
     private readonly object _sessionGate = new();
+#endif
     private Pipe? _pipe;
     private CancellationTokenSource? _sessionCts;
     private Task? _receiveTask;
