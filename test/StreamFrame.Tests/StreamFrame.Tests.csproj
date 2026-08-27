@@ -12,19 +12,19 @@
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="10.0.1" />
-    <PackageReference Include="PolySharp" Version="1.15.0">
+    <PackageReference Include="PolySharp" Version="1.16.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; build_transitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <!-- 让 linux CI 也能编译 net48 目标（测试仅在 Windows 运行时执行） -->
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
-    <PackageReference Include="Meziantou.Analyzer" Version="3.0.187">
+    <PackageReference Include="Meziantou.Analyzer" Version="3.0.189">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
-    <PackageReference Include="xunit" Version="2.5.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
   </ItemGroup>
 
   <ItemGroup>

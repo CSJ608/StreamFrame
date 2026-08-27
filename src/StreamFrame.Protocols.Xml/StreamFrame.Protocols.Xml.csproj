@@ -10,11 +10,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="PolySharp" Version="1.15.0">
+    <PackageReference Include="PolySharp" Version="1.16.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Meziantou.Analyzer" Version="3.0.187">
+    <PackageReference Include="Meziantou.Analyzer" Version="3.0.189">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
