@@ -143,9 +143,26 @@ var conn = new StreamConnection<XDocument>(..., logger: loggerFactory.CreateLogg
 
 Without one, no logging happens (zero-dependency usage).
 
-### Liveness tips
+### Liveness & heartbeat pattern
 
-For production, enable `TcpKeepAlive = true`; for protocols with periodic traffic, also consider `ReceiveIdleTimeoutMs` (e.g., 3× the heartbeat period) as a second safety net against half-open connections.
+For production, enable `TcpKeepAlive = true`; an application-level heartbeat combined with `ReceiveIdleTimeoutMs` (3× the heartbeat period, tolerating 1-2 lost beats) is an even stronger combo. The framework does not ship a heartbeat (the message shape belongs to your protocol) — the pattern:
+
+```csharp
+var options = new StreamConnectionOptions { ReceiveIdleTimeoutMs = 1500 };
+
+// One side beats periodically; the other echoes PONG on any message (bidirectional
+// traffic resets both idle timers). Full runnable sample: demo scenario 4.
+_ = Task.Run(async () =>
+{
+    while (!cts.IsCancellationRequested)
+    {
+        await client.SendAsync("PING", cts.Token);
+        await Task.Delay(TimeSpan.FromMilliseconds(500), cts.Token); // ~1/3 of the timeout
+    }
+});
+```
+
+When the peer dies silently (power loss / unplugged cable, no FIN/RST), the idle timeout kills the session and auto-reconnect kicks in; if the peer is unreachable, reconnection keeps failing and the state stays in `Connecting`/`Retry`.
 
 ## Performance
 
