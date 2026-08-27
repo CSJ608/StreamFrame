@@ -9,6 +9,8 @@
 3. 同步更新 `CHANGELOG.md` 的 `Unreleased` 段（按 新增 / 修复 / 变更 分类）
 4. 推送分支 → 开 PR → 等 `ci.yml` 绿 → rebase 合并并删除分支；**不直接推 main**
 
+> main 已启用分支保护（GitHub 设置）：必须走 PR、`build-test` 必须通过且分支最新、禁 force push/删除、强制线性历史——直推 main 会被 GitHub 拒绝，规则在 Settings → Branches 可调。
+
 ## 提交前必须通过
 
 ```bash

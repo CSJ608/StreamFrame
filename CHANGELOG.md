@@ -10,6 +10,9 @@
 
 ### 新增
 - 帧定界基准测试 `bench/StreamFrame.Benchmarks`（BenchmarkDotNet）：LengthPrefix/StxEtx 的流式 vs 纯函数编码对比与切帧吞吐，为"流式零拷贝"说法提供可复现数据。
+- 项目 LOGO（`docs/logo/`，SVG 母版 + PNG），README 双语版接入展示、两个 NuGet 包启用包图标（随下个版本发布生效）。
+- README 新增 CI 构建状态徽章；main 分支保护（必须走 PR 且 CI 通过、禁 force push/删除、强制线性历史）。
+- 英文版 README（`README.en.md`，与中文版互链），便于国际用户检索与阅读。
 
 ### 修复
 - 暂无
