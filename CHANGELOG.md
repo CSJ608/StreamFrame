@@ -6,6 +6,11 @@
 ## [Unreleased]
 
 ### 变更
+- 暂无
+
+## [2.2.1] - 2026-08-28
+
+### 变更
 - 更换项目 LOGO：旧版为三元素拼贴（文档框+方块+波浪，小尺寸发糊）；新版为单一符号"帧环贯穿字节流"（白色粗环 + 青色右倾波自环心穿过两侧），16px 仍可辨认。`docs/logo/` 全套资产（SVG 母版 + 128/512 PNG）同步更新；README 双语版经 raw 地址引用自动生效，NuGet 包图标随下个版本发布生效；另增 1280×640 social preview 横幅（`docs/logo/social-preview.png`，GitHub Settings → Social preview 手动上传用）。
 - 依赖升级（Dependabot）：`System.IO.Pipelines` 8.0.0→10.0.11（进包）、`System.Threading.Channels` 8.0.0→10.0.11（netstandard2.0 资产）；测试工具 `xunit.runner.visualstudio` 2.8.2→4.0.0（不进包）。至此外部依赖与 .NET 10 LTS 世代对齐。
 
