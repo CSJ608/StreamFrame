@@ -166,7 +166,7 @@ A peer that announces a huge frame but never completes it (or a stream with STX 
 - `MaxIncompleteFrameBufferBytes` (default = frame limit + 4 KB) — a cap in **bytes**: exceeding it disconnects, blocking memory-flooding peers;
 - `IncompleteFrameTimeoutMs` (default 0 = off) — a cap in **time**: if a started frame receives no further bytes for this long, the session is torn down and `FrameError` reports `IncompleteFrameTimeout` with a buffer snapshot capped at 8 KB.
 
-The incomplete-frame timeout only counts while a frame is actually in progress: an idle connection with an empty buffer never trips it (each received byte resets it; it clears once a whole frame is cut). It complements `ReceiveIdleTimeoutMs` (see below) — the latter also times total silence, which suits protocols with periodic traffic; for protocols that may stay idle for a long time but must not tolerate a stalled half-frame (e.g. HSMS T8), use the incomplete-frame timeout.
+The incomplete-frame timeout only counts while a frame is actually in progress: an idle connection with an empty buffer never trips it (each received byte resets it; it clears once a whole frame is cut). It complements `ReceiveIdleTimeoutMs` (see below) — the latter also times total silence, which suits protocols with periodic traffic; for protocols that may stay idle for a long time but must not tolerate a stalled half-frame (e.g. HSMS T8), use the incomplete-frame timeout. Note its scope is "waiting for further bytes from the network": when `ReceiveQueueCapacity` is set and the consumer stalls completely, the decode loop blocks on the message-channel write and the timeout does not tick during that period (the memory guard `MaxIncompleteFrameBufferBytes` still applies).
 
 ### Logging (optional)
 
