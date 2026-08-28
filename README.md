@@ -98,6 +98,7 @@ public interface ICodec<TMessage>
 - **健壮性**：帧内容解码失败、未完成帧超限/超时、发送失败、接收空闲超时都会判定会话失效并自动重建（不再产生"连接看似存活、消息静默消失"的假活）
 - **活性探测（可选）**：TCP KeepAlive 与接收空闲超时，兜底半开连接（对端断电/拔线）
 - **事件**：`ConnectionChanged` 状态变化、`FrameError` 帧层诊断、`RawBytesReceived/Sent` 原始字节（HEX 调试）
+- **内置指标**：`System.Diagnostics.Metrics`（Meter `StreamFrame`）——帧/字节收发计数、重连次数、会话时长、发送队列水位，详见下文"内置指标"
 - **发送背压**：有界发送队列，队列满时 `SendAsync` 自动等待；接收侧默认无上限缓冲，可用 `ReceiveQueueCapacity` 设上限——消费慢时解码暂停、TCP 背压自然传导到对端，防内存无限增长
 - **会话感知收发（可选高级）**：`CurrentSessionId` / `SendInSessionAsync`（整帧写入 socket 才完成、会话失效即失败、绝不跨会话重放）/ `GetSessionMessages`（消息带会话编号）——为有严格会话边界的协议（如 HSMS）准备，详见下文
 
@@ -166,6 +167,27 @@ socket 层全量输出（含被丢弃的噪声字节），发送侧按实际写�
 
 未完成帧超时只计"帧已开头、迟迟收不齐"的时间：缓冲为空的静默连接不计时（收到字节即重置，整帧切尽后归零）。它与 `ReceiveIdleTimeoutMs`（见下节）互补——后者在完全没流量时也计时，适合有周期报文的协议；对允许长时间空闲、但半帧卡死必须判死的协议（如 HSMS T8），用未完成帧超时。注意其作用域是"等待网络后续字节"期间：若设置了 `ReceiveQueueCapacity` 且消费端完全停滞，解码循环阻塞在消息通道写入上，此期间不计时（内存防线仍由 `MaxIncompleteFrameBufferBytes` 兜底）。
 
+### 内置指标（Metrics）
+
+连接自带 [System.Diagnostics.Metrics](https://learn.microsoft.com/dotnet/core/diagnostics/metrics-instrumentation) 指标（Meter 名 `StreamFrame`，标签 `endpoint`），零外部依赖——生产部署用 `MeterListener` 或 OpenTelemetry 订阅即可观测，不订阅则开销为每次记录纳秒级：
+
+| 指标 | 类型 | 含义 |
+|---|---|---|
+| `streamframe.frames_sent` / `frames_received` | Counter | 业务帧收发计数 |
+| `streamframe.bytes_sent` / `bytes_received` | Counter | 字节收发计数（含帧定界字节/噪声） |
+| `streamframe.reconnects` | Counter | 进入重连的次数 |
+| `streamframe.session_duration` | Histogram | 单次 TCP 会话存活时长（秒） |
+| `streamframe.send_queue_length` | Histogram | 发送队列水位（每次入队采样） |
+
+```csharp
+// 最简订阅（示例）：OTel 的 MeterProvider.AddMeter("StreamFrame") 一行即可接入完整体系
+using var listener = new MeterListener { InstrumentPublished = (i, l) => l.EnableMeasurementEvents(i) };
+listener.SetMeasurementEventCallback<long>((instrument, value, _, _) => { /* 上报 */ });
+listener.Start();
+```
+
+> netstandard2.0 目标经 `System.Diagnostics.DiagnosticSource` 包提供同款 API（netfx 运行时可用）。
+
 ### 日志（可选）
 
 构造连接时传入 `ILogger`，内部事件（连接重试、会话故障、用户回调异常等）输出到日志，生产环境不再静默：
@@ -203,8 +225,8 @@ _ = Task.Run(async () =>
 BenchmarkDotNet 实测（详见 [bench/README.md](bench/README.md)，可本地复现）：
 
 - **流式编码**：每帧堆分配减半（单缓冲 vs 双缓冲），小负载耗时快 25–35%，大负载持平；
-- **切帧吞吐**：`LengthPrefixFramer` ≈10 ns/帧，`StxEtxFramer` ≈1.1 µs/帧（逐字节扫描）——高吞吐场景优先长度前缀；
-- **端到端**（真实 TCP 回环）：单向吞吐 ≈24 万条/秒（1KB 消息，LengthPrefix），往返延迟 ≈63 µs；XML codec 每条报文 2–16 µs（400B–4KB）——序列化开销远大于定界层。
+- **切帧吞吐**：`LengthPrefixFramer` ≈8.3 ns/帧，`StxEtxFramer` ≈50 ns/帧（net8+ SearchValues 向量化后较逐字节版提速约 22 倍）——两者均可达每秒千万帧级；
+- **端到端**（真实 TCP 回环，2026-08-28 重测，含内置指标）：单向吞吐 ≈16 万条/秒（1KB 消息，LengthPrefix ≈6.2 µs/条），往返延迟 ≈51 µs；XML codec 每条报文 2–16 µs（400B–4KB）——序列化开销远大于定界层。绝对值随机器浮动，复现方式见 [bench/README.md](bench/README.md)。
 
 ## 支持框架
 

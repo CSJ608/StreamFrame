@@ -5,7 +5,16 @@
 
 ## [Unreleased]
 
+### 新增
+- **内置指标（Meter `StreamFrame`，`System.Diagnostics.Metrics`，零外部依赖）**：帧/字节收发计数（`streamframe.frames_sent/received`、`bytes_sent/received`）、重连次数（`reconnects`）、会话时长（`session_duration` 直方图）、发送队列水位（`send_queue_length` 直方图，入队采样）；单一 `endpoint` 标签，订阅方式与仪器清单见 README"内置指标"。netstandard2.0 目标经 `System.Diagnostics.DiagnosticSource` 包获得同款 API（netfx 可用）。
+- **浸泡/混沌测试套件（默认不运行）**：`STREAMFRAME_SOAK_SECONDS=<秒> dotnet test --filter FullyQualifiedName~Soak` 手动启用——长时间消息流完整性（顺序/无丢失/无重复）与随机故障混沌（对端 FIN/RST 死亡 + 半帧注入 + 绑定/普通发送突发，终局核对无悬挂、普通消息跨会话续发送达、绑定消息无重复投递）。已在本机通过 20s/60s 两档验证。
+
 ### 变更
+- **`StxEtxFramer` 切帧向量化**：net8+ 用 `SearchValues` 一次跳到最近的 STX/ETX 候选（不含候选的整段字节直接跳过），实测 ≈1.1 µs/帧 → ≈50 ns/帧（约 22 倍）；netstandard2.0 目标保留逐字节实现，语义逐字节等价（两套独立实现，现有 StxEtx/FrameDecoder 测试全绿）。README/bench 性能数据以 2026-08-28 重跑刷新（含内置指标的真实路径）。
+- 会话纪元（epoch）改为在 Connected 发布点分配（与会话编号同点），彻底闭合"发布后、任务未创建"窗口内旧纪元幽灵故障卷入新生会话的瞬态误杀（v2.3.0 评审附带发现）；发布窗口注入幽灵的回归测试锁定该行为。
+- demo 新增场景 5：会话感知收发（编号生命周期、整帧写完才完成、旧会话发送失效不重放、新会话照常收发）。
+
+### 修复
 - 暂无
 
 ## [2.3.1] - 2026-08-28
