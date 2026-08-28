@@ -278,6 +278,17 @@ public class SessionAwareConnectionTests
             Assert.True(ex is SessionExpiredException or SocketException or OperationCanceledException,
                 $"失败类型应为会话失效/socket 故障，实际 {ex.GetType().Name}。");
         }
+
+        // 队满等待中的条目被 fault 后，其迟到的入队仍会成功（新 worker 腾出空位）——
+        // worker 认领时的编号校验（跨会话残留防线）必须跳过它、绝不发送。
+        // 连入新对端驱动排空，并断言三条旧消息一个字节都没有发到新会话
+        using (var client2 = new TcpClient())
+        {
+            await ConnectWithRetryAsync(client2, port);
+            await WaitForStateAsync(server, s => s == ConnectionState.Connected, timeoutMs: 8000);
+            await Task.Delay(500); // 留出排空窗口
+            await AssertNoBytesAsync(client2.GetStream());
+        }
     }
 
     [Fact]
@@ -445,6 +456,52 @@ public class SessionAwareConnectionTests
             var task = server.SendInSessionAsync(id2, "alive");
             Assert.Equal("alive", await ReadFrameAsync(client2.GetStream()));
             await AwaitDoneAsync(task, 3000, "活会话发送");
+        }
+    }
+
+    [Fact]
+    public async Task GhostFault_DuringConnectedPublication_DoesNotKillNewbornSession()
+    {
+        // 评审"附带发现"的行为锁定：Connected 发布与 StartSession 之间到达的旧纪元幽灵故障
+        // 必须被丢弃。入口的过期检查 + 纪元在发布点提前递增共同保证这一点——
+        // 在发布线程上（StartSession 尚未执行）注入幽灵是最紧的时序构造
+        var port = GetFreePort();
+        await using var server = CreateServer(port);
+
+        var injectGhost = false;
+        server.ConnectionChanged += (_, s) =>
+        {
+            if (s != ConnectionState.Connected || !injectGhost)
+                return;
+            injectGhost = false;
+            typeof(StreamConnection<string>).GetMethod(
+                "ScheduleReconnect", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+                .Invoke(server, new object[] { 1 }); // 旧会话（epoch=1）的幽灵
+        };
+        server.Start(CancellationToken.None);
+
+        using (var client1 = new TcpClient())
+        {
+            await ConnectWithRetryAsync(client1, port);
+            await WaitForStateAsync(server, s => s == ConnectionState.Connected);
+        }
+
+        await WaitForStateAsync(server, s => s != ConnectionState.Connected);
+        injectGhost = true; // 第二次 Connected 发布的回调里注入幽灵
+        using (var client2 = new TcpClient())
+        {
+            await ConnectWithRetryAsync(client2, port);
+            await WaitForStateAsync(server, s => s == ConnectionState.Connected, timeoutMs: 8000);
+            var id2 = server.CurrentSessionId;
+            Assert.NotEqual(0, id2);
+
+            await Task.Delay(400); // 幽灵若未被丢弃，此刻已把会话 2 卷进 Retry
+            Assert.Equal(ConnectionState.Connected, server.State);
+            Assert.Equal(id2, server.CurrentSessionId);
+
+            var task = server.SendInSessionAsync(id2, "alive");
+            Assert.Equal("alive", await ReadFrameAsync(client2.GetStream()));
+            await AwaitDoneAsync(task, 3000, "新生会话发送");
         }
     }
 

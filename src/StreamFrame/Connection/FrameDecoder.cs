@@ -27,6 +27,7 @@ internal sealed class FrameDecoder<TMessage>
     private readonly IFramer _framing;
     private readonly ICodec<TMessage> _codec;
     private readonly Channel<SessionMessage<TMessage>> _relay;
+    private readonly ConnectionMetrics _metrics;
     private readonly long _sessionId;
     private readonly int _maxIncompleteFrameBytes;
     private readonly int _incompleteFrameTimeoutMs;
@@ -38,6 +39,7 @@ internal sealed class FrameDecoder<TMessage>
         IFramer framing,
         ICodec<TMessage> codec,
         Channel<SessionMessage<TMessage>> relay,
+        ConnectionMetrics metrics,
         long sessionId,
         int maxIncompleteFrameBytes,
         int incompleteFrameTimeoutMs,
@@ -48,6 +50,7 @@ internal sealed class FrameDecoder<TMessage>
         _framing = framing;
         _codec = codec;
         _relay = relay;
+        _metrics = metrics;
         _sessionId = sessionId;
         _maxIncompleteFrameBytes = maxIncompleteFrameBytes;
         _incompleteFrameTimeoutMs = incompleteFrameTimeoutMs;
@@ -109,6 +112,7 @@ internal sealed class FrameDecoder<TMessage>
                     {
                         await _relay.Writer.WriteAsync(
                             new SessionMessage<TMessage>(_sessionId, message), CancellationToken.None).ConfigureAwait(false);
+                        _metrics.FrameReceived();
                     }
                     catch (ChannelClosedException)
                     {

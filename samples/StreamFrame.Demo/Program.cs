@@ -1,15 +1,17 @@
 using System.Buffers;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Xml.Linq;
 using StreamFrame;
 using StreamFrame.Protocols.Xml;
 
-// 本 demo 演示 StreamFrame 的四种典型用法：
+// 本 demo 演示 StreamFrame 的五种典型用法：
 //   1) XML 消息 + 4 字节长度前缀帧（对应 SamSung 风格）
 //   2) 纯文本消息 + STX/ETX 包裹帧
 //   3) 断线自动重连
 //   4) 心跳保活 + 接收空闲超时（半开连接探测）
+//   5) 会话感知收发（整帧写完才完成、旧会话消息不重放）
 // 所有场景共用同一套连接核心，仅 framing / codec / 选项不同。
 
 var cts = new CancellationTokenSource();
@@ -24,6 +26,7 @@ await RunXmlLengthPrefixScenarioAsync(cts.Token);
 await RunStxEtxTextScenarioAsync(cts.Token);
 await RunReconnectScenarioAsync(cts.Token);
 await RunHeartbeatScenarioAsync(cts.Token);
+await RunSessionAwareScenarioAsync(cts.Token);
 
 Console.WriteLine("演示结束。");
 
@@ -395,6 +398,124 @@ static void Assert(bool condition, string message)
         Console.WriteLine($"断言失败：{message}");
         Environment.Exit(1);
     }
+}
+
+// ---------------------------------------------------------------------------
+// 场景 5：会话感知收发（ISessionAwareStreamConnection）
+// ---------------------------------------------------------------------------
+static async Task RunSessionAwareScenarioAsync(CancellationToken ct)
+{
+    const int port = 5500;
+    Console.WriteLine("\n=== 场景 5：会话感知收发（重连后旧会话消息不重放） ===");
+
+    var server = new StreamConnection<string>(
+        new LengthPrefixFramer(),
+        new Utf8TextCodec(),
+        IPAddress.Loopback,
+        port,
+        isActive: false);
+    server.ConnectionChanged += (_, state) =>
+        Console.WriteLine($"[server] 状态 -> {state}（会话编号 {server.CurrentSessionId}）");
+    server.Start(ct);
+
+    // 设备 1 接入：Connected 可见时即可读到有效的会话编号
+    using (var device1 = new TcpClient())
+    {
+        await device1.ConnectAsync(IPAddress.Loopback, port, ct);
+        await WaitForServerStateAsync(server, s => s == ConnectionState.Connected, ct);
+        var session1 = server.CurrentSessionId;
+        Console.WriteLine($"[server] 设备 1 接入，会话编号 = {session1}");
+        Assert(session1 != 0, "Connected 后会话编号必须有效（非 0）");
+
+        // 会话绑定发送：任务在整帧写入 socket 后才完成（对端此刻才能读到完整帧）
+        var sendTask = server.SendInSessionAsync(session1, "hello-device1", ct);
+        var received = await ReadDemoFrameAsync(device1.GetStream(), ct);
+        await sendTask.WaitAsync(TimeSpan.FromSeconds(5));
+        Console.WriteLine($"[device1] 收到完整帧: {received}");
+        Assert(received == "hello-device1", "设备 1 应收到会话绑定消息");
+
+        // 设备 1 掉线（服务端将自动重连进入监听）
+        Console.WriteLine("[device1] 掉线（dispose）…");
+    }
+
+    await WaitForServerStateAsync(server, s => s != ConnectionState.Connected, ct);
+
+    // 旧会话的绑定发送：立即以 SessionExpiredException 失败——不等待重连、绝不重放到新会话
+    var expired = await AssertDemoThrowsAsync<SessionExpiredException>(
+        () => server.SendInSessionAsync(server.CurrentSessionId == 0 ? 1 : server.CurrentSessionId, "stale-message", ct));
+    Console.WriteLine($"[server] 旧会话发送按预期失败：会话 {expired.SessionId} 已失效，消息不会转移到新会话");
+
+    // 设备 2 接入：会话编号单调递增，新会话照常收发
+    using (var device2 = new TcpClient())
+    {
+        await device2.ConnectAsync(IPAddress.Loopback, port, ct);
+        await WaitForServerStateAsync(server, s => s == ConnectionState.Connected, ct);
+        var session2 = server.CurrentSessionId;
+        Console.WriteLine($"[server] 设备 2 接入，会话编号 = {session2}");
+        Assert(session2 > 1, "新会话编号必须大于旧会话");
+
+        var sendTask = server.SendInSessionAsync(session2, "hello-device2", ct);
+        var received = await ReadDemoFrameAsync(device2.GetStream(), ct);
+        await sendTask.WaitAsync(TimeSpan.FromSeconds(5));
+        Console.WriteLine($"[device2] 收到完整帧: {received}");
+        Assert(received == "hello-device2", "设备 2 应收到新会话消息");
+    }
+
+    await server.DisposeAsync();
+    Console.WriteLine("场景 5 通过 ✓");
+}
+
+/// <summary>轮询等待连接状态（demo 用，5 秒超时即断言失败）。</summary>
+static async Task WaitForServerStateAsync(
+    StreamConnection<string> server, Func<ConnectionState, bool> predicate, CancellationToken ct)
+{
+    var deadline = DateTime.UtcNow.AddSeconds(5);
+    while (DateTime.UtcNow < deadline)
+    {
+        if (predicate(server.State))
+            return;
+        await Task.Delay(50, ct);
+    }
+
+    Assert(predicate(server.State), $"等待状态超时，当前 {server.State}。");
+}
+
+/// <summary>从裸 TcpClient 读一个"4 字节大端长度 + UTF-8"帧。</summary>
+static async Task<string> ReadDemoFrameAsync(NetworkStream stream, CancellationToken ct)
+{
+    var header = new byte[4];
+    await ReadDemoExactlyAsync(stream, header, ct);
+    var length = System.Buffers.Binary.BinaryPrimitives.ReadInt32BigEndian(header);
+    var body = new byte[length];
+    await ReadDemoExactlyAsync(stream, body, ct);
+    return Encoding.UTF8.GetString(body);
+}
+
+static async Task ReadDemoExactlyAsync(NetworkStream stream, byte[] buffer, CancellationToken ct)
+{
+    var read = 0;
+    while (read < buffer.Length)
+    {
+        var n = await stream.ReadAsync(buffer, read, buffer.Length - read, ct);
+        Assert(n > 0, "对端提前关闭。");
+        read += n;
+    }
+}
+
+static async Task<TException> AssertDemoThrowsAsync<TException>(Func<Task> action)
+    where TException : Exception
+{
+    try
+    {
+        await action();
+    }
+    catch (TException ex)
+    {
+        return ex;
+    }
+
+    Assert(false, $"应抛出 {typeof(TException).Name}。");
+    throw new InvalidOperationException("unreachable");
 }
 
 /// <summary>简单的 UTF-8 文本 codec（演示自定义 codec 有多么容易）。</summary>

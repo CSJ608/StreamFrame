@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO.Pipelines;
 using System.Net;
 using System.Net.Sockets;
@@ -90,11 +91,15 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
     /// <summary>公共会话编号的分配计数器：仅在真实 TCP 会话建立时递增（有间隔、单调、不复用）；checked 防静默回绕。</summary>
     private long _sessionCounter;
 
+    /// <summary>当前会话的建立时刻（Stopwatch 时戳），拆除时用于会话时长指标。</summary>
+    private long _sessionStartedAt;
+
     /// <summary>当前会话编号：0 = 无会话。分配/归零都必须先于对应状态对外发布（线性化点，见 CommunicationStateChanging）。</summary>
     private long _currentSessionId;
 
     private readonly Channel<SessionSendEntry> _sendQueue;
     private readonly Channel<SessionMessage<TMessage>> _messageRelay;
+    private readonly ConnectionMetrics _metrics;
 
     /// <summary>已注册、尚未终结的会话绑定发送条目：会话拆除时立即 fault，避免调用方空等重连全程。</summary>
     private readonly ConcurrentDictionary<SessionSendEntry, byte> _pendingSessionSends = new();
@@ -171,6 +176,8 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
         _retryScheduler = new RetryDelayScheduler(
             isActive ? _options.ConnectRetryDelayMs : _options.AcceptRetryDelayMs,
             _options.MaxRetryDelayMs);
+
+        _metrics = new ConnectionMetrics($"{IpAddress}:{Port}");
     }
 
     /// <summary>连接是否已停机（Dispose 或 Start 令牌取消）。停机后不可再用，需新建连接。</summary>
@@ -308,7 +315,7 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
                 catch (Exception ex) when (!ct.IsCancellationRequested && !IsDisposed)
                 {
                     var delay = _retryScheduler.NextDelayMs();
-                    _logger.LogWarning(ex, "Accept on {Local} failed (attempt {Attempt}); retry in {Delay}ms.",
+                                _logger.LogWarning(ex, "Accept on {Local} failed (attempt {Attempt}); retry in {Delay}ms.",
                         $"{IpAddress}:{Port}", _retryScheduler.Attempt, delay);
                     await Task.Delay(delay, ct).ConfigureAwait(false);
                 }
@@ -419,16 +426,19 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
             return;
 
         // 公共会话编号的线性化点：Connected 对外发布（事件回调/等待器完成）之前完成分配；
-        // 离开 Connected 的状态（Retry/Disconnected）对外发布之前归零——状态可见时旧会话
-        // 已不可用于新的会话绑定发送（SendInSessionAsync 以编号不匹配快速失败）。
+        // 会话纪元（epoch）同样在发布之前递增——发布后到达的旧纪元幽灵故障在函数入口
+        // 即被判为过期丢弃，不会卷进"已发布、任务未创建"的新生会话（评审附带发现收口）。
         if (newState == ConnectionState.Connected)
         {
             var id = checked(Interlocked.Increment(ref _sessionCounter));
             Volatile.Write(ref _currentSessionId, id);
+            Interlocked.Increment(ref _sessionEpoch);
         }
         else if (newState is ConnectionState.Retry or ConnectionState.Disconnected)
         {
             Volatile.Write(ref _currentSessionId, 0);
+            if (newState == ConnectionState.Retry)
+                _metrics.Reconnect(); // 过期幽灵已在函数入口被丢弃，不会计入
         }
 
         State = newState;
@@ -452,7 +462,7 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
         switch (newState)
         {
             case ConnectionState.Connected:
-                StartSession(Volatile.Read(ref _currentSessionId));
+                StartSession(Volatile.Read(ref _currentSessionId), Volatile.Read(ref _sessionEpoch));
                 break;
 
             case ConnectionState.Retry:
@@ -485,34 +495,36 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
         }
     }
 
-    private void StartSession(long sessionId)
+    private void StartSession(long sessionId, int epoch)
     {
         lock (_sessionGate)
         {
             StopSessionCore();
 
-            // 病态重入兜底：Connected 回调里同步触发 Reconnect() 会让编号在 StartSession
-            // 执行前被归零——此时重新分配一个，保证会话任务拿到的编号恒非零。
+            // 病态重入兜底：Connected 回调里同步触发 Reconnect() 会让编号/纪元在 StartSession
+            // 执行前被归零/递增——此时重新分配两者，保证会话任务拿到的编号恒非零、
+            // 纪元为最新（旧纪元的任务故障会被入口的过期检查丢弃）。
             if (sessionId == 0)
             {
                 sessionId = checked(Interlocked.Increment(ref _sessionCounter));
                 Volatile.Write(ref _currentSessionId, sessionId);
+                epoch = Interlocked.Increment(ref _sessionEpoch);
             }
 
-            var epoch = ++_sessionEpoch;
             var cts = new CancellationTokenSource();
             var token = cts.Token;
             var pipe = new Pipe();
 
             _sessionCts = cts;
             _pipe = pipe;
+            _sessionStartedAt = Stopwatch.GetTimestamp();
 
             var maxIncompleteFrameBytes = _options.MaxIncompleteFrameBufferBytes > 0
                 ? _options.MaxIncompleteFrameBufferBytes
                 : _framing.MaxPayloadBytes + 4096;
 
             var decoder = new FrameDecoder<TMessage>(
-                pipe.Reader, _framing, _codec, _messageRelay, sessionId,
+                pipe.Reader, _framing, _codec, _messageRelay, _metrics, sessionId,
                 maxIncompleteFrameBytes, _options.IncompleteFrameTimeoutMs,
                 _options.DecodeErrorPolicy, RaiseFrameError);
 
@@ -570,6 +582,11 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
     {
         if (_sessionCts is not { } cts)
             return;
+
+        // 会话时长指标：从建立到拆除的真实存活时间
+        var startedAt = Interlocked.Exchange(ref _sessionStartedAt, 0);
+        if (startedAt != 0)
+            _metrics.SessionEnded((Stopwatch.GetTimestamp() - startedAt) / (double)Stopwatch.Frequency);
 
         var pipe = _pipe;
 
@@ -638,6 +655,7 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
                 if (count > 0)
                 {
                     InvokeRawBytesReceived(memory[..count]);
+                    _metrics.AddBytesReceived(count);
                     await writer.FlushAsync(ct).ConfigureAwait(false);
                 }
                 else
@@ -693,6 +711,7 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
                 if (!entry.IsSessionBound)
                 {
                     await SendFramedAsync(entry.Message, ct).ConfigureAwait(false);
+                    _metrics.FrameSent();
                     continue;
                 }
 
@@ -715,6 +734,7 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
                 {
                     await SendFramedAsync(entry.Message, ct).ConfigureAwait(false);
                     entry.Complete(); // 整帧已写入本机 socket，任务成功完成
+                    _metrics.FrameSent();
                 }
                 catch (OperationCanceledException ex) when (ct.IsCancellationRequested)
                 {
@@ -772,6 +792,7 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
 
                 // 按实际写出的分片回调：部分发送失败时，已上线字节也可见
                 InvokeRawBytesSent(buffer[..length]);
+                _metrics.AddBytesSent(length);
                 buffer = buffer[length..];
             }
         }
@@ -820,7 +841,10 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
 
     /// <inheritdoc />
     public Task SendAsync(TMessage message, CancellationToken ct = default)
-        => _sendQueue.Writer.WriteAsync(new SessionSendEntry(message), ct).AsTask();
+    {
+        _metrics.SendQueueObserved(_sendQueue.Reader.Count);
+        return _sendQueue.Writer.WriteAsync(new SessionSendEntry(message), ct).AsTask();
+    }
 
     /// <inheritdoc cref="ISessionAwareStreamConnection{TMessage}.SendInSessionAsync" />
     public async Task SendInSessionAsync(long sessionId, TMessage message, CancellationToken ct = default)
@@ -832,6 +856,7 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
             throw NewSessionExpired(sessionId);
 
         var entry = new SessionSendEntry(sessionId, message);
+        _metrics.SendQueueObserved(_sendQueue.Reader.Count);
         _pendingSessionSends.TryAdd(entry, 0);
         try
         {

@@ -8,6 +8,9 @@ namespace StreamFrame.Tests;
 
 public class FrameDecoderTests
 {
+    /// <summary>指标构造用的占位端点计数器（仅作标签，无实际意义）。</summary>
+    private static int _portCounter;
+
     /// <summary>
     /// 把一个 byte[] 拆成多个小块（模拟 TCP 分片），每次喂一块。
     /// </summary>
@@ -49,6 +52,7 @@ public class FrameDecoderTests
         var pipe = new Pipe();
         var decoder = new FrameDecoder<string>(
             pipe.Reader, framing, codec ?? StringCodec.Instance, relay,
+            metrics: new ConnectionMetrics($"test:{_portCounter++}"),
             sessionId: 1,
             maxIncompleteFrameBytes ?? framing.MaxPayloadBytes + 4096,
             incompleteFrameTimeoutMs,

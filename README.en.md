@@ -98,6 +98,7 @@ public interface ICodec<TMessage>
 - **Robustness**: payload decode failures, incomplete-frame overflows/timeouts, send failures, and receive idle timeouts all invalidate the session and rebuild it automatically (no more "connection looks alive while messages silently vanish")
 - **Liveness detection (optional)**: TCP KeepAlive and receive idle timeout to catch half-open connections (peer power loss / unplugged cable)
 - **Events**: `ConnectionChanged` state changes, `FrameError` frame-level diagnostics, `RawBytesReceived/Sent` raw bytes (HEX debugging)
+- **Built-in metrics**: `System.Diagnostics.Metrics` (meter `StreamFrame`) — frame/byte counters, reconnects, session duration, send-queue watermark; see the "Built-in metrics" section
 - **Backpressure**: bounded send queue — `SendAsync` waits when full; the receive side buffers without limit by default, or set `ReceiveQueueCapacity` — decoding pauses when the consumer lags, propagating TCP backpressure to the peer and preventing unbounded memory growth
 - **Session-aware messaging (optional, advanced)**: `CurrentSessionId` / `SendInSessionAsync` (completes only after the whole frame is written to the socket; fails on session loss and never replays across sessions) / `GetSessionMessages` (messages carry their session id) — for protocols with strict session boundaries such as HSMS; see the dedicated section below
 
@@ -168,6 +169,27 @@ A peer that announces a huge frame but never completes it (or a stream with STX 
 
 The incomplete-frame timeout only counts while a frame is actually in progress: an idle connection with an empty buffer never trips it (each received byte resets it; it clears once a whole frame is cut). It complements `ReceiveIdleTimeoutMs` (see below) — the latter also times total silence, which suits protocols with periodic traffic; for protocols that may stay idle for a long time but must not tolerate a stalled half-frame (e.g. HSMS T8), use the incomplete-frame timeout. Note its scope is "waiting for further bytes from the network": when `ReceiveQueueCapacity` is set and the consumer stalls completely, the decode loop blocks on the message-channel write and the timeout does not tick during that period (the memory guard `MaxIncompleteFrameBufferBytes` still applies).
 
+### Built-in metrics
+
+Connections ship [System.Diagnostics.Metrics](https://learn.microsoft.com/dotnet/core/diagnostics/metrics-instrumentation) instruments (meter name `StreamFrame`, tag `endpoint`) with zero external dependencies — subscribe with a `MeterListener` or OpenTelemetry in production; unsubscribed, each record costs nanoseconds:
+
+| Instrument | Kind | Meaning |
+|---|---|---|
+| `streamframe.frames_sent` / `frames_received` | Counter | Business frames sent/received |
+| `streamframe.bytes_sent` / `bytes_received` | Counter | Bytes sent/received (framing bytes/noise included) |
+| `streamframe.reconnects` | Counter | Reconnect count |
+| `streamframe.session_duration` | Histogram | Lifetime of one TCP session (seconds) |
+| `streamframe.send_queue_length` | Histogram | Send-queue watermark (sampled per enqueue) |
+
+```csharp
+// Minimal subscription (example): OTel's MeterProvider.AddMeter("StreamFrame") hooks the full ecosystem
+using var listener = new MeterListener { InstrumentPublished = (i, l) => l.EnableMeasurementEvents(i) };
+listener.SetMeasurementEventCallback<long>((instrument, value, _, _) => { /* report */ });
+listener.Start();
+```
+
+> The netstandard2.0 target gets the same API via the `System.Diagnostics.DiagnosticSource` package (works on .NET Framework).
+
 ### Logging (optional)
 
 Pass an `ILogger` when constructing the connection to route internal events (connect retries, session faults, user-callback exceptions) to your logs — no more silence in production:
@@ -206,8 +228,8 @@ Choosing between the two receive timeouts: `ReceiveIdleTimeoutMs` demands **peri
 Measured with BenchmarkDotNet (details and how to reproduce in [bench/README.md](bench/README.md)):
 
 - **Streaming encode**: halves per-frame heap allocation (single vs. double buffer); 25–35% faster for small payloads, on par for large ones;
-- **Frame decoding**: `LengthPrefixFramer` ≈10 ns/frame vs `StxEtxFramer` ≈1.1 µs/frame (byte-by-byte scanning) — prefer length-prefix for high-throughput scenarios;
-- **End-to-end** (real TCP loopback): one-way throughput ≈246k msgs/s (1KB messages, LengthPrefix), round-trip latency ≈63 µs; the XML codec costs 2–16 µs per message (400B–4KB) — serialization dominates, not framing.
+- **Frame decoding**: `LengthPrefixFramer` ≈8.3 ns/frame, `StxEtxFramer` ≈50 ns/frame (≈22× faster after SearchValues vectorization on net8+) — both handle tens of millions of frames per second;
+- **End-to-end** (real TCP loopback, re-measured 2026-08-28 with built-in metrics on): one-way throughput ≈160k msgs/s (1KB messages, LengthPrefix ≈6.2 µs/msg), round-trip latency ≈51 µs; the XML codec costs 2–16 µs per message (400B–4KB) — serialization dominates, not framing. Absolute values vary by machine; see [bench/README.md](bench/README.md) to reproduce.
 
 ## Supported frameworks
 
