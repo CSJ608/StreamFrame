@@ -153,7 +153,10 @@ public class IncompleteFrameTimeoutTests
     public async Task CompleteFrameThenLongIdle_DoesNotTrigger()
     {
         var port = GetFreePort();
-        await using var server = CreateServer(port, new StreamConnectionOptions { IncompleteFrameTimeoutMs = 200 });
+        // 余量说明：超时取 500ms 而非 200ms——并行测试负载下，单次 Write 的小帧仍可能被
+        // TCP 拆段，解码循环的续读唤醒被拖过 200ms 会让"帧内间隔"合法触发超时（曾偶发）。
+        // 帧内续传的重置语义由 TrickleWithinDeadline（1000ms 超时 + 250ms 间隔）覆盖
+        await using var server = CreateServer(port, new StreamConnectionOptions { IncompleteFrameTimeoutMs = 500 });
         var errors = AttachErrorRecorder(server);
         var received = StartMessageDrain(server);
         server.Start(CancellationToken.None);
@@ -166,7 +169,7 @@ public class IncompleteFrameTimeoutTests
             // 一帧完整送达后长时间静默：帧已切尽、缓冲为空，不应计时
             await client.GetStream().WriteAsync(Frame("done"));
             await WaitForAsync(() => { lock (received) return received.Count == 1; });
-            await Task.Delay(600);
+            await Task.Delay(1200);
 
             Assert.Equal(ConnectionState.Connected, server.State);
         }
