@@ -243,7 +243,7 @@ public class SoakTests
                         await server.SendAsync(label);
                     }
                 }
-                else if (action < 80 && false && stream is not null)
+                else if (action < 80 && stream is not null)
                 {
                     // 半帧注入（未完成帧超时未启用：仅占住解码缓冲）
                     var junk = new byte[] { 0x00, 0x00, 0x0F, 0xA0 };
@@ -260,7 +260,7 @@ public class SoakTests
                         await WaitForStateAsync(server, s => s != ConnectionState.Connected);
                     }
                 }
-                else if (false)
+                else
                 {
                     // 杀对端（RST 路径：Linger(true,0) 硬复位）
                     // 注：不混入用户显式 Reconnect()——用户重连与自动重连并发竞速会触发
@@ -277,7 +277,6 @@ public class SoakTests
                 }
 
                 await Task.Delay(random.Next(20, 120));
-                else_placeholder: ;
             }
         }
         finally

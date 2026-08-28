@@ -101,13 +101,10 @@ public class ConnectionMetricsTests
             id1 = server.CurrentSessionId;
 
             var payload = new string('M', 1024);
-            var sendTask = server.SendInSessionAsync(id1, payload); // 普通方向：对端发来一帧
-            var header = new byte[4];
-            System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(header, payload.Length);
-            await client1.GetStream().WriteAsync(header);
-            await client1.GetStream().WriteAsync(Encoding.UTF8.GetBytes(payload));
+            var sendTask = server.SendInSessionAsync(id1, payload); // 出站：回环缓冲即可写完，对端无需先读
             await sendTask.WaitAsync(TimeSpan.FromSeconds(10));
 
+            // 入站恰好一帧（长度 3 + "in!"）：驱动 frames_received / bytes_received
             await client1.GetStream().WriteAsync(new byte[] { 0x00, 0x00, 0x00, 0x03, (byte)'i', (byte)'n', 0x21 });
             var deadline = TestClock.TickCount64 + 10_000;
             while (TestClock.TickCount64 < deadline)
