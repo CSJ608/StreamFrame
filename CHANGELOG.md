@@ -5,12 +5,17 @@
 
 ## [Unreleased]
 
+### 变更
+- 暂无
+
+## [2.3.0] - 2026-08-28
+
 ### 新增
-- **会话感知收发（`ISessionAwareStreamConnection<TMessage>` 可选能力接口，#39）**：为有严格会话边界的协议（HSMS 的 Select/T3/T6、禁止重放）提供——`CurrentSessionId`（每次 TCP 会话建立时分配、单调递增不复用，无会话时为 0；分配/归零先于对应状态对外发布，回调与 `WaitForConnectedAsync` 完成时读取必得一致值）、`SendInSessionAsync`（**整帧写入本机 socket 后才完成**；会话在写出前终止以 `SessionExpiredException` 失败且绝不转移到新会话重放；会话拆除时立即 fault 挂起条目，不空等重连；调用方取消的提交点 = worker 认领，认领后取消不撕裂帧）、`GetSessionMessages`（消息带所属会话编号的接收视图，与 `GetMessages` 为二选一的竞争消费视图）。发送队列内部信封化，`SendAsync`/`GetMessages` 现有语义一字不改。
-- **未完成帧超时（`IncompleteFrameTimeoutMs`，默认 0 = 关闭）**（#38）：帧已开头、缓冲里留着半帧字节，但连续这么久未收到后续字节时判定会话失效并断线重连——与 `ReceiveIdleTimeoutMs`（完全静默也计时，要求周期流量）互补，适合允许长时间空闲、但半帧卡死必须判死的长度前缀协议（如 HSMS T8）。计时只在半帧进行中生效：缓冲为空不计时、收到新字节即重置、整帧切尽后归零；超时经 `FrameError` 上报新类别 `IncompleteFrameTimeout` 并携带受 8KB 上限保护的缓冲快照。纯增量、默认行为不变。
+- **会话感知收发（`ISessionAwareStreamConnection<TMessage>` 可选能力接口，[#39](https://github.com/CSJ608/StreamFrame/issues/39)）**：为有严格会话边界的协议（HSMS 的 Select/T3/T6、禁止重放）提供——`CurrentSessionId`（每次 TCP 会话建立时分配、单调递增不复用，无会话时为 0；分配/归零先于对应状态对外发布，回调与 `WaitForConnectedAsync` 完成时读取必得一致值）、`SendInSessionAsync`（**整帧写入本机 socket 后才完成**；会话在写出前终止以 `SessionExpiredException` 失败且绝不转移到新会话重放；会话拆除时立即 fault 挂起条目，不空等重连；调用方取消的提交点 = worker 认领，认领后取消不撕裂帧）、`GetSessionMessages`（消息带所属会话编号的接收视图，与 `GetMessages` 为二选一的竞争消费视图）。发送队列内部信封化，`SendAsync`/`GetMessages` 现有语义一字不改。
+- **未完成帧超时（`IncompleteFrameTimeoutMs`，默认 0 = 关闭）**（[#38](https://github.com/CSJ608/StreamFrame/issues/38)）：帧已开头、缓冲里留着半帧字节，但连续这么久未收到后续字节时判定会话失效并断线重连——与 `ReceiveIdleTimeoutMs`（完全静默也计时，要求周期流量）互补，适合允许长时间空闲、但半帧卡死必须判死的长度前缀协议（如 HSMS T8）。计时只在半帧进行中生效：缓冲为空不计时、收到新字节即重置、整帧切尽后归零；超时经 `FrameError` 上报新类别 `IncompleteFrameTimeout` 并携带受 8KB 上限保护的缓冲快照。纯增量、默认行为不变。
 
 ### 变更
-- LOGO 资产对齐 social preview 定稿：图标符号改为与横幅裸符号完全同构——青色波改为**自左下低位上穿环洞**（旧版为下行穿过且环洞被底色矩形遮盖、波不显于洞内），环壁加粗至约 21.5% 边长、洞圆角收小，背景由纯色 `#4338CA` 改为横幅同款对角渐变 `#1E1B4B → #3730A3`；`docs/logo/` 全套按 social-preview.png 像素实测几何重绘，PNG 由 SVG 母版经 resvg 4096 栅格化降采样产出（单一矢量源），README 双语版经 raw 地址引用自动生效，NuGet 包图标随下个版本发布生效（social preview 横幅本身不变）。
+- LOGO 资产对齐 social preview 定稿：图标符号改为与横幅裸符号完全同构——青色波改为**自左下低位上穿环洞**（旧版为下行穿过且环洞被底色矩形遮盖、波不显于洞内），环壁加粗至约 21.5% 边长、洞圆角收小，背景由纯色 `#4338CA` 改为横幅同款对角渐变 `#1E1B4B → #3730A3`；`docs/logo/` 全套按 social-preview.png 像素实测几何重绘，PNG 由 SVG 母版经 resvg 4096 栅格化降采样产出（单一矢量源），README 双语版经 raw 地址引用自动生效，NuGet 包图标随本版本发布生效（social preview 横幅本身不变）。
 
 ## [2.2.1] - 2026-08-28
 
@@ -141,7 +146,9 @@
 - 发布自动化：`release.yml`（tag 自动建 GitHub Release）、`publish-nuget.yml`（OIDC Trusted Publishing 推送 nuget.org）。
 - 单元测试 25 个 + 三场景端到端 demo。
 
-[Unreleased]: https://github.com/CSJ608/StreamFrame/compare/v2.2.0...HEAD
+[Unreleased]: https://github.com/CSJ608/StreamFrame/compare/v2.3.0...HEAD
+[2.3.0]: https://github.com/CSJ608/StreamFrame/compare/v2.2.1...v2.3.0
+[2.2.1]: https://github.com/CSJ608/StreamFrame/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/CSJ608/StreamFrame/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/CSJ608/StreamFrame/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/CSJ608/StreamFrame/compare/v1.2.0...v2.0.0
