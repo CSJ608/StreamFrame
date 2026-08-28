@@ -5,16 +5,18 @@
 
 ## [Unreleased]
 
+### 变更
+- 暂无
+
+## [2.3.1] - 2026-08-28
+
 ### 修复
 - **迟到的过期故障重连污染活会话**（v2.3.0 评审 P1-1）：垂死旧会话的迟到故障（epoch 已被替换，如 net48 线程池慢导致第二个 `ScheduleReconnect` 延迟到达）此前会在 epoch 校验之前发布 `Retry` 并把 `CurrentSessionId` 归零——完全存活的会话被谎报为重连中、`WaitForConnectedAsync` 悬挂、活会话编号被误判失效。现改为过期故障在任何对外发布之前整体丢弃（gate 内权威复查保留）。回归测试以反射调度过期故障验证。
-- **残留的旧会话绑定条目可能在新会话 socket 上错发并报告成功**（评审 P1-2，"绝不跨会话重放"保证的漏洞）：`Connected→Connected` 直连拆除（双 `StartAsync` 竞速/Connected 回调内 `Reconnect()` 重入）路径下，旧会话排队条目既不被清扫也无编号校验，会被新 worker 发到新 socket 并以成功收尾。现发送 worker 认领时校验条目 `SessionId`，不属当前会话的绑定条目一律以 `SessionExpiredException` 失败、绝不发送。压测改为按帧内容对账（跨会话错发探测器）。
+- **残留的旧会话绑定条目可能在新会话 socket 上错发并报告成功**（v2.3.0 评审 P1-2，"绝不跨会话重放"保证的漏洞）：`Connected→Connected` 直连拆除（双 `StartAsync` 竞速/Connected 回调内 `Reconnect()` 重入）路径下，旧会话排队条目既不被清扫也无编号校验，会被新 worker 发到新 socket 并以成功收尾。现发送 worker 认领时校验条目 `SessionId`，不属当前会话的绑定条目一律以 `SessionExpiredException` 失败、绝不发送。压测改为按帧内容对账（跨会话错发探测器）。
 - 发送失败类型收敛（评审 P2-5/P2-6）：停机时清扫先于发送通道完成（队满等待中的条目统一以 `SessionExpiredException` 收尾而非偶发 `ChannelClosedException`）；worker 写出失败时 internal 的 `SessionFaultException` 与 `ObjectDisposedException` 统一映射为 `SessionExpiredException`，不再向调用方泄漏非文档类型。
 - `Reconnect()` 在 `Start()` 之前调用由 NRE 改为明确的 `InvalidOperationException`（存量问题顺手修复）。
 - 未完成帧超时关闭（默认）时不再每读循环拷贝半帧快照（评审 P2-1，2.2.x 路径的小开销）。
 - `SendInSessionAsync` 注册竞态窗口的失败以条目携带的同一异常收尾，不再留下未观察的任务异常（评审 P2-4）。
-
-### 变更
-- 暂无
 
 ## [2.3.0] - 2026-08-28
 
@@ -154,7 +156,8 @@
 - 发布自动化：`release.yml`（tag 自动建 GitHub Release）、`publish-nuget.yml`（OIDC Trusted Publishing 推送 nuget.org）。
 - 单元测试 25 个 + 三场景端到端 demo。
 
-[Unreleased]: https://github.com/CSJ608/StreamFrame/compare/v2.3.0...HEAD
+[Unreleased]: https://github.com/CSJ608/StreamFrame/compare/v2.3.1...HEAD
+[2.3.1]: https://github.com/CSJ608/StreamFrame/compare/v2.3.0...v2.3.1
 [2.3.0]: https://github.com/CSJ608/StreamFrame/compare/v2.2.1...v2.3.0
 [2.2.1]: https://github.com/CSJ608/StreamFrame/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/CSJ608/StreamFrame/compare/v2.1.0...v2.2.0
