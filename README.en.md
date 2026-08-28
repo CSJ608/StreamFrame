@@ -99,6 +99,35 @@ public interface ICodec<TMessage>
 - **Liveness detection (optional)**: TCP KeepAlive and receive idle timeout to catch half-open connections (peer power loss / unplugged cable)
 - **Events**: `ConnectionChanged` state changes, `FrameError` frame-level diagnostics, `RawBytesReceived/Sent` raw bytes (HEX debugging)
 - **Backpressure**: bounded send queue — `SendAsync` waits when full; the receive side buffers without limit by default, or set `ReceiveQueueCapacity` — decoding pauses when the consumer lags, propagating TCP backpressure to the peer and preventing unbounded memory growth
+- **Session-aware messaging (optional, advanced)**: `CurrentSessionId` / `SendInSessionAsync` (completes only after the whole frame is written to the socket; fails on session loss and never replays across sessions) / `GetSessionMessages` (messages carry their session id) — for protocols with strict session boundaries such as HSMS; see the dedicated section below
+
+## Session-aware messaging (advanced)
+
+For typical business traffic that tolerates replay, `SendAsync` (completes on enqueue; queued messages continue on the next session) + `GetMessages` (a stable stream across reconnects) is enough. Some protocols have strict session boundaries — re-handshake after reconnect, no replay of old-session messages, protocol timers starting when the frame is actually written (HSMS Select/T3/T6/T8). For those there is an optional capability interface `ISessionAwareStreamConnection<TMessage>` (implemented by `StreamConnection<TMessage>`; upper layers depending on the interface abstraction detect it with `is`):
+
+```csharp
+if (connection is ISessionAwareStreamConnection<MyMessage> sessionAware)
+{
+    long id = sessionAware.CurrentSessionId;   // allocated per established TCP session, monotonic, never reused; 0 when no session
+
+    // Completes only after the whole frame is handed to the local socket;
+    // session ends before that → SessionExpiredException, the message is never replayed
+    await sessionAware.SendInSessionAsync(id, message, ct);
+
+    // Receive view: every message carries the session it arrived on
+    // (late deliveries from an old session's decoder still carry the old id)
+    await foreach (var m in sessionAware.GetSessionMessages(ct))
+        Handle(m.SessionId, m.Message);
+}
+```
+
+Semantics at a glance:
+
+- **Id linearization**: reading `CurrentSessionId` from a `ConnectionChanged` callback or after `WaitForConnectedAsync` always yields a valid id (allocation happens before Connected becomes visible); it is already zero when a non-Connected state becomes visible.
+- **"Written" means**: the whole frame has been handed to the local socket (kernel buffer), peer ACK not included — the best signal available at the application layer. When the task fails, **treat the remote outcome as unknown** (the peer may have received part or all of the bytes); reconcile via your protocol's transaction correlation, idempotency or recovery flow.
+- **Cancellation commit point**: cancelling before the send worker claims the entry cancels the task and the message is never sent; cancelling after the claim (frame write in progress) has no effect — cancelling one message neither tears frames nor kills the connection.
+- **Relation to `SendAsync`**: both share one FIFO (serialized in enqueue order); the plain `SendAsync` cross-session replay behavior is unchanged. Session-bound sends never transfer to a new session on any failure path.
+- **The two receive APIs are not a broadcast**: `GetMessages` and `GetSessionMessages` are competing consumer views of the same channel — enumerating both splits messages between them; pick one.
 
 ## Diagnostics & debugging
 

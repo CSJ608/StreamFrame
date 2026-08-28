@@ -99,6 +99,33 @@ public interface ICodec<TMessage>
 - **活性探测（可选）**：TCP KeepAlive 与接收空闲超时，兜底半开连接（对端断电/拔线）
 - **事件**：`ConnectionChanged` 状态变化、`FrameError` 帧层诊断、`RawBytesReceived/Sent` 原始字节（HEX 调试）
 - **发送背压**：有界发送队列，队列满时 `SendAsync` 自动等待；接收侧默认无上限缓冲，可用 `ReceiveQueueCapacity` 设上限——消费慢时解码暂停、TCP 背压自然传导到对端，防内存无限增长
+- **会话感知收发（可选高级）**：`CurrentSessionId` / `SendInSessionAsync`（整帧写入 socket 才完成、会话失效即失败、绝不跨会话重放）/ `GetSessionMessages`（消息带会话编号）——为有严格会话边界的协议（如 HSMS）准备，详见下文
+
+## 会话感知收发（高级）
+
+对允许消息重放的一般业务，`SendAsync`（入队即完成、断线后由新会话续发）+ `GetMessages`（跨重连稳定流）就够了。部分协议有严格的会话边界——重连后必须重新握手、旧会话消息禁止重放、协议计时器要从"整帧实际写出"起算（HSMS 的 Select/T3/T6/T8 即是）。为此提供可选能力接口 `ISessionAwareStreamConnection<TMessage>`（`StreamConnection<TMessage>` 已实现；依赖接口抽象的上层用 `is` 探测）：
+
+```csharp
+if (connection is ISessionAwareStreamConnection<MyMessage> sessionAware)
+{
+    long id = sessionAware.CurrentSessionId;          // 每次 TCP 会话建立时分配，单调递增不复用；无会话时为 0
+
+    // 整帧全部写入本机 socket 后才完成；会话在写出前终止 → SessionExpiredException，消息绝不重放
+    await sessionAware.SendInSessionAsync(id, message, ct);
+
+    // 接收视图：每条消息携带它所属的会话编号（旧会话解码任务迟到投递的消息带旧编号）
+    await foreach (var m in sessionAware.GetSessionMessages(ct))
+        Handle(m.SessionId, m.Message);
+}
+```
+
+语义要点：
+
+- **编号的线性化**：`ConnectionChanged` 回调与 `WaitForConnectedAsync` 完成时读 `CurrentSessionId` 必得有效值（分配先于 Connected 对外发布）；状态离开 Connected（Retry/Disconnected）可见时已归零。
+- **"写完"的定义**：整帧字节已交给本机 socket（内核缓冲），不含对端 ACK——应用层可得的最好信号。任务失败时**远端处理结果视为未知**（可能已收到部分/全部字节），由上层协议的事务关联、幂等或恢复流程兜底。
+- **调用方取消的提交点**：发送 worker 认领条目之前取消 → 任务取消且消息不再发送；认领之后（帧已开始写出）取消对结果无副作用——取消单条消息不会撕裂帧、不会杀死连接。
+- **与 `SendAsync` 的关系**：两类发送共享同一条 FIFO（按入队顺序串行化）；普通 `SendAsync` 的跨会话续发行为不变。会话绑定发送在任何失败路径下都不转移到新会话。
+- **两个接收 API 不是广播**：`GetMessages` 与 `GetSessionMessages` 是同一通道的两个竞争消费视图，同时枚举会互相分流——请二选一使用。
 
 ## 诊断与调试
 

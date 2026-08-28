@@ -24,7 +24,7 @@ public class FrameDecoderTests
 
     private sealed record DecoderHarness(
         FrameDecoder<string> Decoder,
-        Channel<string> Relay,
+        Channel<SessionMessage<string>> Relay,
         Pipe Pipe,
         List<FrameErrorEventArgs> Errors,
         List<string> Messages,
@@ -41,7 +41,7 @@ public class FrameDecoderTests
         int incompleteFrameTimeoutMs = 0)
     {
         var errors = new List<FrameErrorEventArgs>();
-        var relay = Channel.CreateUnbounded<string>(new UnboundedChannelOptions
+        var relay = Channel.CreateUnbounded<SessionMessage<string>>(new UnboundedChannelOptions
         {
             SingleReader = false,
             SingleWriter = true,
@@ -49,6 +49,7 @@ public class FrameDecoderTests
         var pipe = new Pipe();
         var decoder = new FrameDecoder<string>(
             pipe.Reader, framing, codec ?? StringCodec.Instance, relay,
+            sessionId: 1,
             maxIncompleteFrameBytes ?? framing.MaxPayloadBytes + 4096,
             incompleteFrameTimeoutMs,
             policy,
@@ -62,8 +63,8 @@ public class FrameDecoderTests
         {
             try
             {
-                await foreach (var message in h.Relay.Reader.ReadAllAsync(h.Done.Token))
-                    h.Messages.Add(message);
+                await foreach (var envelope in h.Relay.Reader.ReadAllAsync(h.Done.Token))
+                    h.Messages.Add(envelope.Message);
             }
             catch (OperationCanceledException)
             {
@@ -181,7 +182,7 @@ public class FrameDecoderTests
         h.Pipe.Writer.Complete();
         await decodeTask;
 
-        Assert.True(h.Relay.Writer.TryWrite("still-alive"));
+        Assert.True(h.Relay.Writer.TryWrite(new SessionMessage<string>(1, "still-alive")));
         await WaitForMessagesAsync(h, 2);
         lock (h.Messages)
             Assert.Contains("still-alive", h.Messages);
