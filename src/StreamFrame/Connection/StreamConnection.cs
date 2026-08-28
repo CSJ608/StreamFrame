@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Collections.Concurrent;
 using System.IO.Pipelines;
 using System.Net;
 using System.Net.Sockets;
@@ -16,15 +17,17 @@ namespace StreamFrame;
 /// <code>
 /// socket --ReceiveAsync--> pipe.Writer --[Pipe]--> 解码循环
 ///   (producer task)                                  (consumer task)
-///                                                      │ while(TryDecodeFrame) → codec.Decode → Channel&lt;TMessage&gt;
-/// 发送：业务 SendAsync 入队 --有界Channel--> 发送worker → codec.Encode → framing.EncodeFrame → _sendLock → socket
+///                                                      │ while(TryDecodeFrame) → codec.Decode → Channel&lt;SessionMessage&gt;
+/// 发送：业务 SendAsync/SendInSessionAsync 入队 --有界Channel--> 发送worker → codec.Encode → framing.EncodeFrame → _sendLock → socket
 /// </code>
 ///
-/// 会话模型：一次 TCP 连接 = 一个会话（Pipe + 三个会话任务）；断线或会话故障时整个会话
-/// 作废重建，而 <c>_messageRelay</c> 消息通道是连接级的、跨会话存活——业务侧的
+/// 会话模型：一次 TCP 连接 = 一个会话（Pipe + 三个会话任务 + 公共会话编号）；断线或会话故障时
+/// 整个会话作废重建，而 <c>_messageRelay</c> 消息通道是连接级的、跨会话存活——业务侧的
 /// <see cref="GetMessages"/> 枚举在重连前后是同一条稳定流，仅在 Dispose 时正常结束。
+/// 会话感知收发（<see cref="ISessionAwareStreamConnection{TMessage}"/>）在此之上提供
+/// 绑定会话的发送与带会话编号的接收视图。
 /// </summary>
-public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
+public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<TMessage>
 {
     /// <inheritdoc />
     public event EventHandler<ConnectionState>? ConnectionChanged;
@@ -81,8 +84,20 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
     private Task? _sendWorkerTask;
     private int _sessionEpoch;
 
-    private readonly Channel<TMessage> _sendQueue;
-    private readonly Channel<TMessage> _messageRelay;
+    /// <inheritdoc cref="ISessionAwareStreamConnection{TMessage}.CurrentSessionId" />
+    public long CurrentSessionId => Volatile.Read(ref _currentSessionId);
+
+    /// <summary>公共会话编号的分配计数器：仅在真实 TCP 会话建立时递增（有间隔、单调、不复用）；checked 防静默回绕。</summary>
+    private long _sessionCounter;
+
+    /// <summary>当前会话编号：0 = 无会话。分配/归零都必须先于对应状态对外发布（线性化点，见 CommunicationStateChanging）。</summary>
+    private long _currentSessionId;
+
+    private readonly Channel<SessionSendEntry> _sendQueue;
+    private readonly Channel<SessionMessage<TMessage>> _messageRelay;
+
+    /// <summary>已注册、尚未终结的会话绑定发送条目：会话拆除时立即 fault，避免调用方空等重连全程。</summary>
+    private readonly ConcurrentDictionary<SessionSendEntry, byte> _pendingSessionSends = new();
     private readonly SemaphoreSlim _sendLock = new(initialCount: 1);
     private readonly SemaphoreSlim _acceptLock = new(1, 1);
     private readonly ILogger _logger;
@@ -125,7 +140,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
         _options.Validate();
         _logger = logger ?? NullLogger.Instance;
 
-        _sendQueue = Channel.CreateBounded<TMessage>(new BoundedChannelOptions(_options.SendQueueCapacity)
+        _sendQueue = Channel.CreateBounded<SessionSendEntry>(new BoundedChannelOptions(_options.SendQueueCapacity)
         {
             SingleReader = true,
             SingleWriter = false,
@@ -135,7 +150,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
         // 消息通道归连接所有、跨会话复用：会话重建偶发新旧解码循环并存，不能声明 SingleWriter。
         if (_options.ReceiveQueueCapacity > 0)
         {
-            _messageRelay = Channel.CreateBounded<TMessage>(new BoundedChannelOptions(_options.ReceiveQueueCapacity)
+            _messageRelay = Channel.CreateBounded<SessionMessage<TMessage>>(new BoundedChannelOptions(_options.ReceiveQueueCapacity)
             {
                 SingleReader = false,
                 SingleWriter = false,
@@ -145,7 +160,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
         }
         else
         {
-            _messageRelay = Channel.CreateUnbounded<TMessage>(new UnboundedChannelOptions
+            _messageRelay = Channel.CreateUnbounded<SessionMessage<TMessage>>(new UnboundedChannelOptions
             {
                 SingleReader = false,
                 SingleWriter = false,
@@ -392,6 +407,19 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
 
     private void CommunicationStateChanging(ConnectionState newState, int? observedEpoch = null)
     {
+        // 公共会话编号的线性化点：Connected 对外发布（事件回调/等待器完成）之前完成分配；
+        // 离开 Connected 的状态（Retry/Disconnected）对外发布之前归零——状态可见时旧会话
+        // 已不可用于新的会话绑定发送（SendInSessionAsync 以编号不匹配快速失败）。
+        if (newState == ConnectionState.Connected)
+        {
+            var id = checked(Interlocked.Increment(ref _sessionCounter));
+            Volatile.Write(ref _currentSessionId, id);
+        }
+        else if (newState is ConnectionState.Retry or ConnectionState.Disconnected)
+        {
+            Volatile.Write(ref _currentSessionId, 0);
+        }
+
         State = newState;
 
         try
@@ -413,7 +441,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
         switch (newState)
         {
             case ConnectionState.Connected:
-                StartSession();
+                StartSession(Volatile.Read(ref _currentSessionId));
                 break;
 
             case ConnectionState.Retry:
@@ -431,6 +459,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
                             return; // 故障会话已被替换，避免误杀新会话
 
                         _sessionEpoch++; // 同会话的其它迟到故障立即过期，防止二次拆建
+                        FaultPendingSessionSends(); // 拆除时立即失败挂起的会话绑定发送（先于任务拆除）
                         StopSessionCore();
                     }
 
@@ -445,11 +474,19 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
         }
     }
 
-    private void StartSession()
+    private void StartSession(long sessionId)
     {
         lock (_sessionGate)
         {
             StopSessionCore();
+
+            // 病态重入兜底：Connected 回调里同步触发 Reconnect() 会让编号在 StartSession
+            // 执行前被归零——此时重新分配一个，保证会话任务拿到的编号恒非零。
+            if (sessionId == 0)
+            {
+                sessionId = checked(Interlocked.Increment(ref _sessionCounter));
+                Volatile.Write(ref _currentSessionId, sessionId);
+            }
 
             var epoch = ++_sessionEpoch;
             var cts = new CancellationTokenSource();
@@ -464,7 +501,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
                 : _framing.MaxPayloadBytes + 4096;
 
             var decoder = new FrameDecoder<TMessage>(
-                pipe.Reader, _framing, _codec, _messageRelay,
+                pipe.Reader, _framing, _codec, _messageRelay, sessionId,
                 maxIncompleteFrameBytes, _options.IncompleteFrameTimeoutMs,
                 _options.DecodeErrorPolicy, RaiseFrameError);
 
@@ -493,6 +530,20 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
             _logger.LogWarning(ex, "Session loop faulted; scheduling reconnect.");
             ScheduleReconnect(epoch);
         }
+    }
+
+    /// <summary>
+    /// 会话拆除（Retry/停机）时立即 fault 所有挂起的会话绑定发送：排队中未写出的条目以
+    /// <see cref="SessionExpiredException"/> 结束，调用方不必空等重连；已认领（正在写出）的条目
+    /// 由写出路径给出结果。普通条目不受影响（按既有语义留给新会话续发）。
+    /// 注意：只在真正的拆除点调用——<see cref="StartSession"/> 开头对旧会话的清理不能调用，
+    /// 否则会误杀"Connected 已发布、新会话任务尚未就绪"窗口内注册的新条目。
+    /// </summary>
+    private void FaultPendingSessionSends()
+    {
+        foreach (var entry in _pendingSessionSends.Keys)
+            entry.TryExpire(new SessionExpiredException(
+                entry.SessionId, $"会话 {entry.SessionId} 已终止（断线重连/停机），消息未写出。"));
     }
 
     private void StopSession()
@@ -621,12 +672,40 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
     private async Task SendWorkerAsync(CancellationToken ct)
     {
         // 发送失败（socket 故障/会话失效）不在此吞掉：上抛给会话守护 → 断线重连，
-        // 未发送的消息留在连接级队列，由重连后的新 worker 继续发送。
+        // 未发送的普通消息留在连接级队列，由重连后的新 worker 继续发送。
+        // 会话绑定条目已在拆除时被 fault（或调用方已取消）：只跳过、不发送、不重放。
         var reader = _sendQueue.Reader;
         while (await reader.WaitToReadAsync(ct).ConfigureAwait(false))
         {
-            while (reader.TryRead(out var message))
-                await SendFramedAsync(message, ct).ConfigureAwait(false);
+            while (reader.TryRead(out var entry))
+            {
+                if (!entry.IsSessionBound)
+                {
+                    await SendFramedAsync(entry.Message, ct).ConfigureAwait(false);
+                    continue;
+                }
+
+                // 认领 = 调用方取消的提交点：认领成功后写入只受会话令牌控制
+                if (!entry.TryClaimForSend())
+                    continue;
+
+                try
+                {
+                    await SendFramedAsync(entry.Message, ct).ConfigureAwait(false);
+                    entry.Complete(); // 整帧已写入本机 socket，任务成功完成
+                }
+                catch (OperationCanceledException ex) when (ct.IsCancellationRequested)
+                {
+                    entry.Fault(new SessionExpiredException(
+                        entry.SessionId, $"会话 {entry.SessionId} 在整帧写出前终止。", ex));
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    entry.Fault(ex);
+                    throw;
+                }
+            }
         }
     }
 
@@ -714,7 +793,126 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
 
     /// <inheritdoc />
     public Task SendAsync(TMessage message, CancellationToken ct = default)
-        => _sendQueue.Writer.WriteAsync(message, ct).AsTask();
+        => _sendQueue.Writer.WriteAsync(new SessionSendEntry(message), ct).AsTask();
+
+    /// <inheritdoc cref="ISessionAwareStreamConnection{TMessage}.SendInSessionAsync" />
+    public async Task SendInSessionAsync(long sessionId, TMessage message, CancellationToken ct = default)
+    {
+        ThrowIfDisposed();
+
+        // 快速失败（非权威判定；权威在 worker 出队认领与会话拆除 fault）
+        if (Volatile.Read(ref _currentSessionId) != sessionId)
+            throw NewSessionExpired(sessionId);
+
+        var entry = new SessionSendEntry(sessionId, message);
+        _pendingSessionSends.TryAdd(entry, 0);
+        try
+        {
+            // 双检：注册与"拆除归零编号"的竞态——先注册、再复核，失效则立即 fault 本条目
+            if (Volatile.Read(ref _currentSessionId) != sessionId)
+            {
+                entry.TryExpire(NewSessionExpired(sessionId));
+                throw NewSessionExpired(sessionId);
+            }
+
+            // 调用方取消：提交点（worker 认领）之前使条目退出；认领之后无副作用
+            using var ctReg = ct.Register(
+                static state => ((SessionSendEntry)state!).TryCancelByCaller(), entry);
+
+            // 入队（队列满时等待）。期间允许两类及时结束：调用方取消 → WriteAsync 取消；
+            // 会话失效 → 条目被拆除 fault（CompletionTask 先完成，迟到的入队由 worker 跳过）
+            var enqueueTask = _sendQueue.Writer.WriteAsync(entry, ct).AsTask();
+            var first = await Task.WhenAny(enqueueTask, entry.CompletionTask).ConfigureAwait(false);
+
+            if (first == enqueueTask && enqueueTask.Status == TaskStatus.RanToCompletion)
+            {
+                // 正常入队：等待写出结果（整帧写完成功 / 会话失效 / 提交点前取消）
+                await entry.CompletionTask.ConfigureAwait(false);
+                return;
+            }
+
+            if (entry.CompletionTask.IsCompleted)
+            {
+                // 会话拆除已 fault（或提交点前已取消）：以条目结果为准（统一失败类型）；
+                // 迟到的入队可能仍会成功，旧信封由 worker 跳过——观察其异常避免未观察任务异常
+                ObserveLater(enqueueTask);
+                await entry.CompletionTask.ConfigureAwait(false);
+                return;
+            }
+
+            // 入队失败且与会话无关（调用方取消 / 通道已关闭）：传播入队异常
+            await enqueueTask.ConfigureAwait(false);
+        }
+        finally
+        {
+            _pendingSessionSends.TryRemove(entry, out _);
+        }
+    }
+
+    private static SessionExpiredException NewSessionExpired(long sessionId)
+        => new(sessionId, $"会话 {sessionId} 已失效（当前无此会话）。");
+
+    /// <summary>后台观察一个可能迟到完成的入队任务的异常，避免未观察任务异常。</summary>
+    private static void ObserveLater(Task task)
+        => _ = task.ContinueWith(static completed => _ = completed.Exception, TaskScheduler.Default);
+
+    /// <summary>
+    /// 发送队列条目。普通条目（<see cref="SendAsync"/>）无完成源：入队即完成调用方任务，
+    /// 未发送的消息跨会话续发（既有语义）。会话绑定条目（<see cref="SendInSessionAsync"/>）
+    /// 携带完成源：整帧写入 socket 后成功完成；会话终止时失败、绝不重放。
+    ///
+    /// 状态字三向互斥（提交点/取消/失效的线性化）：排队中 → 已认领（worker 正在写出，
+    /// 只有写出路径能给结果）/ 已取消（调用方在提交点前取消）/ 已失效（会话拆除 fault）。
+    /// </summary>
+    private sealed class SessionSendEntry
+    {
+        private const int Queued = 0;
+        private const int Claimed = 1;
+        private const int CancelledByCaller = 2;
+        private const int Expired = 3;
+
+        private readonly TaskCompletionSource<bool>? _completion;
+        private int _state;
+
+        public SessionSendEntry(TMessage message)
+            => Message = message;
+
+        public SessionSendEntry(long sessionId, TMessage message)
+        {
+            SessionId = sessionId;
+            Message = message;
+            _completion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        }
+
+        public TMessage Message { get; }
+        public long SessionId { get; }
+        public bool IsSessionBound => _completion is not null;
+        public Task CompletionTask => _completion?.Task ?? Task.CompletedTask;
+
+        /// <summary>worker 认领（发送提交点）：仅排队中的条目可发送；已取消/已失效一律跳过。</summary>
+        public bool TryClaimForSend()
+            => Interlocked.CompareExchange(ref _state, Claimed, Queued) == Queued;
+
+        /// <summary>调用方在提交点前取消：条目退出（worker 跳过），完成源以取消收尾。</summary>
+        public void TryCancelByCaller()
+        {
+            if (Interlocked.CompareExchange(ref _state, CancelledByCaller, Queued) == Queued)
+                _completion?.TrySetCanceled(CancellationToken.None);
+        }
+
+        /// <summary>会话拆除 fault：仅对排队中的条目生效；已认领的由写出路径给出结果。</summary>
+        public void TryExpire(Exception reason)
+        {
+            if (Interlocked.CompareExchange(ref _state, Expired, Queued) == Queued)
+                _completion?.TrySetException(reason);
+        }
+
+        public void Complete()
+            => _completion?.TrySetResult(true);
+
+        public void Fault(Exception exception)
+            => _completion?.TrySetException(exception);
+    }
 
     /// <inheritdoc />
     public Task WaitForConnectedAsync(CancellationToken ct = default)
@@ -750,8 +948,20 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
         var reader = _messageRelay.Reader;
         while (await reader.WaitToReadAsync(ct).ConfigureAwait(false))
         {
-            while (reader.TryRead(out var message))
-                yield return message;
+            while (reader.TryRead(out var envelope))
+                yield return envelope.Message;
+        }
+    }
+
+    /// <inheritdoc cref="ISessionAwareStreamConnection{TMessage}.GetSessionMessages" />
+    public async IAsyncEnumerable<SessionMessage<TMessage>> GetSessionMessages(
+        [EnumeratorCancellation] CancellationToken ct = default)
+    {
+        var reader = _messageRelay.Reader;
+        while (await reader.WaitToReadAsync(ct).ConfigureAwait(false))
+        {
+            while (reader.TryRead(out var envelope))
+                yield return envelope;
         }
     }
 
@@ -789,6 +999,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
         _lifetimeRegistration.Dispose();
         _lifetimeCts?.Cancel(); // 停止连接/监听重试循环
         _sendQueue.Writer.TryComplete();
+        FaultPendingSessionSends(); // 停机：挂起的会话绑定发送全部以会话失效收尾
 
         StopSession();
 

@@ -6,6 +6,7 @@
 ## [Unreleased]
 
 ### 新增
+- **会话感知收发（`ISessionAwareStreamConnection<TMessage>` 可选能力接口，#39）**：为有严格会话边界的协议（HSMS 的 Select/T3/T6、禁止重放）提供——`CurrentSessionId`（每次 TCP 会话建立时分配、单调递增不复用，无会话时为 0；分配/归零先于对应状态对外发布，回调与 `WaitForConnectedAsync` 完成时读取必得一致值）、`SendInSessionAsync`（**整帧写入本机 socket 后才完成**；会话在写出前终止以 `SessionExpiredException` 失败且绝不转移到新会话重放；会话拆除时立即 fault 挂起条目，不空等重连；调用方取消的提交点 = worker 认领，认领后取消不撕裂帧）、`GetSessionMessages`（消息带所属会话编号的接收视图，与 `GetMessages` 为二选一的竞争消费视图）。发送队列内部信封化，`SendAsync`/`GetMessages` 现有语义一字不改。
 - **未完成帧超时（`IncompleteFrameTimeoutMs`，默认 0 = 关闭）**（#38）：帧已开头、缓冲里留着半帧字节，但连续这么久未收到后续字节时判定会话失效并断线重连——与 `ReceiveIdleTimeoutMs`（完全静默也计时，要求周期流量）互补，适合允许长时间空闲、但半帧卡死必须判死的长度前缀协议（如 HSMS T8）。计时只在半帧进行中生效：缓冲为空不计时、收到新字节即重置、整帧切尽后归零；超时经 `FrameError` 上报新类别 `IncompleteFrameTimeout` 并携带受 8KB 上限保护的缓冲快照。纯增量、默认行为不变。
 
 ### 变更

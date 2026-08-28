@@ -26,7 +26,8 @@ internal sealed class FrameDecoder<TMessage>
     private readonly PipeReader _reader;
     private readonly IFramer _framing;
     private readonly ICodec<TMessage> _codec;
-    private readonly Channel<TMessage> _relay;
+    private readonly Channel<SessionMessage<TMessage>> _relay;
+    private readonly long _sessionId;
     private readonly int _maxIncompleteFrameBytes;
     private readonly int _incompleteFrameTimeoutMs;
     private readonly DecodeErrorPolicy _decodeErrorPolicy;
@@ -36,7 +37,8 @@ internal sealed class FrameDecoder<TMessage>
         PipeReader reader,
         IFramer framing,
         ICodec<TMessage> codec,
-        Channel<TMessage> relay,
+        Channel<SessionMessage<TMessage>> relay,
+        long sessionId,
         int maxIncompleteFrameBytes,
         int incompleteFrameTimeoutMs,
         DecodeErrorPolicy decodeErrorPolicy,
@@ -46,6 +48,7 @@ internal sealed class FrameDecoder<TMessage>
         _framing = framing;
         _codec = codec;
         _relay = relay;
+        _sessionId = sessionId;
         _maxIncompleteFrameBytes = maxIncompleteFrameBytes;
         _incompleteFrameTimeoutMs = incompleteFrameTimeoutMs;
         _decodeErrorPolicy = decodeErrorPolicy;
@@ -104,7 +107,8 @@ internal sealed class FrameDecoder<TMessage>
 
                     try
                     {
-                        await _relay.Writer.WriteAsync(message, CancellationToken.None).ConfigureAwait(false);
+                        await _relay.Writer.WriteAsync(
+                            new SessionMessage<TMessage>(_sessionId, message), CancellationToken.None).ConfigureAwait(false);
                     }
                     catch (ChannelClosedException)
                     {
