@@ -29,7 +29,7 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
     /// <inheritdoc />
     public event EventHandler<ConnectionState>? ConnectionChanged;
 
-    /// <summary>帧层诊断事件：解码失败、被定界器丢弃的字节、不完整帧超限。字节已拷贝、可留存。</summary>
+    /// <summary>帧层诊断事件：解码失败、被定界器丢弃的字节、不完整帧超限、未完成帧超时。字节已拷贝、可留存。</summary>
     public event EventHandler<FrameErrorEventArgs>? FrameError;
 
     /// <inheritdoc />
@@ -465,7 +465,8 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
 
             var decoder = new FrameDecoder<TMessage>(
                 pipe.Reader, _framing, _codec, _messageRelay,
-                maxIncompleteFrameBytes, _options.DecodeErrorPolicy, RaiseFrameError);
+                maxIncompleteFrameBytes, _options.IncompleteFrameTimeoutMs,
+                _options.DecodeErrorPolicy, RaiseFrameError);
 
             _receiveTask = WatchSessionFaultsAsync(ReceiveLoopAsync(pipe.Writer, token, epoch), cts, epoch);
             _decodeTask = WatchSessionFaultsAsync(decoder.RunAsync(token), cts, epoch);
@@ -475,7 +476,8 @@ public sealed class StreamConnection<TMessage> : IStreamConnection<TMessage>
 
     /// <summary>
     /// 会话任务守护：会话停止引发的取消视为正常退出；其余异常（socket 故障、帧解码失败、
-    /// 不完整帧超限、发送失败）统一转为断线重连（按 <paramref name="epoch"/> 防止过期故障误杀新会话）。
+    /// 不完整帧超限、未完成帧超时、发送失败）统一转为断线重连（按 <paramref name="epoch"/>
+    /// 防止过期故障误杀新会话）。
     /// </summary>
     private async Task WatchSessionFaultsAsync(Task sessionTask, CancellationTokenSource sessionCts, int epoch)
     {

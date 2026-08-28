@@ -37,7 +37,8 @@ public class FrameDecoderTests
         IFramer framing,
         DecodeErrorPolicy policy = DecodeErrorPolicy.Disconnect,
         int? maxIncompleteFrameBytes = null,
-        ICodec<string>? codec = null)
+        ICodec<string>? codec = null,
+        int incompleteFrameTimeoutMs = 0)
     {
         var errors = new List<FrameErrorEventArgs>();
         var relay = Channel.CreateUnbounded<string>(new UnboundedChannelOptions
@@ -49,6 +50,7 @@ public class FrameDecoderTests
         var decoder = new FrameDecoder<string>(
             pipe.Reader, framing, codec ?? StringCodec.Instance, relay,
             maxIncompleteFrameBytes ?? framing.MaxPayloadBytes + 4096,
+            incompleteFrameTimeoutMs,
             policy,
             args => { lock (errors) errors.Add(args); });
         return new DecoderHarness(decoder, relay, pipe, errors, new List<string>(), new CancellationTokenSource());

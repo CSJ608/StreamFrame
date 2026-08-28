@@ -95,7 +95,7 @@ public interface ICodec<TMessage>
 - **自动重连**：`Connecting → Connected → Retry` 状态机；可选指数退避（`MaxRetryDelayMs`，连续失败倍增封顶 + ±20% 抖动，连接成功自动复位）；`GetMessages` 是跨重连的稳定消息流——断线重连后已收消息不丢、枚举不中断
 - **启动与停止**：`Start(ct)` 的 `ct` 是连接的**生命周期令牌**——取消它会停止连接/重连并拆线（状态进入 `Disconnected` 终态，`GetMessages` 自然结束，之后需新建连接）；`DisposeAsync` 与之等效。停机后 `SendAsync` 抛 `ChannelClosedException`
 - **等待连接就绪**：`await conn.WaitForConnectedAsync(ct)`——已连接立即完成，未连接时等到下次连接成功（或取消/Dispose），不用轮询状态、不用 `Task.Delay` 盲等
-- **健壮性**：帧内容解码失败、未完成帧超限、发送失败、接收空闲超时都会判定会话失效并自动重建（不再产生"连接看似存活、消息静默消失"的假活）
+- **健壮性**：帧内容解码失败、未完成帧超限/超时、发送失败、接收空闲超时都会判定会话失效并自动重建（不再产生"连接看似存活、消息静默消失"的假活）
 - **活性探测（可选）**：TCP KeepAlive 与接收空闲超时，兜底半开连接（对端断电/拔线）
 - **事件**：`ConnectionChanged` 状态变化、`FrameError` 帧层诊断、`RawBytesReceived/Sent` 原始字节（HEX 调试）
 - **发送背压**：有界发送队列，队列满时 `SendAsync` 自动等待；接收侧默认无上限缓冲，可用 `ReceiveQueueCapacity` 设上限——消费慢时解码暂停、TCP 背压自然传导到对端，防内存无限增长
@@ -112,6 +112,7 @@ client.FrameError += (_, e) =>
     // e.Kind: DecodeFailed（帧完整但内容解析失败）
     //         DiscardedByResync（被定界器当作噪声丢弃的字节）
     //         IncompleteFrameOverflow（未完成帧缓冲超限）
+    //         IncompleteFrameTimeout（未完成帧超时：半帧迟迟收不齐）
     // e.Bytes: 已拷贝，可安全长期留存
     // e.Exception: DecodeFailed 时的原始异常
     Console.WriteLine($"[{e.Kind}] {Convert.ToHexString(e.Bytes.Span)} {e.Exception?.Message}");
@@ -131,7 +132,12 @@ socket 层全量输出（含被丢弃的噪声字节），发送侧按实际写�
 
 ### 未完成帧防护
 
-对端声明一个超长帧却永远不补齐（或 STX/ETX 流中只有 STX 没有闭合），会无限占用缓冲。`MaxIncompleteFrameBufferBytes`（默认 = 帧上限 + 4KB）给"等不齐的半帧"设了硬上限，超限即断线并通过 `FrameError` 上报。
+对端声明一个超长帧却永远不补齐（或 STX/ETX 流中只有 STX 没有闭合），会无限占用缓冲。两条互补的防线：
+
+- `MaxIncompleteFrameBufferBytes`（默认 = 帧上限 + 4KB）——**字节**上限：半帧超过即断线，防内存攻击；
+- `IncompleteFrameTimeoutMs`（默认 0 = 关闭）——**时间**上限：半帧开始后连续这么久收不到后续字节即断线，`FrameError` 上报 `IncompleteFrameTimeout` 并携带受 8KB 上限保护的缓冲快照。
+
+未完成帧超时只计"帧已开头、迟迟收不齐"的时间：缓冲为空的静默连接不计时（收到字节即重置，整帧切尽后归零）。它与 `ReceiveIdleTimeoutMs`（见下节）互补——后者在完全没流量时也计时，适合有周期报文的协议；对允许长时间空闲、但半帧卡死必须判死的协议（如 HSMS T8），用未完成帧超时。
 
 ### 日志（可选）
 
@@ -162,6 +168,8 @@ _ = Task.Run(async () =>
 ```
 
 对端"猝死"（断电/拔线，无 FIN/RST）时静默超限 → 会话判定死亡 → 自动重连；对端不可达时重连持续失败，状态停留在 `Connecting`/`Retry`。
+
+两种接收超时的取舍：`ReceiveIdleTimeoutMs` 要求连接**必须有周期流量**——协议有心跳/周期上报时用它（还能兜底半开连接）；协议允许长时间静默（只在有帧进行中才该有流量）时改用 `IncompleteFrameTimeoutMs`，静默不算故障、半帧卡死才判死。
 
 ## 性能
 

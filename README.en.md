@@ -95,7 +95,7 @@ public interface ICodec<TMessage>
 - **Auto-reconnect**: `Connecting → Connected → Retry` state machine; optional exponential backoff (`MaxRetryDelayMs`, doubling with cap + ±20% jitter, auto-reset on success); `GetMessages` is a stable stream across reconnections — received messages are not lost and enumeration does not break when the connection drops and recovers
 - **Start & stop**: the `ct` passed to `Start(ct)` is the connection's **lifetime token** — cancelling it stops connection/reconnection and tears the link down (state enters the terminal `Disconnected`, `GetMessages` completes naturally; create a new connection afterwards). `DisposeAsync` does the same. After shutdown, `SendAsync` throws `ChannelClosedException`
 - **Waiting for readiness**: `await conn.WaitForConnectedAsync(ct)` — completes immediately when connected; otherwise waits for the next successful connection (or cancellation/dispose). No state polling, no `Task.Delay` guessing
-- **Robustness**: payload decode failures, incomplete-frame overflows, send failures, and receive idle timeouts all invalidate the session and rebuild it automatically (no more "connection looks alive while messages silently vanish")
+- **Robustness**: payload decode failures, incomplete-frame overflows/timeouts, send failures, and receive idle timeouts all invalidate the session and rebuild it automatically (no more "connection looks alive while messages silently vanish")
 - **Liveness detection (optional)**: TCP KeepAlive and receive idle timeout to catch half-open connections (peer power loss / unplugged cable)
 - **Events**: `ConnectionChanged` state changes, `FrameError` frame-level diagnostics, `RawBytesReceived/Sent` raw bytes (HEX debugging)
 - **Backpressure**: bounded send queue — `SendAsync` waits when full; the receive side buffers without limit by default, or set `ReceiveQueueCapacity` — decoding pauses when the consumer lags, propagating TCP backpressure to the peer and preventing unbounded memory growth
@@ -112,6 +112,7 @@ client.FrameError += (_, e) =>
     // e.Kind: DecodeFailed (frame intact, payload parsing failed)
     //         DiscardedByResync (bytes discarded as noise by the framer)
     //         IncompleteFrameOverflow (incomplete-frame buffer over its limit)
+    //         IncompleteFrameTimeout (incomplete frame timed out waiting for the rest)
     // e.Bytes: copied; safe to retain long-term
     // e.Exception: the original exception for DecodeFailed
     Console.WriteLine($"[{e.Kind}] {Convert.ToHexString(e.Bytes.Span)} {e.Exception?.Message}");
@@ -131,7 +132,12 @@ Full output from the socket layer (including noise bytes later discarded by the 
 
 ### Incomplete-frame protection
 
-A peer that announces a huge frame but never completes it (or a stream with STX but no closing ETX) would hold the buffer forever. `MaxIncompleteFrameBufferBytes` (default = frame limit + 4 KB) puts a hard cap on half-frames: exceeding it disconnects and reports via `FrameError`.
+A peer that announces a huge frame but never completes it (or a stream with STX but no closing ETX) would hold the buffer forever. Two complementary guards:
+
+- `MaxIncompleteFrameBufferBytes` (default = frame limit + 4 KB) — a cap in **bytes**: exceeding it disconnects, blocking memory-flooding peers;
+- `IncompleteFrameTimeoutMs` (default 0 = off) — a cap in **time**: if a started frame receives no further bytes for this long, the session is torn down and `FrameError` reports `IncompleteFrameTimeout` with a buffer snapshot capped at 8 KB.
+
+The incomplete-frame timeout only counts while a frame is actually in progress: an idle connection with an empty buffer never trips it (each received byte resets it; it clears once a whole frame is cut). It complements `ReceiveIdleTimeoutMs` (see below) — the latter also times total silence, which suits protocols with periodic traffic; for protocols that may stay idle for a long time but must not tolerate a stalled half-frame (e.g. HSMS T8), use the incomplete-frame timeout.
 
 ### Logging (optional)
 
@@ -163,6 +169,8 @@ _ = Task.Run(async () =>
 ```
 
 When the peer dies silently (power loss / unplugged cable, no FIN/RST), the idle timeout kills the session and auto-reconnect kicks in; if the peer is unreachable, reconnection keeps failing and the state stays in `Connecting`/`Retry`.
+
+Choosing between the two receive timeouts: `ReceiveIdleTimeoutMs` demands **periodic traffic** — use it when the protocol has heartbeats/periodic reports (it also covers half-open connections); when the protocol may stay silent for long stretches (traffic only expected while a frame is in progress), use `IncompleteFrameTimeoutMs` instead — silence is not a fault, only a stalled half-frame is.
 
 ## Performance
 
