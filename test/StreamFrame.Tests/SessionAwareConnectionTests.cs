@@ -251,9 +251,9 @@ public class SessionAwareConnectionTests
         await WaitForStateAsync(server, s => s == ConnectionState.Connected);
         var id = server.CurrentSessionId;
 
+        var writingTask = server.SendInSessionAsync(id, "writing"); // worker 认领后停在编码阶段
         var tasks = new List<Task>
         {
-            server.SendInSessionAsync(id, "writing"), // worker 认领后停在编码阶段
             server.SendInSessionAsync(id, "queued"),   // 占满队列（容量 1）
             server.SendInSessionAsync(id, "waiting"),  // 队列满，WriteAsync 等待空位
         };
@@ -264,6 +264,17 @@ public class SessionAwareConnectionTests
         foreach (var task in tasks)
         {
             var ex = await AwaitFailureAsync(task, 3000, "挂起的会话绑定发送及时失败");
+            Assert.True(ex is SessionExpiredException or SocketException or OperationCanceledException,
+                $"失败类型应为会话失效/socket 故障，实际 {ex.GetType().Name}。");
+        }
+
+        // 正在写出的条目是拆除竞争的合法双结局：整帧恰好写完 → 成功；否则会话失效失败。
+        // 两者都符合契约，但必须在时限内终结（不悬挂）
+        var writingDone = await Task.WhenAny(writingTask, Task.Delay(3000));
+        Assert.True(ReferenceEquals(writingDone, writingTask), "写出中条目应在时限内终结。");
+        if (writingTask.Status != TaskStatus.RanToCompletion)
+        {
+            var ex = await Assert.ThrowsAnyAsync<Exception>(() => writingTask);
             Assert.True(ex is SessionExpiredException or SocketException or OperationCanceledException,
                 $"失败类型应为会话失效/socket 故障，实际 {ex.GetType().Name}。");
         }
@@ -334,9 +345,10 @@ public class SessionAwareConnectionTests
             await WaitForStateAsync(server, s => s == ConnectionState.Connected);
             var id = server.CurrentSessionId;
 
+            var writingTask = server.SendInSessionAsync(id, "writing");
             var tasks = new List<Task>();
-            for (var i = 0; i < 4; i++)
-                tasks.Add(server.SendInSessionAsync(id, i == 0 ? "writing" : $"pending-{i}"));
+            for (var i = 1; i < 4; i++)
+                tasks.Add(server.SendInSessionAsync(id, $"pending-{i}"));
             await Task.Delay(100);
 
             await server.DisposeAsync(); // 停机：挂起的会话绑定发送必须全部异常收尾
@@ -344,6 +356,16 @@ public class SessionAwareConnectionTests
             foreach (var task in tasks)
             {
                 var ex = await AwaitFailureAsync(task, 3000, "Dispose 后挂起发送异常收尾");
+                Assert.True(ex is SessionExpiredException or SocketException or OperationCanceledException,
+                    $"失败类型应为会话失效/socket 故障，实际 {ex.GetType().Name}。");
+            }
+
+            // 正在写出的条目：拆除竞争的合法双结局（写完→成功；否则失效失败），不悬挂即可
+            var writingDone = await Task.WhenAny(writingTask, Task.Delay(3000));
+            Assert.True(ReferenceEquals(writingDone, writingTask), "写出中条目应在时限内终结。");
+            if (writingTask.Status != TaskStatus.RanToCompletion)
+            {
+                var ex = await Assert.ThrowsAnyAsync<Exception>(() => writingTask);
                 Assert.True(ex is SessionExpiredException or SocketException or OperationCanceledException,
                     $"失败类型应为会话失效/socket 故障，实际 {ex.GetType().Name}。");
             }
