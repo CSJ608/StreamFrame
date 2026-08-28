@@ -1,7 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <!-- StreamFrame：字节流（青色波，右倾显动感）贯穿帧（白色环） -->
-  <rect width="128" height="128" rx="28" fill="#4338CA"/>
-  <path d="M12 56.7 Q35 42.5 66 65.3 Q91 84.2 116 71.2" fill="none" stroke="#20C8E2" stroke-width="9" stroke-linecap="round"/>
-  <rect x="32" y="32" width="64" height="64" rx="16" fill="#FFFFFF"/>
-  <rect x="45" y="45" width="38" height="38" rx="8" fill="#4338CA"/>
+  <!-- StreamFrame：字节流（青色波，自左下低位上穿环心）贯穿帧（白色环，真镂空） -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1E1B4B"/>
+      <stop offset="1" stop-color="#3730A3"/>
+    </linearGradient>
+    <clipPath id="tile"><rect width="128" height="128" rx="28"/></clipPath>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
+  <g clip-path="url(#tile)">
+    <path d="M-12.0 46.2 C-10.2 47.0 -4.7 49.0 -1.2 50.8 C2.3 52.6 5.6 54.8 8.9 56.8 C12.2 58.8 15.5 61.2 18.9 63.1 C22.2 65.0 25.0 66.9 29.0 67.9 C33.0 69.0 39.4 69.2 42.8 69.4 C46.1 69.6 46.4 69.8 49.1 69.1 C51.8 68.4 55.8 66.6 59.1 65.4 C62.5 64.2 65.9 62.9 69.2 61.8 C72.5 60.7 76.3 59.3 79.2 58.8 C82.1 58.2 83.5 58.3 86.8 58.5 C90.1 58.7 95.5 59.1 99.3 60.1 C103.0 61.1 105.9 63.0 109.3 64.8 C112.7 66.6 116.1 69.0 119.4 71.1 C122.8 73.1 125.8 74.9 129.4 77.1 C133.0 79.3 139.1 83.1 141.0 84.3" fill="none" stroke="#20C8E2" stroke-width="9.3" stroke-linecap="round"/>
+  </g>
+  <path d="M47.0 32.0 H81.0 A15.0 15.0 0 0 1 96.0 47.0 V81.0 A15.0 15.0 0 0 1 81.0 96.0 H47.0 A15.0 15.0 0 0 1 32.0 81.0 V47.0 A15.0 15.0 0 0 1 47.0 32.0 Z M49.2 45.8 H78.8 A3.5 3.5 0 0 1 82.2 49.2 V78.8 A3.5 3.5 0 0 1 78.8 82.2 H49.2 A3.5 3.5 0 0 1 45.8 78.8 V49.2 A3.5 3.5 0 0 1 49.2 45.8 Z" fill="#FFFFFF" fill-rule="evenodd"/>
 </svg>
