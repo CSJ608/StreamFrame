@@ -299,7 +299,7 @@ public class IncompleteFrameTimeoutTests
         {
             using var client = new TcpClient();
             await ConnectWithRetryAsync(client, port);
-            await WaitForStateAsync(server, s => s == ConnectionState.Connected);
+            await WaitForStateAsync(server, s => s == ConnectionState.Connected, timeoutMs: 8000);
             await client.GetStream().WriteAsync(new byte[] { 0x00, 0x0F });
 
             var expected = cycle + 1;

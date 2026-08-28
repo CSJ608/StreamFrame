@@ -293,11 +293,8 @@ public class SessionAwareConnectionTests
             await WaitForStateAsync(server, s => s == ConnectionState.Connected);
             var id1 = server.CurrentSessionId;
 
-            var bound = new List<Task>
-            {
-                server.SendInSessionAsync(id1, "writing"),
-                server.SendInSessionAsync(id1, "bound-drops"),
-            };
+            var writingTask = server.SendInSessionAsync(id1, "writing");
+            var bound = new List<Task> { server.SendInSessionAsync(id1, "bound-drops") };
             _ = server.SendAsync("plain-replays"); // 普通发送：跨会话续发（既有语义）
 
             await Task.Delay(100);
@@ -306,6 +303,16 @@ public class SessionAwareConnectionTests
             foreach (var task in bound)
             {
                 var ex = await AwaitFailureAsync(task, 3000, "会话切换后旧绑定发送失败");
+                Assert.True(ex is SessionExpiredException or SocketException or OperationCanceledException,
+                    $"失败类型意外：{ex.GetType().Name}。");
+            }
+
+            // 正在写出的条目：拆除竞争的合法双结局（整帧恰好写完→成功；否则失效失败），不悬挂即可
+            var writingDone = await Task.WhenAny(writingTask, Task.Delay(3000));
+            Assert.True(ReferenceEquals(writingDone, writingTask), "写出中条目应在时限内终结。");
+            if (writingTask.Status != TaskStatus.RanToCompletion)
+            {
+                var ex = await Assert.ThrowsAnyAsync<Exception>(() => writingTask);
                 Assert.True(ex is SessionExpiredException or SocketException or OperationCanceledException,
                     $"失败类型意外：{ex.GetType().Name}。");
             }
