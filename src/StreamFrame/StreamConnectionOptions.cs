@@ -84,6 +84,17 @@ public sealed class StreamConnectionOptions
     public int ReceiveIdleTimeoutMs { get; set; }
 
     /// <summary>
+    /// 未完成帧超时（毫秒）：缓冲里已有半帧字节、但后续字节连续这么久未到达，即判定会话失效，
+    /// 断线重连（并通过 FrameError 事件上报 <see cref="FrameErrorKind.IncompleteFrameTimeout"/>，
+    /// 携带受上限保护的缓冲快照）。默认 0 = 关闭。
+    ///
+    /// 与 <see cref="ReceiveIdleTimeoutMs"/> 的区别：后者在"完全没有字节"时也计时（要求连接
+    /// 必须有周期流量）；本选项只在"帧已开头、迟迟收不齐"时计时——缓冲为空的正常静默不会触发，
+    /// 一帧完整切出后重新归零。适合允许长时间空闲、但半帧卡死必须判死的长度前缀协议（如 HSMS T8）。
+    /// </summary>
+    public int IncompleteFrameTimeoutMs { get; set; }
+
+    /// <summary>
     /// 校验所有参数取值的合法性（由 <see cref="StreamConnection{TMessage}"/> 构造时调用）。
     /// 非法值在构造时立即失败，而不是在运行中的重连/收发路径深处抛出难定位的异常。
     /// </summary>
@@ -108,6 +119,8 @@ public sealed class StreamConnectionOptions
             throw new ArgumentOutOfRangeException(nameof(ReceiveQueueCapacity), ReceiveQueueCapacity, "不能为负数（0 = 不限制）。");
         if (ReceiveIdleTimeoutMs < 0)
             throw new ArgumentOutOfRangeException(nameof(ReceiveIdleTimeoutMs), ReceiveIdleTimeoutMs, "不能为负数（0 = 关闭）。");
+        if (IncompleteFrameTimeoutMs < 0)
+            throw new ArgumentOutOfRangeException(nameof(IncompleteFrameTimeoutMs), IncompleteFrameTimeoutMs, "不能为负数（0 = 关闭）。");
         if (TcpKeepAlive && KeepAliveTimeMs <= 0)
             throw new ArgumentOutOfRangeException(nameof(KeepAliveTimeMs), KeepAliveTimeMs, "TcpKeepAlive 开启时必须为正数。");
         if (TcpKeepAlive && KeepAliveIntervalMs <= 0)
