@@ -91,6 +91,11 @@ public sealed class StreamConnectionOptions
     /// 与 <see cref="ReceiveIdleTimeoutMs"/> 的区别：后者在"完全没有字节"时也计时（要求连接
     /// 必须有周期流量）；本选项只在"帧已开头、迟迟收不齐"时计时——缓冲为空的正常静默不会触发，
     /// 一帧完整切出后重新归零。适合允许长时间空闲、但半帧卡死必须判死的长度前缀协议（如 HSMS T8）。
+    ///
+    /// 作用域限制：计时窗口是解码循环等待网络后续字节期间。若设置了
+    /// <see cref="ReceiveQueueCapacity"/> 且消费端完全停滞，解码循环会阻塞在消息通道写入上、
+    /// 不在等待网络字节的状态——此期间本超时不计时（半帧的内存防线仍由
+    /// <see cref="MaxIncompleteFrameBufferBytes"/> 兜底）。
     /// </summary>
     public int IncompleteFrameTimeoutMs { get; set; }
 

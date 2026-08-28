@@ -125,11 +125,15 @@ internal sealed class FrameDecoder<TMessage>
                         $"未完成帧缓冲 {buffer.Length} 字节超过上限 {_maxIncompleteFrameBytes} 字节。");
                 }
 
-                // 挂表前拷贝半帧快照；缓冲为空（帧刚切尽/尚未开始）时清零，下轮不计时
-                pendingBytes = buffer.Length;
-                pendingSnapshot = buffer.IsEmpty
-                    ? ReadOnlyMemory<byte>.Empty
-                    : buffer.Slice(0, (int)Math.Min(buffer.Length, ErrorSnapshotBytes)).ToArray();
+                // 挂表前拷贝半帧快照；缓冲为空（帧刚切尽/尚未开始）时清零，下轮不计时。
+                // 功能关闭（默认）时完全跳过——半帧挂起期间不为诊断付每次读循环的拷贝开销
+                if (_incompleteFrameTimeoutMs > 0)
+                {
+                    pendingBytes = buffer.Length;
+                    pendingSnapshot = buffer.IsEmpty
+                        ? ReadOnlyMemory<byte>.Empty
+                        : buffer.Slice(0, (int)Math.Min(buffer.Length, ErrorSnapshotBytes)).ToArray();
+                }
 
                 _reader.AdvanceTo(buffer.Start, buffer.End);
 

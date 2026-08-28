@@ -261,11 +261,11 @@ public class SessionAwareConnectionTests
 
         server.Reconnect(); // 会话拆除：无需等重连完成，挂起发送必须立即失败
 
+        // 排队中的条目只经拆除清扫终结：失败类型必须精确为会话失效
         foreach (var task in tasks)
         {
             var ex = await AwaitFailureAsync(task, 3000, "挂起的会话绑定发送及时失败");
-            Assert.True(ex is SessionExpiredException or SocketException or OperationCanceledException,
-                $"失败类型应为会话失效/socket 故障，实际 {ex.GetType().Name}。");
+            Assert.IsType<SessionExpiredException>(ex);
         }
 
         // 正在写出的条目是拆除竞争的合法双结局：整帧恰好写完 → 成功；否则会话失效失败。
@@ -303,8 +303,7 @@ public class SessionAwareConnectionTests
             foreach (var task in bound)
             {
                 var ex = await AwaitFailureAsync(task, 3000, "会话切换后旧绑定发送失败");
-                Assert.True(ex is SessionExpiredException or SocketException or OperationCanceledException,
-                    $"失败类型意外：{ex.GetType().Name}。");
+                Assert.IsType<SessionExpiredException>(ex); // 排队条目只经拆除清扫终结
             }
 
             // 正在写出的条目：拆除竞争的合法双结局（整帧恰好写完→成功；否则失效失败），不悬挂即可
@@ -363,8 +362,7 @@ public class SessionAwareConnectionTests
             foreach (var task in tasks)
             {
                 var ex = await AwaitFailureAsync(task, 3000, "Dispose 后挂起发送异常收尾");
-                Assert.True(ex is SessionExpiredException or SocketException or OperationCanceledException,
-                    $"失败类型应为会话失效/socket 故障，实际 {ex.GetType().Name}。");
+                Assert.IsType<SessionExpiredException>(ex); // 排队条目只经停机清扫终结（清扫先于通道完成）
             }
 
             // 正在写出的条目：拆除竞争的合法双结局（写完→成功；否则失效失败），不悬挂即可
@@ -407,6 +405,47 @@ public class SessionAwareConnectionTests
         Assert.Equal("first", await ReadFrameAsync(stream));
         await AwaitDoneAsync(firstTask, 5000, "第 1 条整帧写完");
         await AssertNoBytesAsync(stream);
+    }
+
+    [Fact]
+    public async Task StaleGhostReconnect_DoesNotPolluteLiveSession()
+    {
+        // 评审 P1-1 回归：垂死旧会话的迟到故障（epoch 已过期）必须被整体丢弃——
+        // 不得把活会话的 State 污染成 Retry、不得把 CurrentSessionId 归零。
+        // 这种延迟到达只能经反射调度模拟（公共 API 无法构造）
+        var port = GetFreePort();
+        await using var server = CreateServer(port);
+        server.Start(CancellationToken.None);
+
+        long id1;
+        using (var client1 = new TcpClient())
+        {
+            await ConnectWithRetryAsync(client1, port);
+            await WaitForStateAsync(server, s => s == ConnectionState.Connected);
+            id1 = server.CurrentSessionId;
+        }
+
+        await WaitForStateAsync(server, s => s != ConnectionState.Connected);
+        using (var client2 = new TcpClient())
+        {
+            await ConnectWithRetryAsync(client2, port);
+            await WaitForStateAsync(server, s => s == ConnectionState.Connected, timeoutMs: 8000);
+            var id2 = server.CurrentSessionId;
+            Assert.True(id2 > id1);
+
+            var schedule = typeof(StreamConnection<string>).GetMethod(
+                "ScheduleReconnect", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            Assert.NotNull(schedule);
+            schedule!.Invoke(server, new object[] { 1 }); // 旧会话（epoch=1）的幽灵故障，早已过期
+
+            await Task.Delay(300);
+            Assert.Equal(ConnectionState.Connected, server.State); // 不被谎报为 Retry
+            Assert.Equal(id2, server.CurrentSessionId);            // 活会话编号不被归零
+
+            var task = server.SendInSessionAsync(id2, "alive");
+            Assert.Equal("alive", await ReadFrameAsync(client2.GetStream()));
+            await AwaitDoneAsync(task, 3000, "活会话发送");
+        }
     }
 
     [Fact]
@@ -653,7 +692,7 @@ public class SessionAwareConnectionTests
             });
 
             var sends = Enumerable.Range(0, SendsPerRound)
-                .Select(_ => server.SendInSessionAsync(server.CurrentSessionId, $"r{round}"))
+                .Select(i => server.SendInSessionAsync(server.CurrentSessionId, $"r{round}-{i}"))
                 .ToArray();
 
             // 与拆除并发：不等发送结果，直接切换会话（按轮次交替两种拆除路径）
@@ -681,7 +720,8 @@ public class SessionAwareConnectionTests
 
             // 成功核对（仅 Reconnect 轮次：对端全程在读，成功帧必然可达且完整）：
             // 客户端主动 Dispose 轮次不对账——本地关闭时未读数据随 RST 丢弃属 TCP 语义，
-            // "写入本机 socket"之外的投递结果不在本 API 的公共保证内
+            // "写入本机 socket"之外的投递结果不在本 API 的公共保证内。
+            // 按帧内容对账：每个完整帧的负载必须带本轮标签——检出任何跨会话/跨轮次的错发
             if (round % 2 == 0)
             {
                 lock (peerBytes)
@@ -695,6 +735,8 @@ public class SessionAwareConnectionTests
                         Assert.True(length is > 0 and < 1024, $"帧长度异常：{length}。");
                         if (offset + 4 + length > bytes.Length)
                             break; // 拆除时刻正在写的半帧（其任务必然已失败）
+                        var payload = Encoding.UTF8.GetString(bytes, offset + 4, length);
+                        Assert.StartsWith($"r{round}-", payload, StringComparison.Ordinal); // 错发探测器（P1-2 场景）
                         offset += 4 + length;
                         frames++;
                     }

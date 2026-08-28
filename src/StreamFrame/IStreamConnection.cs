@@ -29,7 +29,8 @@ public interface IStreamConnection<TMessage> : IAsyncDisposable
     /// <summary>
     /// 帧层诊断事件：帧内容解码失败（<see cref="FrameErrorKind.DecodeFailed"/>）、被定界器
     /// 丢弃的噪声字节（<see cref="FrameErrorKind.DiscardedByResync"/>）、未完成帧缓冲超限
-    /// （<see cref="FrameErrorKind.IncompleteFrameOverflow"/>）。
+    /// （<see cref="FrameErrorKind.IncompleteFrameOverflow"/>）、未完成帧超时
+    /// （<see cref="FrameErrorKind.IncompleteFrameTimeout"/>）。
     /// 事件携带的 <see cref="FrameErrorEventArgs.Bytes"/> 是已拷贝的字节，回调后可安全留存。
     /// </summary>
     event EventHandler<FrameErrorEventArgs>? FrameError;
