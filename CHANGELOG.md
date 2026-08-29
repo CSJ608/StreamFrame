@@ -5,17 +5,19 @@
 
 ## [Unreleased]
 
+### 变更
+- 暂无
+
+## [2.6.0] - 2026-08-29
+
 ### 新增
-- **FrameError 事件增补会话归属与快照完整性元数据（#56）**：`FrameErrorEventArgs` 新增三个只读属性——`SessionId`（检测到错误的解码器绑定的会话编号，与 `CurrentSessionId` / `SessionMessage.SessionId` 同一编号空间；会话重建后延迟到达的旧会话事件仍带旧编号，不在投递时改写为当前会话，四种 `FrameErrorKind` 全覆盖）、`ObservedByteCount`（原始观测字节数，恒 >= `Bytes.Length`；含义按 Kind 分化：DecodeFailed=帧内负载、DiscardedByResync=被丢弃字节、Timeout/Overflow=半帧缓冲全长，详见 XML 文档语义表）与 `IsTruncated`（快照是否截断，timeout/overflow 超 8KB 上限时 `Bytes` 只是前缀）。旧构造重载保留（源/二进制兼容，委托新重载），`IsTruncated` 在构造函数内按 `Bytes.Length < ObservedByteCount` 自动计算。
+- **FrameError 事件增补会话归属与快照完整性元数据（[#56](https://github.com/CSJ608/StreamFrame/issues/56)）**：`FrameErrorEventArgs` 新增三个只读属性——`SessionId`（检测到错误的解码器绑定的会话编号，与 `CurrentSessionId` / `SessionMessage.SessionId` 同一编号空间；会话重建后延迟到达的旧会话事件仍带旧编号，不在投递时改写为当前会话，四种 `FrameErrorKind` 全覆盖）、`ObservedByteCount`（原始观测字节数，恒 >= `Bytes.Length`；含义按 Kind 分化：DecodeFailed=帧内负载、DiscardedByResync=被丢弃字节、Timeout/Overflow=半帧缓冲全长，详见 XML 文档语义表）与 `IsTruncated`（快照是否截断，timeout/overflow 超 8KB 上限时 `Bytes` 只是前缀）。旧构造重载保留（源/二进制兼容，委托新重载），`IsTruncated` 在构造函数内按 `Bytes.Length < ObservedByteCount` 自动计算。
 - **NativeAOT/裁剪兼容性门禁**：`samples/StreamFrame.AotSmoke` 冒烟工程（引用库的最小可运行路径，含会话感知发送）+ ci.yml 新增 `aot` job（ubuntu 上 PublishAot 发布，IL2026/IL3050 等警告经 TreatWarningsAsErrors 直接红掉；非必需检查，不影响分支保护）。本地 managed 侧已验证零裁剪/AOT 警告。
 - README 双语新增 System.Text.Json 最简 codec 示例（span 直写、AOT 安全）。
 
 ### 变更
-- 接收 Pipe 段尺寸对齐 `SocketReceiveBufferSize`（大报文整帧常驻单段，Kestrel 同款做法）；本机基准两轮 48.75µs / 93µs，效果在噪声内无法确立，保留改动（语义合理、98×3 测试无回归），待每夜 soak 与后续基准复检。
+- 接收 Pipe 段尺寸对齐 `SocketReceiveBufferSize`（大报文整帧常驻单段，Kestrel 同款做法）；本机基准两轮 48.75µs / 93µs，效果在噪声内无法确立，保留改动（语义合理、101×3 测试无回归），待每夜 soak 与后续基准复检。
 - CHANGELOG 修复：v2.5.0 归档时脚本锚点未匹配导致 2.5.0 内容错挂在 2.4.0 段落（Release 正文回退为自动生成）——已按两个 tag 的实际内容拆分还原（监听加固归 2.4.0，代次门控/大报文/观察基建归 2.5.0）。
-
-### 修复
-- 暂无
 
 ## [2.5.0] - 2026-08-29
 
@@ -191,7 +193,8 @@
 - 发布自动化：`release.yml`（tag 自动建 GitHub Release）、`publish-nuget.yml`（OIDC Trusted Publishing 推送 nuget.org）。
 - 单元测试 25 个 + 三场景端到端 demo。
 
-[Unreleased]: https://github.com/CSJ608/StreamFrame/compare/v2.5.0...HEAD
+[Unreleased]: https://github.com/CSJ608/StreamFrame/compare/v2.6.0...HEAD
+[2.6.0]: https://github.com/CSJ608/StreamFrame/compare/v2.5.0...v2.6.0
 [2.5.0]: https://github.com/CSJ608/StreamFrame/compare/v2.4.0...v2.5.0
 [2.4.0]: https://github.com/CSJ608/StreamFrame/compare/v2.3.1...v2.4.0
 [2.3.1]: https://github.com/CSJ608/StreamFrame/compare/v2.3.0...v2.3.1
