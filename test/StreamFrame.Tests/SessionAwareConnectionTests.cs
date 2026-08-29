@@ -578,6 +578,59 @@ public class SessionAwareConnectionTests
         }
     }
 
+    /// <summary>
+    /// #56 会话归属：DiscardedByResync 不断开（SkipFrame 语义继续解码），是四种
+    /// FrameErrorKind 里跨会话延迟投递窗口最大的一类。会话重建后，旧会话检出的
+    /// 丢弃事件必须仍带旧编号，不能在投递时被改写为当前会话。
+    /// </summary>
+    [Fact]
+    public async Task FrameError_DiscardEvents_CarrySourceSession_AcrossSessionSwitch()
+    {
+        var port = GetFreePort();
+        await using var server = CreateServer(port);
+        var errors = new List<FrameErrorEventArgs>();
+        server.FrameError += (_, e) => { lock (errors) errors.Add(e); };
+
+        server.Start(CancellationToken.None);
+
+        // 会话 1：非法长度头（声明超过帧上限）→ DiscardedByResync，连接不断
+        using (var client1 = new TcpClient())
+        {
+            await ConnectWithRetryAsync(client1, port);
+            await WaitForStateAsync(server, s => s == ConnectionState.Connected);
+            Assert.Equal(1, server.CurrentSessionId); // 首个会话编号恒为 1
+
+            await client1.GetStream().WriteAsync(new byte[] { 0x7F, 0xFF, 0xFF, 0xFF });
+            await WaitForAsync(() => { lock (errors) return errors.Count == 1; }, what: "会话 1 丢弃事件");
+            Assert.Equal(ConnectionState.Connected, server.State); // 丢弃不拆会话
+        }
+
+        // 会话重建：client1 关闭驱动重连，新客户端接入开新会话
+        using (var client2 = new TcpClient())
+        {
+            await ConnectWithRetryAsync(client2, port);
+            await WaitForStateAsync(server, s => s == ConnectionState.Connected, timeoutMs: 8000);
+            Assert.Equal(2, server.CurrentSessionId);
+
+            await client2.GetStream().WriteAsync(new byte[] { 0x7F, 0xFF, 0xFF, 0xFF });
+            await WaitForAsync(() => { lock (errors) return errors.Count == 2; }, what: "会话 2 丢弃事件");
+        }
+
+        lock (errors)
+        {
+            Assert.All(errors, e =>
+            {
+                Assert.Equal(FrameErrorKind.DiscardedByResync, e.Kind);
+                Assert.Equal(new byte[] { 0x7F, 0xFF, 0xFF, 0xFF }, e.Bytes.ToArray());
+                Assert.Equal(4, e.ObservedByteCount); // 被丢弃的 4 字节长度头，完整拷贝
+                Assert.False(e.IsTruncated);
+            });
+            // 归属随检出者绑定：旧事件仍是会话 1，与当前会话 2 严格区分
+            Assert.Equal(1, errors[0].SessionId);
+            Assert.Equal(2, errors[1].SessionId);
+        }
+    }
+
     [Fact]
     public async Task ConsumerViews_Compete_NotBroadcast()
     {
