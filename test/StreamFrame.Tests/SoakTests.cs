@@ -29,7 +29,7 @@ public class SoakTests
     private static double SoakSeconds()
     {
         var raw = Environment.GetEnvironmentVariable("STREAMFRAME_SOAK_SECONDS");
-        return double.TryParse(raw, out var value) && value > 0 ? value : 0;
+        return double.TryParse(raw, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var value) && value > 0 ? value : 0;
     }
 
     private static async Task ConnectWithRetryAsync(TcpClient client, int port)
@@ -260,12 +260,9 @@ public class SoakTests
                         await WaitForStateAsync(server, s => s != ConnectionState.Connected);
                     }
                 }
-                else
+                else if (action < 97)
                 {
                     // 杀对端（RST 路径：Linger(true,0) 硬复位）
-                    // 注：不混入用户显式 Reconnect()——用户重连与自动重连并发竞速会触发
-                    // 双 StartAsync 接受循环的存量脆弱点（监听状态机楔死，v2.3.0 评审
-                    // "附带发现"同源），属独立的状态过渡原子化设计任务，不在本套件覆盖
                     if (client is not null)
                     {
                         client.LingerState = new LingerOption(true, 0);
@@ -273,6 +270,19 @@ public class SoakTests
                         client = null;
                         stream = null;
                         await WaitForStateAsync(server, s => s != ConnectionState.Connected);
+                    }
+                }
+                else
+                {
+                    // 用户显式重连（#47 观察到的楔死触发器，与本会话并发故障竞速）：
+                    // 不等当前会话的自动重连，立即发起服务端主动拆除
+                    server.Reconnect();
+                    if (client is not null)
+                    {
+                        await WaitForStateAsync(server, s => s != ConnectionState.Connected);
+                        client.Dispose();
+                        client = null;
+                        stream = null;
                     }
                 }
 

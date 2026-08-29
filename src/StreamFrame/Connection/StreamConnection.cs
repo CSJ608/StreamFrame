@@ -282,12 +282,17 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
 
     private async Task<Socket> AcceptAsync(CancellationToken ct)
     {
-        await _acceptLock.WaitAsync(ct).ConfigureAwait(false);
-        try
+        while (true)
         {
-            while (true)
+            ct.ThrowIfCancellationRequested();
+
+            // 逐次尝试获取锁、重试延迟在锁外等待：绑定/接受持续失败期间不堵死其它
+            // 接受循环（#47 防御性修复——旧实现整个重试循环持锁，故障期被放大为全停）
+            await _acceptLock.WaitAsync(ct).ConfigureAwait(false);
+            Socket? accepted = null;
+            int? retryDelay = null;
+            try
             {
-                ct.ThrowIfCancellationRequested();
                 if (_server == null)
                     InitServer();
 
@@ -296,11 +301,21 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
 #if NETSTANDARD2_0
                     var listener = _server!;
                     // FromAsync 无法取消；停机时 listener 被释放，挂起的 accept 以异常收尾
-                    var socket = await Task.Factory.FromAsync(listener.BeginAccept, listener.EndAccept, null).ConfigureAwait(false);
+                    accepted = await Task.Factory.FromAsync(listener.BeginAccept, listener.EndAccept, null).ConfigureAwait(false);
 #else
-                    var socket = await _server!.AcceptAsync(ct).ConfigureAwait(false);
+                    accepted = await _server!.AcceptAsync(ct).ConfigureAwait(false);
 #endif
-                    ConfigureSocket(socket);
+                }
+                catch (Exception ex) when (!ct.IsCancellationRequested && !IsDisposed)
+                {
+                    retryDelay = _retryScheduler.NextDelayMs();
+                    _logger.LogWarning(ex, "Accept on {Local} failed (attempt {Attempt}); retry in {Delay}ms.",
+                        $"{IpAddress}:{Port}", _retryScheduler.Attempt, retryDelay.Value);
+                }
+
+                if (accepted is not null)
+                {
+                    ConfigureSocket(accepted);
 
                     // 单客户端模式：accept 到第一个客户端后关闭监听 socket，
                     // 后续连接在 TCP 层被立即拒绝。
@@ -309,21 +324,17 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
                         _server.Dispose();
                         _server = null;
                     }
-
-                    return socket;
-                }
-                catch (Exception ex) when (!ct.IsCancellationRequested && !IsDisposed)
-                {
-                    var delay = _retryScheduler.NextDelayMs();
-                                _logger.LogWarning(ex, "Accept on {Local} failed (attempt {Attempt}); retry in {Delay}ms.",
-                        $"{IpAddress}:{Port}", _retryScheduler.Attempt, delay);
-                    await Task.Delay(delay, ct).ConfigureAwait(false);
                 }
             }
-        }
-        finally
-        {
-            _acceptLock.Release();
+            finally
+            {
+                _acceptLock.Release();
+            }
+
+            if (accepted is not null)
+                return accepted;
+
+            await Task.Delay(retryDelay ?? _retryScheduler.NextDelayMs(), ct).ConfigureAwait(false);
         }
     }
 
@@ -337,6 +348,10 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
 
         _server = CreateTcpSocket();
         _server.Blocking = false;
+        // 允许重绑覆盖遗留的 TIME_WAIT：服务端主动关闭（用户 Reconnect/停机）后立即重新
+        // 监听不受 2MSL 限制（Linux 上没有该选项会遇到 EADDRINUSE；Windows 实测宽松，
+        // 一并设置保持跨平台行为一致——#47 防御性修复）
+        _server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
         _server.Bind(new IPEndPoint(NormalizeListenAddress(IpAddress), Port));
         _server.Listen(0);
     }
