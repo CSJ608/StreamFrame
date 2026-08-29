@@ -79,6 +79,15 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
     private readonly object _sessionGate = new();
 #endif
     private Pipe? _pipe;
+
+    /// <summary>
+    /// 接受循环代次（#47）：每次 StartCore 递增。用户重连与自动重连竞速会产生多个并发的
+    /// StartAsync 接受循环——旧的"僵尸"循环完成 accept 后可能看到 _server 已被新循环替换，
+    /// 跳过单客户端的监听器关闭，泄漏一个"仍在监听但永无人 accept"的 socket（客户端 SYN
+    /// 进入无人消费的 backlog，ConnectAsync 永久挂起）。代次门控让被取代的循环在取得
+    /// _acceptLock 后静默退出：监听器的创建/关闭/accept 只归属当代循环。
+    /// </summary>
+    private int _acceptLoopId;
     private CancellationTokenSource? _sessionCts;
     private Task? _receiveTask;
     private Task? _decodeTask;
@@ -209,9 +218,9 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
 
     /// <summary>内部启动入口（重连流程复用），不做一次性启动校验。</summary>
     private void StartCore(CancellationToken ct)
-        => _ = StartAsync(ct);
+        => _ = StartAsync(ct, Interlocked.Increment(ref _acceptLoopId));
 
-    private async Task StartAsync(CancellationToken ct)
+    private async Task StartAsync(CancellationToken ct, int loopId)
     {
         var connected = false;
         try
@@ -221,7 +230,13 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
                 CommunicationStateChanging(ConnectionState.Connecting);
                 try
                 {
-                    _socket = IsActive ? await ConnectAsync(ct).ConfigureAwait(false) : await AcceptAsync(ct).ConfigureAwait(false);
+                    if (!IsActive && Volatile.Read(ref _acceptLoopId) != loopId)
+                        return; // 已被更新的接受循环取代：静默退出，不再竞争 accept
+
+                    _socket = IsActive ? await ConnectAsync(ct).ConfigureAwait(false) : await AcceptAsync(ct, loopId).ConfigureAwait(false);
+                    if (_socket is null)
+                        return; // 排队等到锁时已被取代（AcceptAsync 内部的代次检查）
+
                     _retryScheduler.Reset();
                     CommunicationStateChanging(ConnectionState.Connected);
                     connected = true;
@@ -280,7 +295,7 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
         return socket;
     }
 
-    private async Task<Socket> AcceptAsync(CancellationToken ct)
+    private async Task<Socket?> AcceptAsync(CancellationToken ct, int loopId)
     {
         while (true)
         {
@@ -293,6 +308,12 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
             int? retryDelay = null;
             try
             {
+                // 代次门控（#47 阶段二）：排队等到锁时若已被更新的循环取代，静默退出——
+                // 监听器的创建/关闭/accept 只归属当代循环，杜绝僵尸循环泄漏监听器
+                // （泄漏的监听器无人 accept，客户端 SYN 进入 backlog 后 ConnectAsync 永久挂起）
+                if (Volatile.Read(ref _acceptLoopId) != loopId)
+                    return null;
+
                 if (_server == null)
                     InitServer();
 
@@ -318,7 +339,8 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
                     ConfigureSocket(accepted);
 
                     // 单客户端模式：accept 到第一个客户端后关闭监听 socket，
-                    // 后续连接在 TCP 层被立即拒绝。
+                    // 后续连接在 TCP 层被立即拒绝。代次门控保证此处 _server 属于当代循环，
+                    // 不会误关/漏关其它循环的监听器。
                     if (_options.AcceptFirstClientOnly && _server != null)
                     {
                         _server.Dispose();

@@ -1,0 +1,49 @@
+name: soak
+
+# 长期观察：每夜以 600 秒跑浸泡/混沌套件（ubuntu + windows 双平台）。
+# 覆盖重连竞速（Soak_ReconnectRacing_LongRun，含状态机转移合法性与会话编号线性化的
+# 全程校验）、随机故障混沌与长流完整性。失败会通过 GitHub 通知提醒维护者。
+# 手动触发：workflow_dispatch 可指定时长（分钟数）。
+
+on:
+  schedule:
+    - cron: '0 19 * * *' # UTC 19:00 = 北京时间 03:00
+  workflow_dispatch:
+    inputs:
+      seconds:
+        description: '浸泡时长（秒）'
+        required: false
+        default: '600'
+
+permissions:
+  contents: read
+
+jobs:
+  soak:
+    name: soak (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Build (Release)
+        run: dotnet build StreamFrame.slnx -c Release
+
+      - name: Soak tests
+        env:
+          STREAMFRAME_SOAK_SECONDS: ${{ inputs.seconds || '600' }}
+        run: >-
+          dotnet test test/StreamFrame.Tests/StreamFrame.Tests.csproj -c Release --no-build
+          --filter "FullyQualifiedName~Soak"

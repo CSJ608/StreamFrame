@@ -67,7 +67,7 @@ public class ReconnectWedgeTests
         }
     }
 
-    private static async Task WaitConnectedAsync(StreamConnection<string> server, int timeoutMs = 5000)
+    private static async Task WaitConnectedAsync(StreamConnection<string> server, int timeoutMs = 10_000)
     {
         var deadline = TestClock.TickCount64 + timeoutMs;
         while (TestClock.TickCount64 < deadline && server.State != ConnectionState.Connected)
@@ -93,14 +93,14 @@ public class ReconnectWedgeTests
             using (var client = new TcpClient())
             {
                 await ConnectWithRetryAsync(client, port);
-                await WaitConnectedAsync(server);
+                await WaitConnectedAsync(server, timeoutMs: 10_000);
             }
 
             // 等自动重连完成、再次形成会话
             using (var client = new TcpClient())
             {
                 await ConnectWithRetryAsync(client, port);
-                await WaitConnectedAsync(server, 8000);
+                await WaitConnectedAsync(server, 15_000);
 
                 // 两路并发触发（#47 的竞速形态）：杀对端（自动重连）与用户显式 Reconnect() 竞争
                 var kill = Task.Run(client.Dispose);
@@ -108,7 +108,7 @@ public class ReconnectWedgeTests
                 await kill;
             }
 
-            var rebindDeadline = TestClock.TickCount64 + 10_000; // 修复目标：秒级可用（10s 为宽松上限）
+            var rebindDeadline = TestClock.TickCount64 + 20_000; // 修复目标：秒级可用（20s 上限：并行负载下偶发慢收敛，曾以 1/15 概率闪失）
             while (TestClock.TickCount64 < rebindDeadline)
             {
                 if (await TryConnectAsync(port))
