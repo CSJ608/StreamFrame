@@ -232,6 +232,22 @@ Measured with BenchmarkDotNet (details and how to reproduce in [bench/README.md]
 - **End-to-end** (real TCP loopback, 2026-08-29 two-round ranges, built-in metrics on): one-way throughput ≈130–135k msgs/s at 1KB and ≈210–240k at 64B (LengthPrefix); round-trip latency ≈66–74 µs; the XML codec costs 2–16 µs per message (400B–4KB) — serialization dominates, not framing. **Framework tax depends on message size**: for small messages the bounded-queue pipeline is even faster than the naive serialized-NetworkStream-write baseline (13–52%); at 64KB the cost is ≈3–4× (encoding-buffer allocations dominate — recorded as an optimization direction);
 - **Cost of the new features, measured**: built-in metrics cost 0.5–1.0 ns per record with zero allocation when nobody subscribes (fine to leave on); `SendInSessionAsync` is roughly 2× the time of `SendAsync` with +≈470 B/msg allocated (the price of session semantics — use `SendAsync` when you don't need them); the receive views and the disabled incomplete-frame timeout show no measurable difference. Absolute values vary by machine; full data and noise disclosure in [bench/README.md](bench/README.md).
 
+### Large-message guide (≥64KB)
+
+For 64KB-class messages the dominant costs are the codec style and the message type, not the framework (attribution data in [bench/README.md](bench/README.md)). Three recommendations:
+
+1. **Use the span-based write overload in your codec** — `Encoding.GetBytes(ReadOnlySpan<char>, IBufferWriter<byte>)` produces no intermediate array (the naive style adds a full-size allocation + copy per message):
+
+   ```csharp
+   // Recommended: zero intermediate arrays
+   public void Encode(string message, IBufferWriter<byte> writer, CancellationToken ct)
+       => Encoding.UTF8.GetBytes(message.AsSpan(), writer);
+   // Not recommended: writer.Write(Encoding.UTF8.GetBytes(message));  // full-size byte[] per message
+   ```
+
+2. **Pick byte[] / ReadOnlyMemory<byte> as the message type**: string messages inherently allocate ≈2× the payload size per message for UTF-16 materialization; with byte payloads and a pass-through codec the framework sits within ≈20–30% of raw TCP;
+3. Keep **streaming encode** on (default, `UseStreamingEncode`) — send buffers now start at the previous frame's size (adaptive, capped at 1MB).
+
 ## Supported frameworks
 
 | Package target | Runtime |

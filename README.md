@@ -229,6 +229,22 @@ BenchmarkDotNet 实测（详见 [bench/README.md](bench/README.md)，可本地�
 - **端到端**（真实 TCP 回环，2026-08-29 两轮区间，含内置指标）：单向吞吐 1KB ≈13–13.5 万条/秒、64B ≈21–24 万条/秒（LengthPrefix）；往返延迟 ≈66–74 µs；XML codec 每条报文 2–16 µs（400B–4KB）——序列化开销远大于定界层。**框架税分尺寸**：小消息下队列流水线反而快于裸 NetworkStream 逐条 Write 的对照（13–52%），64KB 大消息约 3–4×（编码缓冲分配主导，优化方向已记录）；
 - **新特性成本实测**：内置指标无监听时 0.5–1.0 ns/次、零分配（可常开）；`SendInSessionAsync` 约为 `SendAsync` 的 2 倍耗时、+≈470 B/条分配（会话语义的代价，不需要时用 `SendAsync`）；接收视图与未完成帧超时（关闭态）均无可测差异。绝对值随机器浮动，完整数据与噪声披露见 [bench/README.md](bench/README.md)。
 
+### 大报文指南（≥64KB）
+
+64KB 级消息下，开销大头在 codec 写法与消息类型而非框架（归因数据见 [bench/README.md](bench/README.md)）。三条建议：
+
+1. **codec 用 span 直写重载**——`Encoding.GetBytes(ReadOnlySpan<char>, IBufferWriter<byte>)` 不产生中间数组（旧写法每条多一次全尺寸分配 + 拷贝）：
+
+   ```csharp
+   // 推荐：零中间数组
+   public void Encode(string message, IBufferWriter<byte> writer, CancellationToken ct)
+       => Encoding.UTF8.GetBytes(message.AsSpan(), writer);
+   // 不推荐：writer.Write(Encoding.UTF8.GetBytes(message));  // 每条一次全尺寸 byte[]
+   ```
+
+2. **消息类型选 byte[] / ReadOnlyMemory<byte>**：string 消息每条固有 ≈2× 报文大小的 UTF-16 物化分配；字节负载 + 透传 codec 时框架距裸 TCP 仅 ≈20–30%；
+3. 保持默认的**流式编码**开启（`UseStreamingEncode`），发送缓冲会按上一帧大小自适应起租（封顶 1MB）。
+
 ## 支持框架
 
 | 包目标 | 运行环境 |

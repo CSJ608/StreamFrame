@@ -771,25 +771,46 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
         }
     }
 
+    /// <summary>
+    /// 发送编码缓冲的自适应初始尺寸（高水位记忆）：稳态消息尺寸相近的协议（设备周期上报）
+    /// 直接按上一帧大小起租，消掉从 EncodeBufferInitialSize（默认 1KB）起的几何增长梯子——
+    /// 大报文场景的反复跨桶租借与其中间拷贝显著减少。发送 worker 单线程访问，无需同步。
+    /// </summary>
+    private int _encodeBufferHighWater;
+
+    private int AdaptiveEncodeBufferSize
+        => Math.Clamp(_encodeBufferHighWater, _options.EncodeBufferInitialSize, MaxAdaptiveEncodeBufferBytes);
+
+    /// <summary>自适应缓冲封顶：超过此值回退到配置初始值（防御异常尺寸的偶发大帧抬高常态水位）。</summary>
+    private const int MaxAdaptiveEncodeBufferBytes = 1024 * 1024;
+
     private async Task SendFramedAsync(TMessage message, CancellationToken ct)
     {
         // 流式编码：单缓冲、零 memcpy（BeginFrame 占位 → codec 直接写 → EndFrame 回填/收尾）
         if (_options.UseStreamingEncode && _framing is IStreamingFramer streaming)
         {
-            using var frame = new PooledBufferWriter(_options.EncodeBufferInitialSize);
+            using var frame = new PooledBufferWriter(AdaptiveEncodeBufferSize);
             streaming.BeginFrame(frame);
             _codec.Encode(message, frame, ct);
             streaming.EndFrame(frame);
+            RememberEncodeHighWater(frame.WrittenCount);
             await SendRawAsync(frame.WrittenMemory, ct).ConfigureAwait(false);
             return;
         }
 
         // 纯函数编码：序列化产物 → 帧，两段缓冲（含一次 memcpy）
-        using var payload = new PooledBufferWriter(_options.EncodeBufferInitialSize);
+        using var payload = new PooledBufferWriter(AdaptiveEncodeBufferSize);
         _codec.Encode(message, payload, ct);
         using var frame2 = new PooledBufferWriter(payload.WrittenCount + 16);
         _framing.EncodeFrame(payload.WrittenSpan, frame2);
+        RememberEncodeHighWater(frame2.WrittenCount);
         await SendRawAsync(frame2.WrittenMemory, ct).ConfigureAwait(false);
+    }
+
+    private void RememberEncodeHighWater(int frameBytes)
+    {
+        if (frameBytes > _encodeBufferHighWater && frameBytes <= MaxAdaptiveEncodeBufferBytes)
+            _encodeBufferHighWater = frameBytes;
     }
 
     private async Task SendRawAsync(ReadOnlyMemory<byte> buffer, CancellationToken ct)
