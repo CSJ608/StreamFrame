@@ -164,7 +164,16 @@ client.FrameError += (_, e) =>
     //         IncompleteFrameTimeout (incomplete frame timed out waiting for the rest)
     // e.Bytes: copied; safe to retain long-term
     // e.Exception: the original exception for DecodeFailed
-    Console.WriteLine($"[{e.Kind}] {Convert.ToHexString(e.Bytes.Span)} {e.Exception?.Message}");
+    // e.SessionId: the session whose decoder detected the error (same ID space as
+    //              CurrentSessionId/SessionMessage.SessionId; a delayed event from
+    //              an old session keeps the old ID after reconnecting)
+    // e.ObservedByteCount / e.IsTruncated: the originally observed byte count and
+    //              whether Bytes is truncated. Timeout/overflow snapshots are capped
+    //              at 8 KB — when IsTruncated is true, Bytes is only a prefix and
+    //              ObservedByteCount is the real size
+    Console.WriteLine($"[session {e.SessionId}] [{e.Kind}] {Convert.ToHexString(e.Bytes.Span)}" +
+        (e.IsTruncated ? $" (first {e.Bytes.Length}/{e.ObservedByteCount} bytes)") : "") +
+        $" {e.Exception?.Message}");
 };
 ```
 

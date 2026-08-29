@@ -101,7 +101,8 @@ internal sealed class FrameDecoder<TMessage>
                     }
                     catch (Exception ex)
                     {
-                        RaiseFrameError(new FrameErrorEventArgs(FrameErrorKind.DecodeFailed, payload.ToArray(), ex));
+                        RaiseFrameError(new FrameErrorEventArgs(
+                            FrameErrorKind.DecodeFailed, payload.ToArray(), ex, _sessionId, payload.Length));
                         if (_decodeErrorPolicy == DecodeErrorPolicy.Disconnect)
                             throw new SessionFaultException($"帧负载解码失败: {ex.Message}", ex);
 
@@ -124,7 +125,8 @@ internal sealed class FrameDecoder<TMessage>
                 {
                     // 未完成帧永远等不齐或对端蓄意喂半帧：判定流不可恢复，交由连接层断线。
                     var snapshot = buffer.Slice(0, Math.Min(buffer.Length, ErrorSnapshotBytes)).ToArray();
-                    RaiseFrameError(new FrameErrorEventArgs(FrameErrorKind.IncompleteFrameOverflow, snapshot));
+                    RaiseFrameError(new FrameErrorEventArgs(
+                        FrameErrorKind.IncompleteFrameOverflow, snapshot, null, _sessionId, buffer.Length));
                     throw new SessionFaultException(
                         $"未完成帧缓冲 {buffer.Length} 字节超过上限 {_maxIncompleteFrameBytes} 字节。");
                 }
@@ -167,7 +169,8 @@ internal sealed class FrameDecoder<TMessage>
     /// <summary>未完成帧超时的会话故障：先上报带快照的 FrameError，再抛出（由连接层断线重连）。</summary>
     private SessionFaultException TimeoutFault(long pendingBytes, ReadOnlyMemory<byte> snapshot)
     {
-        RaiseFrameError(new FrameErrorEventArgs(FrameErrorKind.IncompleteFrameTimeout, snapshot));
+        RaiseFrameError(new FrameErrorEventArgs(
+            FrameErrorKind.IncompleteFrameTimeout, snapshot, null, _sessionId, pendingBytes));
         return new SessionFaultException(
             $"未完成帧已缓冲 {pendingBytes} 字节，{_incompleteFrameTimeoutMs}ms 内未收齐后续字节，判定会话失效。");
     }
@@ -179,7 +182,8 @@ internal sealed class FrameDecoder<TMessage>
         {
             var found = reporting.TryDecodeFrame(ref buffer, out payload, out var discarded);
             if (!discarded.IsEmpty)
-                RaiseFrameError(new FrameErrorEventArgs(FrameErrorKind.DiscardedByResync, discarded.ToArray()));
+                RaiseFrameError(new FrameErrorEventArgs(
+                    FrameErrorKind.DiscardedByResync, discarded.ToArray(), null, _sessionId, discarded.Length));
             return found;
         }
 

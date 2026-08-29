@@ -31,7 +31,11 @@ public interface IStreamConnection<TMessage> : IAsyncDisposable
     /// 丢弃的噪声字节（<see cref="FrameErrorKind.DiscardedByResync"/>）、未完成帧缓冲超限
     /// （<see cref="FrameErrorKind.IncompleteFrameOverflow"/>）、未完成帧超时
     /// （<see cref="FrameErrorKind.IncompleteFrameTimeout"/>）。
-    /// 事件携带的 <see cref="FrameErrorEventArgs.Bytes"/> 是已拷贝的字节，回调后可安全留存。
+    /// 事件携带的 <see cref="FrameErrorEventArgs.Bytes"/> 是已拷贝的字节，回调后可安全留存；
+    /// <see cref="FrameErrorEventArgs.SessionId"/> 是检测到错误的解码器绑定的会话编号
+    /// （会话重建后延迟到达的旧会话事件仍带旧编号）；
+    /// <see cref="FrameErrorEventArgs.ObservedByteCount"/> 与
+    /// <see cref="FrameErrorEventArgs.IsTruncated"/> 描述快照相对原始观测数据的完整性。
     /// </summary>
     event EventHandler<FrameErrorEventArgs>? FrameError;
 

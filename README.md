@@ -160,7 +160,15 @@ client.FrameError += (_, e) =>
     //         IncompleteFrameTimeout（未完成帧超时：半帧迟迟收不齐）
     // e.Bytes: 已拷贝，可安全长期留存
     // e.Exception: DecodeFailed 时的原始异常
-    Console.WriteLine($"[{e.Kind}] {Convert.ToHexString(e.Bytes.Span)} {e.Exception?.Message}");
+    // e.SessionId: 检测到错误的解码器所属会话编号（与 CurrentSessionId/
+    //              SessionMessage.SessionId 同一编号空间；重连后迟到的
+    //              旧会话事件仍带旧编号，不会被改写成当前会话）
+    // e.ObservedByteCount / e.IsTruncated: 原始观测字节数与快照是否截断。
+    //              timeout/overflow 快照有 8KB 上限，Bytes 更长时只是前缀；
+    //              IsTruncated == true 时 ObservedByteCount 才是真实规模
+    Console.WriteLine($"[session {e.SessionId}] [{e.Kind}] {Convert.ToHexString(e.Bytes.Span)}" +
+        (e.IsTruncated ? $"（前 {e.Bytes.Length}/{e.ObservedByteCount} 字节）" : "") +
+        $" {e.Exception?.Message}");
 };
 ```
 
