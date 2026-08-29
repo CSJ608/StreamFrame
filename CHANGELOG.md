@@ -175,7 +175,8 @@
 - 发布自动化：`release.yml`（tag 自动建 GitHub Release）、`publish-nuget.yml`（OIDC Trusted Publishing 推送 nuget.org）。
 - 单元测试 25 个 + 三场景端到端 demo。
 
-[Unreleased]: https://github.com/CSJ608/StreamFrame/compare/v2.4.0...HEAD
+[Unreleased]: https://github.com/CSJ608/StreamFrame/compare/v2.5.0...HEAD
+[2.5.0]: https://github.com/CSJ608/StreamFrame/compare/v2.4.0...v2.5.0
 [2.4.0]: https://github.com/CSJ608/StreamFrame/compare/v2.3.1...v2.4.0
 [2.3.1]: https://github.com/CSJ608/StreamFrame/compare/v2.3.0...v2.3.1
 [2.3.0]: https://github.com/CSJ608/StreamFrame/compare/v2.2.1...v2.3.0
