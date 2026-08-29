@@ -33,7 +33,10 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
     /// <inheritdoc />
     public event EventHandler<ConnectionState>? ConnectionChanged;
 
-    /// <summary>帧层诊断事件：解码失败、被定界器丢弃的字节、不完整帧超限、未完成帧超时。字节已拷贝、可留存。</summary>
+    /// <summary>帧层诊断事件：解码失败、被定界器丢弃的字节、不完整帧超限、未完成帧超时。
+    /// 字节已拷贝、可留存；<see cref="FrameErrorEventArgs.SessionId"/> 为检测会话（旧会话延迟事件带旧编号），
+    /// <see cref="FrameErrorEventArgs.ObservedByteCount"/>/<see cref="FrameErrorEventArgs.IsTruncated"/>
+    /// 描述快照完整性。详见接口文档。</summary>
     public event EventHandler<FrameErrorEventArgs>? FrameError;
 
     /// <inheritdoc />
