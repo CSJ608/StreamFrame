@@ -52,7 +52,7 @@ public class ReconnectWedgeTests
     {
         // Start() 是异步的：监听器完成 bind 前连接会被拒（CI 的 ubuntu 上线程池调度更慢，
         // 必须容忍启动窗口），重试直到超时
-        var deadline = TestClock.TickCount64 + timeoutMs;
+        var deadline = TestClock.TickCount64 + timeoutMs; // 预算宽裕：本断言探测的是永久不可用，并行负载下偶发慢收敛不应误报
         while (true)
         {
             try
@@ -67,9 +67,9 @@ public class ReconnectWedgeTests
         }
     }
 
-    private static async Task WaitConnectedAsync(StreamConnection<string> server, int timeoutMs = 10_000)
+    private static async Task WaitConnectedAsync(StreamConnection<string> server, int timeoutMs = 30_000)
     {
-        var deadline = TestClock.TickCount64 + timeoutMs;
+        var deadline = TestClock.TickCount64 + timeoutMs; // 预算宽裕：本断言探测的是永久不可用，并行负载下偶发慢收敛不应误报
         while (TestClock.TickCount64 < deadline && server.State != ConnectionState.Connected)
             await Task.Delay(20);
         Assert.Equal(ConnectionState.Connected, server.State);
@@ -100,7 +100,7 @@ public class ReconnectWedgeTests
             using (var client = new TcpClient())
             {
                 await ConnectWithRetryAsync(client, port);
-                await WaitConnectedAsync(server, 15_000);
+                await WaitConnectedAsync(server, 30_000);
 
                 // 两路并发触发（#47 的竞速形态）：杀对端（自动重连）与用户显式 Reconnect() 竞争
                 var kill = Task.Run(client.Dispose);
