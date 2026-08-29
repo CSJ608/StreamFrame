@@ -779,7 +779,18 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
     private int _encodeBufferHighWater;
 
     private int AdaptiveEncodeBufferSize
-        => Math.Clamp(_encodeBufferHighWater, _options.EncodeBufferInitialSize, MaxAdaptiveEncodeBufferBytes);
+    {
+        get
+        {
+            // netstandard2.0 无 Math.Clamp：显式收拢到 [初始配置, 1MB]
+            var size = _encodeBufferHighWater;
+            if (size < _options.EncodeBufferInitialSize)
+                size = _options.EncodeBufferInitialSize;
+            if (size > MaxAdaptiveEncodeBufferBytes)
+                size = MaxAdaptiveEncodeBufferBytes;
+            return size;
+        }
+    }
 
     /// <summary>自适应缓冲封顶：超过此值回退到配置初始值（防御异常尺寸的偶发大帧抬高常态水位）。</summary>
     private const int MaxAdaptiveEncodeBufferBytes = 1024 * 1024;
