@@ -5,6 +5,11 @@
 
 ## [Unreleased]
 
+### 变更
+- 暂无
+
+## [2.4.0] - 2026-08-29
+
 ### 新增
 - **内置指标（Meter `StreamFrame`，`System.Diagnostics.Metrics`，零外部依赖）**：帧/字节收发计数（`streamframe.frames_sent/received`、`bytes_sent/received`）、重连次数（`reconnects`）、会话时长（`session_duration` 直方图）、发送队列水位（`send_queue_length` 直方图，入队采样）；单一 `endpoint` 标签，订阅方式与仪器清单见 README"内置指标"。netstandard2.0 目标经 `System.Diagnostics.DiagnosticSource` 包获得同款 API（netfx 可用）。
 - **浸泡/混沌测试套件（默认不运行）**：`STREAMFRAME_SOAK_SECONDS=<秒> dotnet test --filter FullyQualifiedName~Soak` 手动启用——长时间消息流完整性（顺序/无丢失/无重复）与随机故障混沌（对端 FIN/RST 死亡 + 半帧注入 + 绑定/普通发送突发，终局核对无悬挂、普通消息跨会话续发送达、绑定消息无重复投递）。已在本机通过 20s/60s 两档验证。
@@ -166,7 +171,8 @@
 - 发布自动化：`release.yml`（tag 自动建 GitHub Release）、`publish-nuget.yml`（OIDC Trusted Publishing 推送 nuget.org）。
 - 单元测试 25 个 + 三场景端到端 demo。
 
-[Unreleased]: https://github.com/CSJ608/StreamFrame/compare/v2.3.1...HEAD
+[Unreleased]: https://github.com/CSJ608/StreamFrame/compare/v2.4.0...HEAD
+[2.4.0]: https://github.com/CSJ608/StreamFrame/compare/v2.3.1...v2.4.0
 [2.3.1]: https://github.com/CSJ608/StreamFrame/compare/v2.3.0...v2.3.1
 [2.3.0]: https://github.com/CSJ608/StreamFrame/compare/v2.2.1...v2.3.0
 [2.2.1]: https://github.com/CSJ608/StreamFrame/compare/v2.2.0...v2.2.1
