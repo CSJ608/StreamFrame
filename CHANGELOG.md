@@ -5,8 +5,27 @@
 
 ## [Unreleased]
 
+### 新增
+- **NativeAOT/裁剪兼容性门禁**：`samples/StreamFrame.AotSmoke` 冒烟工程（引用库的最小可运行路径，含会话感知发送）+ ci.yml 新增 `aot` job（ubuntu 上 PublishAot 发布，IL2026/IL3050 等警告经 TreatWarningsAsErrors 直接红掉；非必需检查，不影响分支保护）。本地 managed 侧已验证零裁剪/AOT 警告。
+- README 双语新增 System.Text.Json 最简 codec 示例（span 直写、AOT 安全）。
+
 ### 变更
+- 接收 Pipe 段尺寸对齐 `SocketReceiveBufferSize`（大报文整帧常驻单段，Kestrel 同款做法）；本机基准两轮 48.75µs / 93µs，效果在噪声内无法确立，保留改动（语义合理、98×3 测试无回归），待每夜 soak 与后续基准复检。
+- CHANGELOG 修复：v2.5.0 归档时脚本锚点未匹配导致 2.5.0 内容错挂在 2.4.0 段落（Release 正文回退为自动生成）——已按两个 tag 的实际内容拆分还原（监听加固归 2.4.0，代次门控/大报文/观察基建归 2.5.0）。
+
+### 修复
 - 暂无
+
+## [2.5.0] - 2026-08-29
+
+### 新增
+- **重连竞速长期观察基建**：`StateTransitionRecorder`（状态机合法转移、非 Connected 态编号归零、Connected 态编号严格递增、终态收敛的全程校验 + Connected→Connected 直连迁移计数）、`Soak_ReconnectRacing_LongRun` 竞速专用混沌（60% 动作并发竞速 + FIFO 完整性探针）、每夜 600s 双平台 soak CI（`.github/workflows/soak.yml`，北京时间 03:00，失败自动通知）。
+
+### 变更
+- **大报文优化与归因**：发送编码缓冲自适应初始尺寸（按连接记忆上一帧高水位、封顶 1MB——稳态尺寸相近的协议不再从 1KB 起爬几何增长梯子）。新增 64KB 三 codec 归因基准（byte[] 透传 / string+span / string+分配式），结论：框架纯成本距裸 TCP 仅 ≈20–30%，其余为 codec 写法税（span 重载可消除中间数组）与 string 消息固有税（UTF-16 物化 ≈2× 报文）。README 双语新增"大报文指南"，bench/README 附归因表。
+
+### 修复
+- **接受循环代次门控（#47 阶段二，竞速泄漏监听器 bug）**：用户重连与自动重连竞速产生多个并发 StartAsync 接受循环时，被取代的"僵尸"循环完成 accept 后可能看到 `_server` 已被新循环替换而跳过单客户端的监听器关闭——**泄漏一个仍在监听但永无人 accept 的 socket**，客户端 SYN 进入无人消费的 backlog 后 `ConnectAsync` 永久挂起（远比"拒绝"严重）。新增 `_acceptLoopId` 代次：每次 StartCore 递增，被取代的循环在取得 `_acceptLock` 后静默退出，监听器的创建/关闭/accept 只归属当代循环。由新增的重连竞速混沌（`Soak_ReconnectRacing_LongRun`，60% 动作占比并发竞速）复现并锁定。
 
 ## [2.4.0] - 2026-08-29
 
@@ -20,11 +39,7 @@
 - demo 新增场景 5：会话感知收发（编号生命周期、整帧写完才完成、旧会话发送失效不重放、新会话照常收发）。
 - **基准矩阵扩容 + 性能文档重写**：新增内置指标开销微基准（0.5–1.0 ns/次、零分配）、裸 TCP 地板基准（框架税：小消息反而快于裸写 13–52%，64KB 约 3–4×）、会话感知/接收视图/未完成帧超时的三轮对比（SendInSessionAsync ≈2× SendAsync、+≈470 B/条；其余无可测差异）；端到端吞吐参数化到 64B/1KB/64KB 两轮区间。bench/README 全量刷新（环境、噪声披露、框架税绝对+百分比并列），README 双语性能摘要同步。
 
-### 变更（2.4.0 后新增）
-- **大报文优化与归因**：发送编码缓冲自适应初始尺寸（按连接记忆上一帧高水位、封顶 1MB——稳态尺寸相近的协议不再从 1KB 起爬几何增长梯子）。新增 64KB 三 codec 归因基准（byte[] 透传 / string+span / string+分配式），结论：框架纯成本距裸 TCP 仅 ≈20–30%，其余为 codec 写法税（span 重载可消除中间数组）与 string 消息固有税（UTF-16 物化 ≈2× 报文）。README 双语新增"大报文指南"，bench/README 附归因表。
-
 ### 修复
-- **接受循环代次门控（#47 阶段二，竞速泄漏监听器 bug）**：用户重连与自动重连竞速产生多个并发 StartAsync 接受循环时，被取代的"僵尸"循环完成 accept 后可能看到 `_server` 已被新循环替换而跳过单客户端的监听器关闭——**泄漏一个仍在监听但永无人 accept 的 socket**，客户端 SYN 进入无人消费的 backlog 后 `ConnectAsync` 永久挂起（远比"拒绝"严重）。新增 `_acceptLoopId` 代次：每次 StartCore 递增，被取代的循环在取得 `_acceptLock` 后静默退出，监听器的创建/关闭/accept 只归属当代循环。由新增的重连竞速混沌（`Soak_ReconnectRacing_LongRun`，60% 动作占比并发竞速）复现并锁定。
 - **被动端监听韧性加固（#47，防御性）**：排查确认原始"用户 `Reconnect()` 竞速楔死监听"**无法复现**（顺序/并发两组确定性复现 + 混沌套件恢复该动作后多轮全绿，此前观察到的楔死系当时测试自身缺陷），但修复排查中识别的两个真实弱点——① 接受循环的重试延迟改为锁外等待（旧实现整个重试循环持有 `_acceptLock`，绑定/接受持续失败期间会堵死其它接受循环）；② 监听 socket 设置 `SO_REUSEADDR`（服务端主动关闭后立即重绑不受 2MSL/TIME_WAIT 限制；Windows 实测宽松，Linux 上无此选项会遇 `EADDRINUSE`，一并设置保持跨平台一致）。新增确定性回归测试（8 轮服务端主动重连，端口须秒级可重新接受），混沌套件恢复用户重连动作。
 
 ## [2.3.1] - 2026-08-28

@@ -34,6 +34,25 @@ XML message driver (optional):
 dotnet add package StreamFrame.Protocols.Xml
 ```
 
+Minimal JSON driver (System.Text.Json, span-written, AOT-safe):
+
+```csharp
+sealed class SystemTextJsonCodec : ICodec<JsonElement>
+{
+    public static readonly SystemTextJsonCodec Instance = new();
+
+    public JsonElement Decode(in ReadOnlySequence<byte> frame, CancellationToken ct = default)
+        => JsonDocument.Parse(frame.ToArray()).RootElement;
+
+    public void Encode(JsonElement message, IBufferWriter<byte> writer, CancellationToken ct = default)
+    {
+        var raw = message.GetRawText(); // serialized form (non-ASCII already escaped)
+        var span = writer.GetSpan(Encoding.UTF8.GetMaxByteCount(raw.Length));
+        writer.Advance(Encoding.UTF8.GetBytes(raw, span));
+    }
+}
+```
+
 ## Quick start
 
 One connection = one **framer** + one **codec** + address/port/mode. Framing and codec are both **fixed per connection**: a connection carries exactly one message type in exactly one frame format.

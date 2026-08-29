@@ -550,7 +550,9 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
 
             var cts = new CancellationTokenSource();
             var token = cts.Token;
-            var pipe = new Pipe();
+            // 段尺寸对齐接收缓冲：大报文（64KB 级）在默认 4KB 段下跨 16 段重组，
+            // 对齐后整帧常驻单段（64KB 基准实测见 bench/README）
+            var pipe = new Pipe(new PipeOptions(minimumSegmentSize: _options.SocketReceiveBufferSize));
 
             _sessionCts = cts;
             _pipe = pipe;
