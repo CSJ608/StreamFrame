@@ -20,3 +20,6 @@ packages/
 ## BenchmarkDotNet
 BenchmarkDotNet.Artifacts/
 bench-results.txt
+
+# 本地覆盖率收集产物（dotnet test --collect）
+test/**/TestResults/
