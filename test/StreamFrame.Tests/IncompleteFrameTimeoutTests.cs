@@ -88,14 +88,14 @@ public class IncompleteFrameTimeoutTests
         }
     }
 
-    /// <summary>记录 FrameError 事件（拷贝字节，回调返回后可安全断言）。</summary>
-    private static List<(FrameErrorKind Kind, byte[] Bytes)> AttachErrorRecorder(StreamConnection<string> server)
+    /// <summary>记录 FrameError 事件（事件参数字节已拷贝，回调返回后可安全断言）。</summary>
+    private static List<FrameErrorEventArgs> AttachErrorRecorder(StreamConnection<string> server)
     {
-        var errors = new List<(FrameErrorKind, byte[])>();
+        var errors = new List<FrameErrorEventArgs>();
         server.FrameError += (_, e) =>
         {
             lock (errors)
-                errors.Add((e.Kind, e.Bytes.ToArray()));
+                errors.Add(e);
         };
         return errors;
     }
@@ -199,9 +199,12 @@ public class IncompleteFrameTimeoutTests
             await WaitForAsync(() => { lock (errors) return errors.Count == 1; }, timeoutMs: 3000);
             lock (errors)
             {
-                var (kind, bytes) = Assert.Single(errors);
-                Assert.Equal(FrameErrorKind.IncompleteFrameTimeout, kind);
-                Assert.Equal(new byte[] { 0x00, 0x00 }, bytes);
+                var error = Assert.Single(errors);
+                Assert.Equal(FrameErrorKind.IncompleteFrameTimeout, error.Kind);
+                Assert.Equal(new byte[] { 0x00, 0x00 }, error.Bytes.ToArray());
+                Assert.Equal(1, error.SessionId); // 首个会话检出
+                Assert.Equal(2, error.ObservedByteCount);
+                Assert.False(error.IsTruncated);
             }
 
             // 超时判定会话失效：离开 Connected 进入重连
@@ -215,6 +218,12 @@ public class IncompleteFrameTimeoutTests
             await WaitForStateAsync(server, s => s == ConnectionState.Connected, timeoutMs: 8000);
             await Task.Delay(300);
             await client2.GetStream().WriteAsync(Frame("after-timeout"));
+
+            // #56 会话归属：重连后旧会话的超时事件不被改写——事件编号仍是 1，
+            // 与当前会话编号（已递增为 2）严格区分
+            lock (errors)
+                Assert.Equal(1, Assert.Single(errors).SessionId);
+            Assert.Equal(2, server.CurrentSessionId);
         }
 
         await WaitForAsync(() => { lock (received) return received.Count == 1; }, timeoutMs: 8000);
@@ -242,9 +251,12 @@ public class IncompleteFrameTimeoutTests
             await WaitForAsync(() => { lock (errors) return errors.Count == 1; }, timeoutMs: 3000);
             lock (errors)
             {
-                var (kind, bytes) = Assert.Single(errors);
-                Assert.Equal(FrameErrorKind.IncompleteFrameTimeout, kind);
-                Assert.Equal(partial, bytes);
+                var error = Assert.Single(errors);
+                Assert.Equal(FrameErrorKind.IncompleteFrameTimeout, error.Kind);
+                Assert.Equal(partial, error.Bytes.ToArray());
+                Assert.Equal(1, error.SessionId);
+                Assert.Equal(partial.Length, error.ObservedByteCount); // 7 字节全量快照
+                Assert.False(error.IsTruncated);
             }
         }
     }
@@ -313,7 +325,13 @@ public class IncompleteFrameTimeoutTests
         }
 
         lock (errors)
+        {
             Assert.Equal(2, errors.Count);
+            // #56 会话归属：两轮超时分别由会话 1、2 检出，编号随会话重建递增
+            Assert.Equal(1, errors[0].SessionId);
+            Assert.Equal(2, errors[1].SessionId);
+            Assert.All(errors, e => Assert.False(e.IsTruncated)); // 2 字节半帧远小于快照上限
+        }
 
         // 第三轮：正常客户端照常工作
         using (var client = new TcpClient())
@@ -349,9 +367,12 @@ public class IncompleteFrameTimeoutTests
             await WaitForAsync(() => { lock (errors) return errors.Count == 1; }, timeoutMs: 3000);
             lock (errors)
             {
-                var (kind, bytes) = Assert.Single(errors);
-                Assert.Equal(FrameErrorKind.IncompleteFrameTimeout, kind);
-                Assert.Equal(8192, bytes.Length);
+                var error = Assert.Single(errors);
+                Assert.Equal(FrameErrorKind.IncompleteFrameTimeout, error.Kind);
+                Assert.Equal(8192, error.Bytes.Length);
+                Assert.Equal(1, error.SessionId);
+                Assert.Equal(4 + 9000, error.ObservedByteCount); // 头 4 + 正文 9000 的真实规模
+                Assert.True(error.IsTruncated); // 快照只是前缀
             }
         }
     }

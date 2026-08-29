@@ -177,6 +177,12 @@ public class ConnectionResilienceTests
         var error = Assert.Single(errors);
         Assert.Equal(FrameErrorKind.DecodeFailed, error.Kind);
         Assert.Equal("FLAKY", Encoding.UTF8.GetString(error.Bytes.Span));
+        Assert.Equal(1, error.SessionId);
+        Assert.Equal(5, error.ObservedByteCount); // 帧内负载 5 字节，完整拷贝
+        Assert.False(error.IsTruncated);
+        // #56 会话归属：此刻仍在等待新客户端（Retry），CurrentSessionId 已归零——
+        // 回调时刻读当前编号无法归属，事件自身携带的编号才是权威
+        Assert.Equal(0, server.CurrentSessionId);
 
         // 重连后正常消息恢复送达
         using (var client2 = new TcpClient())
@@ -257,6 +263,11 @@ public class ConnectionResilienceTests
         var error = Assert.Single(errors);
         Assert.Equal(FrameErrorKind.DecodeFailed, error.Kind);
         Assert.Equal("poison", Encoding.UTF8.GetString(error.Bytes.Span));
+        // SkipFrame 不断线：事件编号与当前会话一致（同一会话内检出）
+        Assert.Equal(1, error.SessionId);
+        Assert.Equal(server.CurrentSessionId, error.SessionId);
+        Assert.Equal(6, error.ObservedByteCount);
+        Assert.False(error.IsTruncated);
 
         drainCts.Cancel();
         await drainTask;
@@ -385,6 +396,10 @@ public class ConnectionResilienceTests
 
         var overflow = Assert.Single(errors);
         Assert.Equal(FrameErrorKind.IncompleteFrameOverflow, overflow.Kind);
+        Assert.Equal(1, overflow.SessionId); // 首个会话检出
+        Assert.Equal(4 + 128, overflow.ObservedByteCount); // 头 + 正文全量（< 8KB 上限）
+        Assert.False(overflow.IsTruncated);
+        Assert.Equal(0, server.CurrentSessionId); // Retry 窗口：归属只能来自事件自身（#56）
     }
 
     /// <summary>

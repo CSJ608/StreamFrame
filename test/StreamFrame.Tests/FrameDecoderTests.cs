@@ -41,7 +41,8 @@ public class FrameDecoderTests
         DecodeErrorPolicy policy = DecodeErrorPolicy.Disconnect,
         int? maxIncompleteFrameBytes = null,
         ICodec<string>? codec = null,
-        int incompleteFrameTimeoutMs = 0)
+        int incompleteFrameTimeoutMs = 0,
+        long sessionId = 1)
     {
         var errors = new List<FrameErrorEventArgs>();
         var relay = Channel.CreateUnbounded<SessionMessage<string>>(new UnboundedChannelOptions
@@ -53,7 +54,7 @@ public class FrameDecoderTests
         var decoder = new FrameDecoder<string>(
             pipe.Reader, framing, codec ?? StringCodec.Instance, relay,
             metrics: new ConnectionMetrics($"test:{_portCounter++}"),
-            sessionId: 1,
+            sessionId,
             maxIncompleteFrameBytes ?? framing.MaxPayloadBytes + 4096,
             incompleteFrameTimeoutMs,
             policy,
@@ -210,6 +211,9 @@ public class FrameDecoderTests
         var discard = Assert.Single(h.Errors);
         Assert.Equal(FrameErrorKind.DiscardedByResync, discard.Kind);
         Assert.Equal(new byte[] { 0x7F, 0xFF, 0xFF, 0xFF }, discard.Bytes.ToArray());
+        Assert.Equal(1, discard.SessionId);
+        Assert.Equal(4, discard.ObservedByteCount); // 完整丢弃：观测数 == 携带数
+        Assert.False(discard.IsTruncated);
     }
 
     [Fact]
@@ -235,6 +239,9 @@ public class FrameDecoderTests
         var discard = Assert.Single(h.Errors);
         Assert.Equal(FrameErrorKind.DiscardedByResync, discard.Kind);
         Assert.Equal(new byte[] { 0x4E, 0x4E, 0x02, (byte)'A' }, discard.Bytes.ToArray());
+        Assert.Equal(1, discard.SessionId);
+        Assert.Equal(4, discard.ObservedByteCount);
+        Assert.False(discard.IsTruncated);
     }
 
     [Fact]
@@ -254,6 +261,58 @@ public class FrameDecoderTests
         var overflow = Assert.Single(h.Errors);
         Assert.Equal(FrameErrorKind.IncompleteFrameOverflow, overflow.Kind);
         Assert.Equal(36, overflow.Bytes.Length); // 缓冲 36B < 8KB 快照上限，全量携带
+        Assert.Equal(1, overflow.SessionId);
+        Assert.Equal(36, overflow.ObservedByteCount);
+        Assert.False(overflow.IsTruncated);
+    }
+
+    [Fact]
+    public async Task IncompleteFrame_OverLimit_BeyondSnapshotCap_ReportsTruncation()
+    {
+        var framing = new LengthPrefixFramer();
+        // 上限放到 9KB：缓冲一旦超过即触发 overflow，同时超过 8KB 快照上限
+        using var h = CreateDecoder(framing, maxIncompleteFrameBytes: 9 * 1024);
+        var decodeTask = h.Decoder.RunAsync(CancellationToken.None);
+
+        var header = new byte[4];
+        System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(header, 1024 * 1024);
+        await h.Pipe.Writer.WriteAsync(header.Concat(new byte[9 * 1024]).ToArray());
+
+        await Assert.ThrowsAsync<SessionFaultException>(() => decodeTask);
+
+        var overflow = Assert.Single(h.Errors);
+        Assert.Equal(FrameErrorKind.IncompleteFrameOverflow, overflow.Kind);
+        Assert.Equal(8192, overflow.Bytes.Length); // 快照封顶
+        Assert.Equal(9 * 1024 + 4, overflow.ObservedByteCount); // 原始规模 = 头 + 正文
+        Assert.True(overflow.IsTruncated);
+    }
+
+    /// <summary>
+    /// 会话归属在构造时绑定（#56）：旧会话解码器（编号 7）的事件不因新会话解码器
+    /// （编号 8）的存在而改写——DiscardedByResync 不断开、解码循环继续，是四种
+    /// Kind 里跨会话延迟投递窗口最大的一类。
+    /// </summary>
+    [Fact]
+    public async Task DiscardEvents_SessionIdBoundAtConstruction_NotRewrittenByNewerSession()
+    {
+        var framing = new LengthPrefixFramer();
+        using var oldSession = CreateDecoder(framing, sessionId: 7);
+        var oldTask = oldSession.Decoder.RunAsync(CancellationToken.None);
+
+        // 旧会话先产生一个丢弃事件
+        await oldSession.Pipe.Writer.WriteAsync(new byte[] { 0x7F, 0xFF, 0xFF, 0xFF, 0x41 });
+        oldSession.Pipe.Writer.Complete();
+        await oldTask;
+
+        // 会话重建：新解码器（编号 8）开始工作并产生自己的事件
+        using var newSession = CreateDecoder(framing, sessionId: 8);
+        var newTask = newSession.Decoder.RunAsync(CancellationToken.None);
+        await newSession.Pipe.Writer.WriteAsync(new byte[] { 0x7F, 0xFF, 0xFF, 0xFF, 0x42 });
+        newSession.Pipe.Writer.Complete();
+        await newTask;
+
+        Assert.Equal(7, Assert.Single(oldSession.Errors).SessionId);
+        Assert.Equal(8, Assert.Single(newSession.Errors).SessionId);
     }
 
     [Fact]
@@ -275,6 +334,9 @@ public class FrameDecoderTests
         Assert.Equal(FrameErrorKind.DecodeFailed, error.Kind);
         Assert.Equal("bad", Encoding.UTF8.GetString(error.Bytes.Span));
         Assert.IsType<InvalidOperationException>(error.Exception);
+        Assert.Equal(1, error.SessionId);
+        Assert.Equal(3, error.ObservedByteCount); // 帧内负载 3 字节，完整拷贝
+        Assert.False(error.IsTruncated);
     }
 
     [Fact]
@@ -304,6 +366,9 @@ public class FrameDecoderTests
         var error = Assert.Single(h.Errors);
         Assert.Equal(FrameErrorKind.DecodeFailed, error.Kind);
         Assert.Equal("bad", Encoding.UTF8.GetString(error.Bytes.Span));
+        Assert.Equal(1, error.SessionId);
+        Assert.Equal(3, error.ObservedByteCount);
+        Assert.False(error.IsTruncated);
     }
 
     /// <summary>对负载 "bad" 抛异常、其余正常解码的 codec（模拟内容损坏的帧）。</summary>
