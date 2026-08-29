@@ -229,7 +229,8 @@ Measured with BenchmarkDotNet (details and how to reproduce in [bench/README.md]
 
 - **Streaming encode**: halves per-frame heap allocation (single vs. double buffer); 25–35% faster for small payloads, on par for large ones;
 - **Frame decoding**: `LengthPrefixFramer` ≈8.3 ns/frame, `StxEtxFramer` ≈50 ns/frame (≈22× faster after SearchValues vectorization on net8+) — both handle tens of millions of frames per second;
-- **End-to-end** (real TCP loopback, re-measured 2026-08-28 with built-in metrics on): one-way throughput ≈160k msgs/s (1KB messages, LengthPrefix ≈6.2 µs/msg), round-trip latency ≈51 µs; the XML codec costs 2–16 µs per message (400B–4KB) — serialization dominates, not framing. Absolute values vary by machine; see [bench/README.md](bench/README.md) to reproduce.
+- **End-to-end** (real TCP loopback, 2026-08-29 two-round ranges, built-in metrics on): one-way throughput ≈130–135k msgs/s at 1KB and ≈210–240k at 64B (LengthPrefix); round-trip latency ≈66–74 µs; the XML codec costs 2–16 µs per message (400B–4KB) — serialization dominates, not framing. **Framework tax depends on message size**: for small messages the bounded-queue pipeline is even faster than the naive serialized-NetworkStream-write baseline (13–52%); at 64KB the cost is ≈3–4× (encoding-buffer allocations dominate — recorded as an optimization direction);
+- **Cost of the new features, measured**: built-in metrics cost 0.5–1.0 ns per record with zero allocation when nobody subscribes (fine to leave on); `SendInSessionAsync` is roughly 2× the time of `SendAsync` with +≈470 B/msg allocated (the price of session semantics — use `SendAsync` when you don't need them); the receive views and the disabled incomplete-frame timeout show no measurable difference. Absolute values vary by machine; full data and noise disclosure in [bench/README.md](bench/README.md).
 
 ## Supported frameworks
 
@@ -252,7 +253,7 @@ The `netstandard2.0` asset is validated by the **full net48 test suite** (real T
 ```bash
 dotnet build StreamFrame.slnx
 dotnet test
-dotnet run --project samples/StreamFrame.Demo          # 4-scenario end-to-end demo
+dotnet run --project samples/StreamFrame.Demo          # 5-scenario end-to-end demo
 dotnet run -c Release --project bench/StreamFrame.Benchmarks   # benchmarks (~5-10 min)
 dotnet test -f net8.0 --collect:"XPlat Code Coverage"  # coverage (CI also collects & summarizes)
 ```

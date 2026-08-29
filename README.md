@@ -226,7 +226,8 @@ BenchmarkDotNet 实测（详见 [bench/README.md](bench/README.md)，可本地�
 
 - **流式编码**：每帧堆分配减半（单缓冲 vs 双缓冲），小负载耗时快 25–35%，大负载持平；
 - **切帧吞吐**：`LengthPrefixFramer` ≈8.3 ns/帧，`StxEtxFramer` ≈50 ns/帧（net8+ SearchValues 向量化后较逐字节版提速约 22 倍）——两者均可达每秒千万帧级；
-- **端到端**（真实 TCP 回环，2026-08-28 重测，含内置指标）：单向吞吐 ≈16 万条/秒（1KB 消息，LengthPrefix ≈6.2 µs/条），往返延迟 ≈51 µs；XML codec 每条报文 2–16 µs（400B–4KB）——序列化开销远大于定界层。绝对值随机器浮动，复现方式见 [bench/README.md](bench/README.md)。
+- **端到端**（真实 TCP 回环，2026-08-29 两轮区间，含内置指标）：单向吞吐 1KB ≈13–13.5 万条/秒、64B ≈21–24 万条/秒（LengthPrefix）；往返延迟 ≈66–74 µs；XML codec 每条报文 2–16 µs（400B–4KB）——序列化开销远大于定界层。**框架税分尺寸**：小消息下队列流水线反而快于裸 NetworkStream 逐条 Write 的对照（13–52%），64KB 大消息约 3–4×（编码缓冲分配主导，优化方向已记录）；
+- **新特性成本实测**：内置指标无监听时 0.5–1.0 ns/次、零分配（可常开）；`SendInSessionAsync` 约为 `SendAsync` 的 2 倍耗时、+≈470 B/条分配（会话语义的代价，不需要时用 `SendAsync`）；接收视图与未完成帧超时（关闭态）均无可测差异。绝对值随机器浮动，完整数据与噪声披露见 [bench/README.md](bench/README.md)。
 
 ## 支持框架
 
@@ -249,7 +250,7 @@ BenchmarkDotNet 实测（详见 [bench/README.md](bench/README.md)，可本地�
 ```bash
 dotnet build StreamFrame.slnx
 dotnet test
-dotnet run --project samples/StreamFrame.Demo          # 四场景端到端 demo
+dotnet run --project samples/StreamFrame.Demo          # 五场景端到端 demo
 dotnet run -c Release --project bench/StreamFrame.Benchmarks   # 性能基准（约 5-10 分钟）
 dotnet test -f net8.0 --collect:"XPlat Code Coverage"  # 覆盖率（CI 亦自动收集并写入运行摘要）
 ```
