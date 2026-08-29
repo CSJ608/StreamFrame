@@ -6,6 +6,7 @@
 ## [Unreleased]
 
 ### 新增
+- **FrameError 事件增补会话归属与快照完整性元数据（#56）**：`FrameErrorEventArgs` 新增三个只读属性——`SessionId`（检测到错误的解码器绑定的会话编号，与 `CurrentSessionId` / `SessionMessage.SessionId` 同一编号空间；会话重建后延迟到达的旧会话事件仍带旧编号，不在投递时改写为当前会话，四种 `FrameErrorKind` 全覆盖）、`ObservedByteCount`（原始观测字节数，恒 >= `Bytes.Length`；含义按 Kind 分化：DecodeFailed=帧内负载、DiscardedByResync=被丢弃字节、Timeout/Overflow=半帧缓冲全长，详见 XML 文档语义表）与 `IsTruncated`（快照是否截断，timeout/overflow 超 8KB 上限时 `Bytes` 只是前缀）。旧构造重载保留（源/二进制兼容，委托新重载），`IsTruncated` 在构造函数内按 `Bytes.Length < ObservedByteCount` 自动计算。
 - **NativeAOT/裁剪兼容性门禁**：`samples/StreamFrame.AotSmoke` 冒烟工程（引用库的最小可运行路径，含会话感知发送）+ ci.yml 新增 `aot` job（ubuntu 上 PublishAot 发布，IL2026/IL3050 等警告经 TreatWarningsAsErrors 直接红掉；非必需检查，不影响分支保护）。本地 managed 侧已验证零裁剪/AOT 警告。
 - README 双语新增 System.Text.Json 最简 codec 示例（span 直写、AOT 安全）。
 
