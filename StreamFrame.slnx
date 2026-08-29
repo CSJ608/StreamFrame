@@ -4,6 +4,7 @@
   </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/StreamFrame.Demo/StreamFrame.Demo.csproj" />
+    <Project Path="samples/StreamFrame.AotSmoke/StreamFrame.AotSmoke.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/StreamFrame.Protocols.Xml/StreamFrame.Protocols.Xml.csproj" />

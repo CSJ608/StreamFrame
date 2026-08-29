@@ -87,7 +87,24 @@ public interface ICodec<TMessage>
 }
 ```
 
-**接新设备 = 写一个驱动**：实现 `ICodec<TMessage>` + 定义业务消息类，选一个帧策略，其余全部复用。官方示例见 `StreamFrame.Protocols.Xml`。
+**接新设备 = 写一个驱动**：实现 `ICodec<TMessage>` + 定义业务消息类，选一个帧策略，其余全部复用。官方示例见 `StreamFrame.Protocols.Xml`。JSON 报文最简驱动（System.Text.Json，span 直写、AOT 安全）：
+
+```csharp
+sealed class SystemTextJsonCodec : ICodec<JsonElement>
+{
+    public static readonly SystemTextJsonCodec Instance = new();
+
+    public JsonElement Decode(in ReadOnlySequence<byte> frame, CancellationToken ct = default)
+        => JsonDocument.Parse(frame.ToArray()).RootElement;
+
+    public void Encode(JsonElement message, IBufferWriter<byte> writer, CancellationToken ct = default)
+    {
+        var raw = message.GetRawText(); // 序列化产物（已转义的非 ASCII 安全直写）
+        var span = writer.GetSpan(Encoding.UTF8.GetMaxByteCount(raw.Length));
+        writer.Advance(Encoding.UTF8.GetBytes(raw, span));
+    }
+}
+```
 
 ### 连接（IStreamConnection&lt;T&gt;）— 传输层
 

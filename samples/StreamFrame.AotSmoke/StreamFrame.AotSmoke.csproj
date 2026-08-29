@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- CI 以 RID publish 本工程（见 ci.yml 的 aot job）：NativeAOT 发布涵盖裁剪分析，
+         IL2026/IL3050 等警告因 TreatWarningsAsErrors 直接红掉——防止库悄悄引入
+         反射/动态代码等不兼容依赖。注意：不要用命令行 -p:PublishAot=true 传递
+         （全局属性会传播到库的 netstandard2.0 目标，触发 NETSDK1124） -->
+    <PublishAot>true</PublishAot>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\StreamFrame\StreamFrame.csproj" />
+  </ItemGroup>
+
+</Project>

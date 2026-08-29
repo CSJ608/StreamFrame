@@ -101,3 +101,22 @@ jobs:
           name: coverage-${{ github.run_number }}
           path: coverage/
           retention-days: 14
+
+  # NativeAOT/裁剪兼容性门禁（非必需检查）：发布引用库的冒烟工程（PublishAot 在工程内开启，
+  # 涵盖裁剪分析）。IL2026/IL3050 等警告经 TreatWarningsAsErrors 变为错误，防止库悄悄
+  # 引入反射/动态代码。ubuntu runner 自带 AOT 原生工具链。
+  aot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: PublishAot（NativeAOT + 裁剪警告门禁）
+        run: dotnet publish samples/StreamFrame.AotSmoke -c Release -r linux-x64
