@@ -35,13 +35,13 @@ public abstract class SessionAwareBenchmarkBase
             }
         });
 
-    protected void SetupCore(StreamConnectionOptions options, Func<IAsyncEnumerable<string>> streamFactory)
+    protected void SetupCore(StreamConnectionOptions options, Func<IAsyncEnumerable<string>> streamFactory, ICodec<string>? codec = null)
     {
         var port = GetFreePort();
         StreamConnection<string> Create(bool isActive)
             => new(
                 new LengthPrefixFramer(),
-                Utf8TextCodec.Instance,
+                codec ?? Utf8TextCodec.Instance,
                 IPAddress.Loopback,
                 port,
                 isActive,
