@@ -18,7 +18,7 @@
     </PackageReference>
     <!-- 让 linux CI 也能编译 net48 目标（测试仅在 Windows 运行时执行） -->
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
-    <PackageReference Include="Meziantou.Analyzer" Version="3.0.189">
+    <PackageReference Include="Meziantou.Analyzer" Version="3.0.203">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
