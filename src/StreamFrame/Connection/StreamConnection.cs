@@ -782,8 +782,14 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
         var reader = _sendQueue.Reader;
         while (await reader.WaitToReadAsync(ct).ConfigureAwait(false))
         {
-            while (reader.TryRead(out var entry))
+            while (true)
             {
+                // 上一帧写完后也可能已拆除会话；取消的 worker 不再认领下一条，
+                // 否则它会出队后在写入处抛取消，丢掉本应由新会话续发的普通条目。
+                ct.ThrowIfCancellationRequested();
+                if (!reader.TryRead(out var entry))
+                    break;
+
                 if (!entry.IsSessionBound)
                 {
                     await SendFramedAsync(entry.Message, ct).ConfigureAwait(false);

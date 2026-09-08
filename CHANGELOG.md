@@ -6,6 +6,7 @@
 ## [Unreleased]
 
 ### 修复
+- **取消后的队列续发（[#67](https://github.com/CSJ608/StreamFrame/issues/67)）**：发送 worker 每次出队前检查会话取消，避免上一帧写完后拆除的旧 worker 取走并丢弃待续发普通条目，保持 SendAsync 仅入队契约。
 - **TCP KeepAlive 单位（[#62](https://github.com/CSJ608/StreamFrame/issues/62)）**：现代 .NET 将正毫秒值安全向上取整为秒，默认 30000/5000ms 正确设置为 30/5s；保留 netstandard2.0 IOControl 毫秒语义及默认关闭。增加真实 Socket 配置读回与边界回归，双语文档明确粒度差异。
 - **终态连接等待（[#65](https://github.com/CSJ608/StreamFrame/issues/65)）**：取得连接等待器后复查停机状态，关闭首次注册与 Shutdown 的竞态；Dispose 或生命周期取消后的新等待也以任务取消结束，无需调用方令牌。补充终态调用、1000 次首次注册竞速及调用方取消隔离回归。
 - **坏头后完整帧交付（[#64](https://github.com/CSJ608/StreamFrame/issues/64)）**：定界器返回 false 但已消费无效前缀时继续解析现有缓冲，无进展才等待输入；保留非法长度头四字节丢弃策略，避免完整帧挂起及误触发半帧超时。补充推进契约及连续坏头、粘包、半帧、EOF、自定义定界器和错误元数据回归。
@@ -32,6 +33,7 @@
 - **大报文优化与归因**：发送编码缓冲自适应初始尺寸（按连接记忆上一帧高水位、封顶 1MB——稳态尺寸相近的协议不再从 1KB 起爬几何增长梯子）。新增 64KB 三 codec 归因基准（byte[] 透传 / string+span / string+分配式），结论：框架纯成本距裸 TCP 仅 ≈20–30%，其余为 codec 写法税（span 重载可消除中间数组）与 string 消息固有税（UTF-16 物化 ≈2× 报文）。README 双语新增"大报文指南"，bench/README 附归因表。
 
 ### 修复
+- **取消后的队列续发（[#67](https://github.com/CSJ608/StreamFrame/issues/67)）**：发送 worker 每次出队前检查会话取消，避免上一帧写完后拆除的旧 worker 取走并丢弃待续发普通条目，保持 SendAsync 仅入队契约。
 - **接受循环代次门控（#47 阶段二，竞速泄漏监听器 bug）**：用户重连与自动重连竞速产生多个并发 StartAsync 接受循环时，被取代的"僵尸"循环完成 accept 后可能看到 `_server` 已被新循环替换而跳过单客户端的监听器关闭——**泄漏一个仍在监听但永无人 accept 的 socket**，客户端 SYN 进入无人消费的 backlog 后 `ConnectAsync` 永久挂起（远比"拒绝"严重）。新增 `_acceptLoopId` 代次：每次 StartCore 递增，被取代的循环在取得 `_acceptLock` 后静默退出，监听器的创建/关闭/accept 只归属当代循环。由新增的重连竞速混沌（`Soak_ReconnectRacing_LongRun`，60% 动作占比并发竞速）复现并锁定。
 
 ## [2.4.0] - 2026-08-29
@@ -47,11 +49,13 @@
 - **基准矩阵扩容 + 性能文档重写**：新增内置指标开销微基准（0.5–1.0 ns/次、零分配）、裸 TCP 地板基准（框架税：小消息反而快于裸写 13–52%，64KB 约 3–4×）、会话感知/接收视图/未完成帧超时的三轮对比（SendInSessionAsync ≈2× SendAsync、+≈470 B/条；其余无可测差异）；端到端吞吐参数化到 64B/1KB/64KB 两轮区间。bench/README 全量刷新（环境、噪声披露、框架税绝对+百分比并列），README 双语性能摘要同步。
 
 ### 修复
+- **取消后的队列续发（[#67](https://github.com/CSJ608/StreamFrame/issues/67)）**：发送 worker 每次出队前检查会话取消，避免上一帧写完后拆除的旧 worker 取走并丢弃待续发普通条目，保持 SendAsync 仅入队契约。
 - **被动端监听韧性加固（#47，防御性）**：排查确认原始"用户 `Reconnect()` 竞速楔死监听"**无法复现**（顺序/并发两组确定性复现 + 混沌套件恢复该动作后多轮全绿，此前观察到的楔死系当时测试自身缺陷），但修复排查中识别的两个真实弱点——① 接受循环的重试延迟改为锁外等待（旧实现整个重试循环持有 `_acceptLock`，绑定/接受持续失败期间会堵死其它接受循环）；② 监听 socket 设置 `SO_REUSEADDR`（服务端主动关闭后立即重绑不受 2MSL/TIME_WAIT 限制；Windows 实测宽松，Linux 上无此选项会遇 `EADDRINUSE`，一并设置保持跨平台一致）。新增确定性回归测试（8 轮服务端主动重连，端口须秒级可重新接受），混沌套件恢复用户重连动作。
 
 ## [2.3.1] - 2026-08-28
 
 ### 修复
+- **取消后的队列续发（[#67](https://github.com/CSJ608/StreamFrame/issues/67)）**：发送 worker 每次出队前检查会话取消，避免上一帧写完后拆除的旧 worker 取走并丢弃待续发普通条目，保持 SendAsync 仅入队契约。
 - **迟到的过期故障重连污染活会话**（v2.3.0 评审 P1-1）：垂死旧会话的迟到故障（epoch 已被替换，如 net48 线程池慢导致第二个 `ScheduleReconnect` 延迟到达）此前会在 epoch 校验之前发布 `Retry` 并把 `CurrentSessionId` 归零——完全存活的会话被谎报为重连中、`WaitForConnectedAsync` 悬挂、活会话编号被误判失效。现改为过期故障在任何对外发布之前整体丢弃（gate 内权威复查保留）。回归测试以反射调度过期故障验证。
 - **残留的旧会话绑定条目可能在新会话 socket 上错发并报告成功**（v2.3.0 评审 P1-2，"绝不跨会话重放"保证的漏洞）：`Connected→Connected` 直连拆除（双 `StartAsync` 竞速/Connected 回调内 `Reconnect()` 重入）路径下，旧会话排队条目既不被清扫也无编号校验，会被新 worker 发到新 socket 并以成功收尾。现发送 worker 认领时校验条目 `SessionId`，不属当前会话的绑定条目一律以 `SessionExpiredException` 失败、绝不发送。压测改为按帧内容对账（跨会话错发探测器）。
 - 发送失败类型收敛（评审 P2-5/P2-6）：停机时清扫先于发送通道完成（队满等待中的条目统一以 `SessionExpiredException` 收尾而非偶发 `ChannelClosedException`）；worker 写出失败时 internal 的 `SessionFaultException` 与 `ObjectDisposedException` 统一映射为 `SessionExpiredException`，不再向调用方泄漏非文档类型。
@@ -79,6 +83,7 @@
 - 心跳保活示例（demo 场景 4）：周期心跳 + 接收空闲超时的完整范式——有心跳时连接稳定（零状态事件），停止心跳后空闲判定触发重连；README 活性探测小节同步补充代码片段。
 
 ### 修复
+- **取消后的队列续发（[#67](https://github.com/CSJ608/StreamFrame/issues/67)）**：发送 worker 每次出队前检查会话取消，避免上一帧写完后拆除的旧 worker 取走并丢弃待续发普通条目，保持 SendAsync 仅入队契约。
 - 接收空闲超时在部分平台（Windows）会把取消中的接收折算成 0 字节完成，被误判为"对端正常关闭"（FIN）——现统一按会话故障处理（结果同为重连，但诊断语义正确；最小复现确认后修复）。
 - demo 场景 3 强制重连后用 `WaitForConnectedAsync` 等待双方就绪存在竞态（旧会话瞬时仍为 Connected 会走"立即完成"快速路径）——改为轮询双方状态，连续 10 次运行无抖动。
 
@@ -95,6 +100,7 @@
 - 基准测试扩容：`CodecBenchmarks`（XmlDocumentCodec 典型报文编解码开销）与 `EndToEndBenchmarks`（真实 TCP 回环的单向吞吐（双 framer）与往返延迟）；基准项目纳入解决方案（IDE 可见，随解决方案构建；`dotnet test` 依 IsTestProject 机制自动跳过）。
 
 ### 修复
+- **取消后的队列续发（[#67](https://github.com/CSJ608/StreamFrame/issues/67)）**：发送 worker 每次出队前检查会话取消，避免上一帧写完后拆除的旧 worker 取走并丢弃待续发普通条目，保持 SendAsync 仅入队契约。
 - 暂无
 
 ## [2.1.0] - 2026-08-27
@@ -115,6 +121,7 @@
 - 英文版 README（`README.en.md`，与中文版互链），便于国际用户检索与阅读。
 
 ### 修复
+- **取消后的队列续发（[#67](https://github.com/CSJ608/StreamFrame/issues/67)）**：发送 worker 每次出队前检查会话取消，避免上一帧写完后拆除的旧 worker 取走并丢弃待续发普通条目，保持 SendAsync 仅入队契约。
 - 暂无
 
 ## [2.0.0] - 2026-08-27
@@ -129,6 +136,7 @@
 - **socket 改为 IPv6 双栈**（同一 socket 同时支持 IPv4/IPv6；监听 `IPAddress.Any` 自动按双栈处理）。1.x 仅 IPv4。
 
 ### 修复
+- **取消后的队列续发（[#67](https://github.com/CSJ608/StreamFrame/issues/67)）**：发送 worker 每次出队前检查会话取消，避免上一帧写完后拆除的旧 worker 取走并丢弃待续发普通条目，保持 SendAsync 仅入队契约。
 - 主动模式连接失败重试不再泄漏 socket：`ConnectAsync` 失败/取消时立即释放本次尝试创建的 socket（此前每次失败重试泄漏一个，等终结器回收）。
 - CHANGELOG 底部版本对比链接补齐 `[1.2.0]` 并修正 `[Unreleased]` 指向（v1.2.0 发版时漏更新）。
 
@@ -149,6 +157,7 @@
 ## [1.2.0] - 2026-08-27
 
 ### 修复
+- **取消后的队列续发（[#67](https://github.com/CSJ608/StreamFrame/issues/67)）**：发送 worker 每次出队前检查会话取消，避免上一帧写完后拆除的旧 worker 取走并丢弃待续发普通条目，保持 SendAsync 仅入队契约。
 - **会话假活（严重）**：消息通道不再被解码循环在会话停止时关闭——此前任何一次断线重连（或一条解码失败的报文）都会永久关闭通道，之后连接看似健康（Connected、字节仍在收发），业务消息却永远不再送达。`GetMessages` 现在是跨重连的稳定消息流，仅在 `DisposeAsync` 后正常结束。
 - **已收消息不再丢失**：对端"发完数据立即断开"时，解码循环退出前会投递所有已缓冲的完整帧（此前会话停止的取消可能抢在投递之前）。
 - **会话拆除不再泄漏旧 socket**：每次重连都会关闭上一个连接的 socket（此前等终结器收场）。
