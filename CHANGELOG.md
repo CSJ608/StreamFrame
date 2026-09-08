@@ -6,6 +6,7 @@
 ## [Unreleased]
 
 ### 修复
+- **监听绑定失败恢复（[#63](https://github.com/CSJ608/StreamFrame/issues/63)）**：监听 Socket 完成配置、Bind/Listen 后才发布，失败释放并保持字段为空，端口释放后可自动重试接入；发布与停机释放互斥，保留接受循环代次及单客户端监听关闭语义。新增同步信号门控的端口占用恢复、双向消息及取消/Dispose 竞态回归。
 - **Soak 目标矩阵（[#66](https://github.com/CSJ608/StreamFrame/issues/66)）**：显式选择 Ubuntu net8.0/net10.0、Windows net8.0/net10.0/net48，避免 Ubuntu 启动 .NET Framework 测试；job 名、详细日志与始终尝试上传的 TRX 产物按 OS/TFM 区分，测试断言失败继续使 job 失败。普通 CI 必需检查名不变。
 
 ## [2.6.0] - 2026-08-29

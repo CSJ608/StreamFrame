@@ -77,8 +77,10 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
     private readonly StreamConnectionOptions _options;
 
 #if NET9_0_OR_GREATER
+    private readonly Lock _listenerGate = new(); // 监听器发布与停机释放互斥，不跨 await 持有。
     private readonly Lock _sessionGate = new(); // System.Threading.Lock（net9+，比 monitor 锁更轻量）
 #else
+    private readonly object _listenerGate = new();
     private readonly object _sessionGate = new();
 #endif
     private Pipe? _pipe;
@@ -263,8 +265,16 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
     private static Socket CreateTcpSocket()
     {
         var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-        socket.DualMode = true;
-        return socket;
+        try
+        {
+            socket.DualMode = true;
+            return socket;
+        }
+        catch
+        {
+            socket.Dispose();
+            throw;
+        }
     }
 
     /// <summary>双栈监听地址归一：0.0.0.0 绑定到 IPv6 的 ::（v4 流量经映射地址到达）。</summary>
@@ -317,17 +327,15 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
                 if (Volatile.Read(ref _acceptLoopId) != loopId)
                     return null;
 
-                if (_server == null)
-                    InitServer();
+                var listener = InitServer(ct);
 
                 try
                 {
 #if NETSTANDARD2_0
-                    var listener = _server!;
                     // FromAsync 无法取消；停机时 listener 被释放，挂起的 accept 以异常收尾
                     accepted = await Task.Factory.FromAsync(listener.BeginAccept, listener.EndAccept, null).ConfigureAwait(false);
 #else
-                    accepted = await _server!.AcceptAsync(ct).ConfigureAwait(false);
+                    accepted = await listener.AcceptAsync(ct).ConfigureAwait(false);
 #endif
                 }
                 catch (Exception ex) when (!ct.IsCancellationRequested && !IsDisposed)
@@ -344,16 +352,23 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
                     // 单客户端模式：accept 到第一个客户端后关闭监听 socket，
                     // 后续连接在 TCP 层被立即拒绝。代次门控保证此处 _server 属于当代循环，
                     // 不会误关/漏关其它循环的监听器。
-                    if (_options.AcceptFirstClientOnly && _server != null)
+                    if (_options.AcceptFirstClientOnly)
                     {
-                        _server.Dispose();
-                        _server = null;
+                        lock (_listenerGate)
+                        {
+                            _server?.Dispose();
+                            _server = null;
+                        }
                     }
                 }
             }
             finally
             {
-                _acceptLock.Release();
+                lock (_listenerGate)
+                {
+                    if (!IsDisposed)
+                        _acceptLock.Release();
+                }
             }
 
             if (accepted is not null)
@@ -363,22 +378,36 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
         }
     }
 
-    private void InitServer()
+    private Socket InitServer(CancellationToken ct)
     {
-        if (_server != null)
+        lock (_listenerGate)
         {
-            _server.Dispose();
-            _server = null;
-        }
+            ct.ThrowIfCancellationRequested();
+            // Shutdown 先标记终态，再取得同一把锁释放；迟到的初始化不得发布监听器。
+            if (IsDisposed)
+                throw new OperationCanceledException(ct);
+            if (_server != null)
+                return _server;
 
-        _server = CreateTcpSocket();
-        _server.Blocking = false;
-        // 允许重绑覆盖遗留的 TIME_WAIT：服务端主动关闭（用户 Reconnect/停机）后立即重新
-        // 监听不受 2MSL 限制（Linux 上没有该选项会遇到 EADDRINUSE；Windows 实测宽松，
-        // 一并设置保持跨平台行为一致——#47 防御性修复）
-        _server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-        _server.Bind(new IPEndPoint(NormalizeListenAddress(IpAddress), Port));
-        _server.Listen(0);
+            var listener = CreateTcpSocket();
+            try
+            {
+                listener.Blocking = false;
+                // 允许重绑覆盖遗留的 TIME_WAIT：服务端主动关闭（用户 Reconnect/停机）后立即重新
+                // 监听不受 2MSL 限制（Linux 上没有该选项会遇到 EADDRINUSE；Windows 实测宽松，
+                // 一并设置保持跨平台行为一致——#47 防御性修复）
+                listener.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                listener.Bind(new IPEndPoint(NormalizeListenAddress(IpAddress), Port));
+                listener.Listen(0);
+                _server = listener; // 全部成功才转移所有权；失败保持字段为空，下一轮可重试。
+                return listener;
+            }
+            catch
+            {
+                listener.Dispose();
+                throw;
+            }
+        }
     }
 
     /// <summary>统一配置已连接 socket：非阻塞、接收缓冲、可选 TCP KeepAlive（半开连接探测）。</summary>
@@ -1149,11 +1178,14 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
             _socket = null;
         }
 
-        _server?.Dispose();
-        _server = null;
+        lock (_listenerGate)
+        {
+            _server?.Dispose();
+            _server = null;
+            _acceptLock.Dispose();
+        }
 
         _sendLock.Dispose();
-        _acceptLock.Dispose();
         _lifetimeCts?.Dispose();
         _lifetimeCts = null;
     }
