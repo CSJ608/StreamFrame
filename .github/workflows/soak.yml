@@ -14,6 +14,10 @@ on:
         description: '浸泡时长（秒）'
         required: false
         default: '600'
+      seed:
+        description: '可选随机 seed（重放动作序列）'
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -54,6 +58,7 @@ jobs:
       - name: Soak tests (${{ matrix.tfm }})
         env:
           STREAMFRAME_SOAK_SECONDS: ${{ inputs.seconds || '600' }}
+          STREAMFRAME_SOAK_SEED: ${{ inputs.seed || '' }}
         run: >-
           dotnet test test/StreamFrame.Tests/StreamFrame.Tests.csproj -c Release --no-build
           -f ${{ matrix.tfm }}
