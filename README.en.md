@@ -42,7 +42,10 @@ sealed class SystemTextJsonCodec : ICodec<JsonElement>
     public static readonly SystemTextJsonCodec Instance = new();
 
     public JsonElement Decode(in ReadOnlySequence<byte> frame, CancellationToken ct = default)
-        => JsonDocument.Parse(frame.ToArray()).RootElement;
+    {
+        using var document = JsonDocument.Parse(frame.ToArray());
+        return document.RootElement.Clone(); // Own data beyond document disposal.
+    }
 
     public void Encode(JsonElement message, IBufferWriter<byte> writer, CancellationToken ct = default)
     {
@@ -54,6 +57,8 @@ sealed class SystemTextJsonCodec : ICodec<JsonElement>
 ```
 
 ## Quick start
+
+This is a **single-connection device integration library**. A passive listener serves one client at a time; `AcceptFirstClientOnly = false` keeps the listener open without adding multi-client handling. The snippets below represent separate processes/roles, with a host-provided `ct`. See the production configuration below and dispose connections with `await using`.
 
 One connection = one **framer** + one **codec** + address/port/mode. Framing and codec are both **fixed per connection**: a connection carries exactly one message type in exactly one frame format.
 
@@ -113,13 +118,51 @@ public interface ICodec<TMessage>
 - **Client/server dual mode**: `isActive: true` connects out, `false` listens; IPv4/IPv6 dual-stack (listening on `IPAddress.Any` is normalized to dual-stack; IPv4 client addresses are displayed as plain IPv4)
 - **Auto-reconnect**: `Connecting → Connected → Retry` state machine; optional exponential backoff (`MaxRetryDelayMs`, doubling with cap + ±20% jitter, auto-reset on success); `GetMessages` is a stable stream across reconnections — received messages are not lost and enumeration does not break when the connection drops and recovers
 - **Start & stop**: the `ct` passed to `Start(ct)` is the connection's **lifetime token** — cancelling it stops connection/reconnection and tears the link down (state enters the terminal `Disconnected`, `GetMessages` completes naturally; create a new connection afterwards). `DisposeAsync` does the same. After shutdown, `SendAsync` throws `ChannelClosedException`
-- **Waiting for readiness**: `await conn.WaitForConnectedAsync(ct)` — completes immediately when connected; otherwise waits for the next successful connection (or cancellation/dispose). No state polling, no `Task.Delay` guessing
+- **Waiting for readiness**: `await conn.WaitForConnectedAsync(ct)` — completes immediately when connected; otherwise waits for the next successful connection (or caller cancellation, lifetime cancellation/disposal). Future waits after terminal shutdown are cancelled too, even without a caller token
 - **Robustness**: payload decode failures, incomplete-frame overflows/timeouts, send failures, and receive idle timeouts all invalidate the session and rebuild it automatically (no more "connection looks alive while messages silently vanish")
 - **Liveness detection (optional)**: TCP KeepAlive and receive idle timeout to catch half-open connections (peer power loss / unplugged cable)
 - **Events**: `ConnectionChanged` state changes, `FrameError` frame-level diagnostics, `RawBytesReceived/Sent` raw bytes (HEX debugging)
 - **Built-in metrics**: `System.Diagnostics.Metrics` (meter `StreamFrame`) — frame/byte counters, reconnects, session duration, send-queue watermark; see the "Built-in metrics" section
 - **Backpressure**: bounded send queue — `SendAsync` waits when full; the receive side buffers without limit by default, or set `ReceiveQueueCapacity` — decoding pauses when the consumer lags, propagating TCP backpressure to the peer and preventing unbounded memory growth
 - **Session-aware messaging (optional, advanced)**: `CurrentSessionId` / `SendInSessionAsync` (completes only after the whole frame is written to the socket; fails on session loss and never replays across sessions) / `GetSessionMessages` (messages carry their session id) — for protocols with strict session boundaries such as HSMS; see the dedicated section below
+
+## Buffer ownership and concurrency
+
+`Decode` borrows `frame` only during the synchronous call. The returned message, including nested fields, must independently own retained data. Never return `frame.First`, slices or `ReadOnlyMemory<byte>` backed by pipeline storage: the pipe advances/releases its buffers, while business processing may happen after an `await`. Read-only memory does not imply ownership. This interface offers no transfer of pooled pipeline storage.
+
+`Encode` must finish writing before returning. Do not retain/dispose `writer` or retain its buffers for asynchronous use. The send queue holds message objects: do not mutate or return their backing arrays after enqueue. Plain `SendAsync` completion means enqueue only; encoding may not have started. A dedicated array that is never modified afterwards is the simplest approach.
+
+A session's send worker serializes its own encoding calls, **not the codec instance**. `Encode` and `Decode` may run concurrently. Session teardown waits at most two seconds: old decoders (for example, stalled by receive backpressure) may overlap new session decoders; a blocked old encoder cannot be assumed to have exited either. Use call-local state or synchronization and avoid blocking synchronous methods. Callers sharing a codec/framer across connections must ensure concurrency safety. One instance per connection still needs to support concurrent read/write and old/new session calls.
+
+The same rules apply to `IFramer`: do not retain input sequences; output `payload` may borrow input for the immediately following synchronous codec call. Use the encoding writer only within the call. Other calls may interleave between `IStreamingFramer.BeginFrame` and `EndFrame`; keep pair state in the supplied writer rather than an instance's "current frame" field.
+
+Complete, compilable [`OwnedBytesCodec`](samples/StreamFrame.Ownership/OwnedBytesCodec.cs) / [`OwnedMemoryCodec`](samples/StreamFrame.Ownership/OwnedMemoryCodec.cs) examples return `frame.ToArray()` for both message types, including single-segment input. Their encoders synchronously call `writer.Write(message)` or `writer.Write(message.Span)`. These exact sources are compiled in the test project for net8.0/net10.0/net48. `OwnershipExampleTests` overwrites single/multi-segment input and runs the real FrameDecoder with a pool that fills returned storage with `0xDD`; asynchronous consumption after pipe disposal must still produce the original bytes.
+
+## Production configuration starting point
+
+The complete [`ProductionExample.RunAsync`](samples/StreamFrame.Ownership/ProductionExample.cs) demonstrates bounded queues, a ten-second readiness timeout, asynchronous consumption, lifetime cancellation and `await using` disposal, and is compiled for all three test targets. These values assume payloads up to 64 KiB: tune them to the protocol, peak traffic and processing time. Library defaults remain unchanged.
+
+```csharp
+var framer = new LengthPrefixFramer(64 * 1024);
+var options = new StreamConnectionOptions
+{
+    SendQueueCapacity = 128,
+    ReceiveQueueCapacity = 128, // Default 0 is unbounded.
+    MaxIncompleteFrameBufferBytes = 64 * 1024 + 4, // Includes length header.
+    IncompleteFrameTimeoutMs = 5_000,
+    ReceiveIdleTimeoutMs = 0, // Silence is legal; consider 15_000 with a 5s heartbeat.
+    TcpKeepAlive = true,
+    KeepAliveTimeMs = 30_000,
+    KeepAliveIntervalMs = 1_500, // Modern .NET rounds up to 2 seconds (#62).
+    AcceptFirstClientOnly = true,
+};
+```
+
+Capacity counts **messages**, not bytes: 128 × 64 KiB is approximately 8 MiB of payload per queue, plus object overhead, encoding/pipe/socket buffers, in-flight processing, waiting producers and lingering old-session work. Decoded objects may exceed their wire size. Bound producer concurrency and await sends sequentially rather than creating unlimited waiting tasks. Bounded queues are not a hard process-memory limit.
+
+Slow consumers block receive-channel writes and pause decoding; backpressure propagates through the pipe and TCP to the peer. The incomplete-frame byte limit checks unconsumed partial frames, not complete messages or total memory. While the channel is blocked, the incomplete-frame timer does not run and the byte check must wait for decoding to resume. Receive idle timeout suits periodic traffic; keep it at zero when silence is valid and choose a partial-frame timeout from the protocol's transfer deadline. KeepAlive uses positive milliseconds, rounded up to seconds on modern .NET; netstandard2.0 IOControl retains milliseconds.
+
+A caller timeout for `WaitForConnectedAsync` cancels only that wait. Lifetime cancellation/disposal stops the connection and cancels future waits too, even without a caller token (#65). Plain `SendAsync` guarantees neither socket write nor peer acknowledgement: queued entries can continue in a new session, but a failed dequeued send cannot be treated as delivered (#67). Reliable business delivery needs protocol ACKs, retries and deduplication. Session-bound send success also means only that the entire frame reached the local socket.
 
 ## Session-aware messaging (advanced)
 
@@ -275,7 +318,7 @@ For 64KB-class messages the dominant costs are the codec style and the message t
    // Not recommended: writer.Write(Encoding.UTF8.GetBytes(message));  // full-size byte[] per message
    ```
 
-2. **Pick byte[] / ReadOnlyMemory<byte> as the message type**: string messages inherently allocate ≈2× the payload size per message for UTF-16 materialization; with byte payloads and a pass-through codec the framework sits within ≈20–30% of raw TCP;
+2. **Pick byte[] / ReadOnlyMemory<byte> as the message type**: string messages inherently allocate ≈2× the payload size per message for UTF-16 materialization; with byte payloads and an [owning codec](#buffer-ownership-and-concurrency) the framework sits within ≈20–30% of raw TCP;
 3. Keep **streaming encode** on (default, `UseStreamingEncode`) — send buffers now start at the previous frame's size (adaptive, capped at 1MB).
 
 ## Supported frameworks

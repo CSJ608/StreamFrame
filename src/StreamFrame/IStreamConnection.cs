@@ -72,12 +72,20 @@ public interface IStreamConnection<TMessage> : IAsyncDisposable
 
     /// <summary>
     /// 等待连接进入 <see cref="ConnectionState.Connected"/>：已连接时立即完成；否则等到
-    /// 下一次连接成功、<paramref name="ct"/> 取消或连接 Dispose（任务以取消结束）。
+    /// 下一次连接成功、<paramref name="ct"/> 取消、生命周期取消或连接 Dispose（任务以取消结束）。
+    /// 终态后的新等待同样以取消结束，即使未传调用方令牌。
+    /// Lifetime cancellation/disposal also cancels future waits, even without a caller token.
     /// 替代轮询 <see cref="State"/> 或 Task.Delay 式等待。
     /// </summary>
     Task WaitForConnectedAsync(CancellationToken ct = default);
 
     /// <summary>发送一条业务消息。仅入队，由发送 worker 编码加帧后写出；队列满时背压等待。</summary>
+    /// <remarks>
+    /// 完成不代表已编码、写入 socket 或远端确认。消息及底层数据应在入队后保持不变。
+    /// 未出队普通消息可由新会话续发；已出队发送失败的远端结果未知，不保证交付。
+    /// Completion means enqueue only, not encoding, socket write or peer acknowledgement.
+    /// Keep queued data immutable; queued entries can continue in a new session, but delivery is not guaranteed.
+    /// </remarks>
     Task SendAsync(TMessage message, CancellationToken ct = default);
 
     /// <summary>

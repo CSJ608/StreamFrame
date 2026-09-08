@@ -22,7 +22,8 @@ public sealed class StreamConnectionOptions
     /// <summary>Socket 接收缓冲区大小（字节）。</summary>
     public int SocketReceiveBufferSize { get; set; } = 65536;
 
-    /// <summary>发送队列容量；超过容量时 SendAsync 将等待（背压）。</summary>
+    /// <summary>发送队列容量（消息数，非字节预算）；超过容量时 SendAsync 将等待（背压）。
+    /// Capacity counts messages, not bytes; full queues backpressure SendAsync.</summary>
     public int SendQueueCapacity { get; set; } = 1024;
 
     /// <summary>编码缓冲区的初始大小（字节）。</summary>
@@ -75,6 +76,8 @@ public sealed class StreamConnectionOptions
     /// 接收消息通道容量（默认 0 = 不限制）：解码出的业务消息先入通道，再由 GetMessages 消费。
     /// 设为正数后，消费慢时解码循环暂停读取（TCP 背压自然传导到对端），防止慢消费者撑爆内存。
     /// 注意：消费完全停滞期间，会话拆除最多等待 2 秒（内部超时）后继续。
+    /// 容量按消息数而非字节计量；还需预算单条对象大小、处理中消息、等待入队的生产者及管线/socket 缓冲。
+    /// Capacity counts messages, not bytes. Budget message size, in-flight work, waiting producers and I/O buffers too.
     /// </summary>
     public int ReceiveQueueCapacity { get; set; }
 

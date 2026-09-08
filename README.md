@@ -36,6 +36,8 @@ dotnet add package StreamFrame.Protocols.Xml
 
 ## 快速上手
 
+本库面向**单连接设备对接**。被动监听同时只服务一个客户端；`AcceptFirstClientOnly = false` 仅保持监听，不增加多客户端处理能力。以下为两个独立进程/角色的入门片段，`ct` 由宿主提供；部署前参考下方生产配置，并用 `await using` 释放连接。
+
 一条连接 = 一个**帧定界策略**（framing）+ 一个**编解码器**（codec）+ 地址/端口/模式。framing 与 codec 均**连接级固定**，一条连接只流通一种消息类型、一种帧格式。
 
 ```csharp
@@ -95,7 +97,10 @@ sealed class SystemTextJsonCodec : ICodec<JsonElement>
     public static readonly SystemTextJsonCodec Instance = new();
 
     public JsonElement Decode(in ReadOnlySequence<byte> frame, CancellationToken ct = default)
-        => JsonDocument.Parse(frame.ToArray()).RootElement;
+    {
+        using var document = JsonDocument.Parse(frame.ToArray());
+        return document.RootElement.Clone(); // Own data beyond document disposal.
+    }
 
     public void Encode(JsonElement message, IBufferWriter<byte> writer, CancellationToken ct = default)
     {
@@ -111,13 +116,51 @@ sealed class SystemTextJsonCodec : ICodec<JsonElement>
 - **客户端/服务端双模式**：`isActive: true` 主动连远端，`false` 被动监听；IPv4/IPv6 双栈（监听 `IPAddress.Any` 自动按双栈处理，IPv4 客户端地址归一显示为 IPv4）
 - **自动重连**：`Connecting → Connected → Retry` 状态机；可选指数退避（`MaxRetryDelayMs`，连续失败倍增封顶 + ±20% 抖动，连接成功自动复位）；`GetMessages` 是跨重连的稳定消息流——断线重连后已收消息不丢、枚举不中断
 - **启动与停止**：`Start(ct)` 的 `ct` 是连接的**生命周期令牌**——取消它会停止连接/重连并拆线（状态进入 `Disconnected` 终态，`GetMessages` 自然结束，之后需新建连接）；`DisposeAsync` 与之等效。停机后 `SendAsync` 抛 `ChannelClosedException`
-- **等待连接就绪**：`await conn.WaitForConnectedAsync(ct)`——已连接立即完成，未连接时等到下次连接成功（或取消/Dispose），不用轮询状态、不用 `Task.Delay` 盲等
+- **等待连接就绪**：`await conn.WaitForConnectedAsync(ct)`——已连接立即完成，未连接时等到下次连接成功（或调用方取消、生命周期取消/Dispose）；终态后的新等待也会取消，即使未传令牌，不用轮询状态
 - **健壮性**：帧内容解码失败、未完成帧超限/超时、发送失败、接收空闲超时都会判定会话失效并自动重建（不再产生"连接看似存活、消息静默消失"的假活）
 - **活性探测（可选）**：TCP KeepAlive 与接收空闲超时，兜底半开连接（对端断电/拔线）
 - **事件**：`ConnectionChanged` 状态变化、`FrameError` 帧层诊断、`RawBytesReceived/Sent` 原始字节（HEX 调试）
 - **内置指标**：`System.Diagnostics.Metrics`（Meter `StreamFrame`）——帧/字节收发计数、重连次数、会话时长、发送队列水位，详见下文"内置指标"
 - **发送背压**：有界发送队列，队列满时 `SendAsync` 自动等待；接收侧默认无上限缓冲，可用 `ReceiveQueueCapacity` 设上限——消费慢时解码暂停、TCP 背压自然传导到对端，防内存无限增长
 - **会话感知收发（可选高级）**：`CurrentSessionId` / `SendInSessionAsync`（整帧写入 socket 才完成、会话失效即失败、绝不跨会话重放）/ `GetSessionMessages`（消息带会话编号）——为有严格会话边界的协议（如 HSMS）准备，详见下文
+
+## 缓冲所有权与并发约束
+
+`Decode` 的 `frame` 仅在同步调用期间借用。返回消息及其嵌套字段必须独立拥有所需数据，不能返回 `frame.First`、切片或引用管线内存的 `ReadOnlyMemory<byte>`。管线随后推进/释放，业务可能跨 `await` 才消费。`ReadOnlyMemory` 不代表所有权转移；本接口没有转移管线池化内存所有权的机制。
+
+`Encode` 必须在返回前完成写入，不得保留/释放 `writer`，也不得保留其缓冲供异步使用。发送队列存消息对象，入队后不要修改或归还底层数组：普通 `SendAsync` 成功只表示入队，编码可能还没开始。最简单的做法是发送独立数组且之后不再修改。
+
+同一会话的发送 worker 只串行化自己的编码调用，**不是整个 Codec 的锁**：`Encode` 与 `Decode` 可并行；会话拆除最多等待 2 秒，旧解码任务（例如被接收背压阻塞）可与新会话解码重叠，阻塞的旧编码也不能假定已退出。使用调用局部状态或自行同步，避免阻塞同步方法。跨连接共享 Codec/Framer 实例前，由调用方确认其并发安全；每连接一个实例仍须满足收发和新旧会话约束。
+
+`IFramer` 同样适用：不能留存输入序列；输出 `payload` 可借用输入，供连接紧接着同步调用 Codec。编码 writer 只能在本次调用内使用。`IStreamingFramer.BeginFrame`/`EndFrame` 之间可穿插其它调用，配对状态应放在传入 writer 中，不能依赖实例的“当前帧”字段。
+
+完整可编译的 [`OwnedBytesCodec`](samples/StreamFrame.Ownership/OwnedBytesCodec.cs) / [`OwnedMemoryCodec`](samples/StreamFrame.Ownership/OwnedMemoryCodec.cs) 对两种消息类型均返回 `frame.ToArray()`，包括单段输入；`Encode` 同步 `writer.Write(message)` 或 `writer.Write(message.Span)`。源文件直接纳入测试工程，在 net8.0/net10.0/net48 编译。`OwnershipExampleTests` 主动覆盖单段/多段输入，并用归还时填充 `0xDD` 的内存池运行真实 FrameDecoder，等管线释放后再异步消费，断言原始数据仍正确。
+
+## 生产配置起点
+
+完整 [`ProductionExample.RunAsync`](samples/StreamFrame.Ownership/ProductionExample.cs) 展示有界收发、10 秒连接等待超时、异步消费、生命周期取消及 `await using` Dispose，直接参与三目标编译。以下参数假设负载最多 64 KiB，须按协议、峰值流量和处理时间调整；不改变库默认值：
+
+```csharp
+var framer = new LengthPrefixFramer(64 * 1024);
+var options = new StreamConnectionOptions
+{
+    SendQueueCapacity = 128,
+    ReceiveQueueCapacity = 128, // 默认 0 为无界
+    MaxIncompleteFrameBufferBytes = 64 * 1024 + 4, // 含长度头
+    IncompleteFrameTimeoutMs = 5_000,
+    ReceiveIdleTimeoutMs = 0, // 允许静默；有 5 秒心跳时可考虑 15_000
+    TcpKeepAlive = true,
+    KeepAliveTimeMs = 30_000,
+    KeepAliveIntervalMs = 1_500, // 现代 .NET 向上取整为 2 秒（#62）
+    AcceptFirstClientOnly = true,
+};
+```
+
+容量按**消息数**而非字节预算：128 条 × 64 KiB 约为每队列 8 MiB 负载，还需计算对象开销、编码/管线/socket 缓冲、处理中消息、等待入队的生产者及旧会话残留工作。解码对象也可能比线上负载大。限制生产者并发并逐条 `await SendAsync`，避免无限创建等待任务；有界队列不是进程内存硬上限。
+
+慢消费者使接收通道写入等待，解码暂停，背压经管线和 TCP 逐步传向对端。半帧字节限制只检查未消费半帧，不是完整消息或总内存预算；通道堵塞期间半帧超时不计时，字节检查也要等解码循环继续才能执行。接收空闲超时适合周期流量；允许静默时保留 0，并按帧传输时限选择半帧超时。KeepAlive 参数为正毫秒，现代 .NET 向上取整为秒，netstandard2.0 IOControl 保留毫秒。
+
+`WaitForConnectedAsync` 的调用方超时只取消本次等待；生命周期取消/Dispose 停止连接，终态后的新等待也取消，即使未传令牌（#65）。普通 `SendAsync` 不保证 socket 写出或远端确认，未出队条目可跨会话续发，已出队失败不能视为已交付（#67）；可靠业务交付需要协议 ACK、重试和去重。会话绑定发送成功也只表示整帧交给本机 socket。
 
 ## 会话感知收发（高级）
 
@@ -269,7 +312,7 @@ BenchmarkDotNet 实测（详见 [bench/README.md](bench/README.md)，可本地�
    // 不推荐：writer.Write(Encoding.UTF8.GetBytes(message));  // 每条一次全尺寸 byte[]
    ```
 
-2. **消息类型选 byte[] / ReadOnlyMemory<byte>**：string 消息每条固有 ≈2× 报文大小的 UTF-16 物化分配；字节负载 + 透传 codec 时框架距裸 TCP 仅 ≈20–30%；
+2. **消息类型选 byte[] / ReadOnlyMemory<byte>**：string 消息每条固有 ≈2× 报文大小的 UTF-16 物化分配；字节负载 + [拥有数据的 codec](#缓冲所有权与并发约束) 时框架距裸 TCP 仅 ≈20–30%；
 3. 保持默认的**流式编码**开启（`UseStreamingEncode`），发送缓冲会按上一帧大小自适应起租（封顶 1MB）。
 
 ## 支持框架
