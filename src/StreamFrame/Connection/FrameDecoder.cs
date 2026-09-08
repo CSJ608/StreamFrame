@@ -92,8 +92,18 @@ internal sealed class FrameDecoder<TMessage>
                 var buffer = result.Buffer;
 
                 // 切尽当前缓冲内的所有完整帧；已缓冲的字节即便会话正在停止也要投递完
-                while (TryDecodeFrame(ref buffer, out var payload))
+                while (true)
                 {
+                    var previousLength = buffer.Length;
+                    if (!TryDecodeFrame(ref buffer, out var payload))
+                    {
+                        // false 也可能已丢弃坏头；有消费进展时继续检查剩余缓冲。
+                        // 无进展才等待更多输入，避免半帧导致忙循环。
+                        if (buffer.Length < previousLength)
+                            continue;
+                        break;
+                    }
+
                     TMessage message;
                     try
                     {

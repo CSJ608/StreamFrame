@@ -73,7 +73,7 @@ public sealed class LengthPrefixFramer : IStreamingFramer, IFrameDiscardReportin
 
         var length = ReadLengthPrefix(buffer);
 
-        // 非法长度（负数 / 超上限）：丢弃长度头，尝试从下一字节重新同步。
+        // 非法长度（负数 / 超上限）：丢弃整个四字节长度头，从其后重新同步。
         if ((uint)length > (uint)MaxPayloadBytes)
         {
             discarded = buffer.Slice(0, LengthPrefixSize);

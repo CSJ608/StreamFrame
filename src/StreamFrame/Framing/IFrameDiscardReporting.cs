@@ -22,6 +22,6 @@ public interface IFrameDiscardReporting
     /// <param name="buffer">待解析的字节流；成功时前进到下一帧起点，失败时保留未消费字节。</param>
     /// <param name="payload">切出的帧内负载（不含定界字节）。</param>
     /// <param name="discarded">本次调用中被定界器丢弃的字节；无丢弃时为空序列。</param>
-    /// <returns>成功切出一帧返回 true；数据不足（半包）返回 false。</returns>
+    /// <returns>成功切出一帧返回 true；未切出帧返回 false，仍可消费无效前缀，推进契约同 <see cref="IFramer.TryDecodeFrame"/>。</returns>
     bool TryDecodeFrame(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> payload, out ReadOnlySequence<byte> discarded);
 }

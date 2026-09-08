@@ -8,6 +8,116 @@ namespace StreamFrame.Tests;
 
 public class FrameDecoderTests
 {
+    [Theory]
+    [InlineData(1, false, 0)]
+    [InlineData(3, false, 0)]
+    [InlineData(3, true, 0)]
+    [InlineData(1, false, 100)]
+    public async Task Resync_CompleteFrames_DeliveredWithoutFurtherInput(int badHeaders, bool eof, int timeoutMs)
+    {
+        using var h = CreateDecoder(new LengthPrefixFramer(), incompleteFrameTimeoutMs: timeoutMs, sessionId: 42);
+        var bytes = Enumerable.Repeat((byte)0xFF, badHeaders * 4)
+            .Concat(new byte[] { 0, 0, 0, 3, 65, 65, 65, 0, 0, 0, 1, 66 }).ToArray();
+        await h.Pipe.Writer.WriteAsync(bytes);
+        if (eof) h.Pipe.Writer.Complete();
+        var run = h.Decoder.RunAsync(CancellationToken.None);
+        try
+        {
+            Assert.True(h.Relay.Reader.TryRead(out var first), "完整帧必须在等待更多输入前交付");
+            Assert.Equal("AAA", first.Message);
+            Assert.Equal(42, first.SessionId);
+            Assert.True(h.Relay.Reader.TryRead(out var second));
+            Assert.Equal("B", second.Message);
+            Assert.False(h.Relay.Reader.TryRead(out _));
+            Assert.Equal(badHeaders, h.Errors.Count);
+            Assert.All(h.Errors, error =>
+            {
+                Assert.Equal(FrameErrorKind.DiscardedByResync, error.Kind);
+                Assert.Equal(42, error.SessionId);
+                Assert.Equal(4, error.ObservedByteCount);
+                Assert.Equal(new byte[] { 255, 255, 255, 255 }, error.Bytes.ToArray());
+                Assert.False(error.IsTruncated);
+            });
+            if (timeoutMs > 0)
+            {
+                await Task.Delay(timeoutMs * 3);
+                Assert.False(run.IsCompleted); // 已切尽的缓冲不得启动半帧超时
+            }
+        }
+        finally
+        {
+            if (!eof) h.Pipe.Writer.Complete();
+            await run;
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Resync_CustomFramer_ProgressThenPartialStopsUntilMoreInput(bool eof)
+    {
+        var framer = new ProgressFramer();
+        using var h = CreateDecoder(framer);
+        await h.Pipe.Writer.WriteAsync(new byte[] { 255, 0, 0, 0, 2, 65 });
+        var run = h.Decoder.RunAsync(CancellationToken.None);
+        try
+        {
+            Assert.Equal(2, framer.Calls); // 丢弃一次、半帧一次；不忙循环
+            Assert.False(h.Relay.Reader.TryRead(out _));
+            if (!eof) await h.Pipe.Writer.WriteAsync(new byte[] { 66 });
+        }
+        finally
+        {
+            h.Pipe.Writer.Complete();
+            await run;
+        }
+        if (eof) Assert.False(h.Relay.Reader.TryRead(out _));
+        else
+        {
+            Assert.True(h.Relay.Reader.TryRead(out var message));
+            Assert.Equal("AB", message.Message);
+        }
+    }
+
+    [Fact]
+    public async Task Resync_CustomFramer_CompleteFrameDeliveredWithoutFurtherInput()
+    {
+        using var h = CreateDecoder(new ProgressFramer());
+        await h.Pipe.Writer.WriteAsync(new byte[] { 255, 0, 0, 0, 1, 65 });
+        var run = h.Decoder.RunAsync(CancellationToken.None);
+        try
+        {
+            Assert.True(h.Relay.Reader.TryRead(out var message));
+            Assert.Equal("A", message.Message);
+            Assert.Empty(h.Errors); // 普通 IFramer 不提供丢弃诊断
+        }
+        finally
+        {
+            h.Pipe.Writer.Complete();
+            await run;
+        }
+    }
+
+    private sealed class ProgressFramer : IFramer
+    {
+        private readonly LengthPrefixFramer _inner = new();
+        public int Calls { get; private set; }
+        public int MaxPayloadBytes => _inner.MaxPayloadBytes;
+        public void EncodeFrame(ReadOnlySpan<byte> payload, IBufferWriter<byte> writer) => _inner.EncodeFrame(payload, writer);
+        public bool TryDecodeFrame(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> payload)
+        {
+            Calls++;
+            if (Calls > 10) throw new InvalidOperationException("无进展忙循环");
+            if (!buffer.IsEmpty && buffer.First.Span[0] == 255)
+            {
+                buffer = buffer.Slice(1);
+                payload = default;
+                return false;
+            }
+            return _inner.TryDecodeFrame(ref buffer, out payload);
+        }
+    }
+
     /// <summary>指标构造用的占位端点计数器（仅作标签，无实际意义）。</summary>
     private static int _portCounter;
 
