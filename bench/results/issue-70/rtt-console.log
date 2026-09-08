@@ -1,0 +1,2898 @@
+// Validating benchmarks:
+// ***** BenchmarkRunner: Start   *****
+// ***** Found 36 benchmark(s) in total *****
+// ***** Building 1 exe(s) in Parallel: Start   *****
+// start dotnet  restore --nodeReuse:false /p:UseSharedCompilation=false /p:Deterministic=true /p:Optimize=true /p:ArtifactsPath="C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1/" /p:OutDir="C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0/" /p:OutputPath="C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0/" /p:PublishDir="C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\publish/" in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1
+// command took 2.06 sec and exited with 0
+// start dotnet  build -c Release --no-restore --nodeReuse:false /p:UseSharedCompilation=false /p:Deterministic=true /p:Optimize=true /p:ArtifactsPath="C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1/" /p:OutDir="C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0/" /p:OutputPath="C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0/" /p:PublishDir="C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\publish/" --output "C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0/" in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1
+// command took 11.22 sec and exited with 0
+// ***** Done, took 00:00:13 (13.37 sec)   *****
+// Found 36 benchmarks:
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=Bytes, Transport=DirectTcp]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=Bytes, Transport=StreamFrame]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=StringAlloc, Transport=DirectTcp]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=StringAlloc, Transport=StreamFrame]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=StringSpan, Transport=DirectTcp]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=StringSpan, Transport=StreamFrame]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=Bytes, Transport=DirectTcp]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=Bytes, Transport=StreamFrame]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=StringAlloc, Transport=DirectTcp]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=StringAlloc, Transport=StreamFrame]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=StringSpan, Transport=DirectTcp]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=StringSpan, Transport=StreamFrame]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=Bytes, Transport=DirectTcp]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=Bytes, Transport=StreamFrame]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=StringAlloc, Transport=DirectTcp]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=StringAlloc, Transport=StreamFrame]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=StringSpan, Transport=DirectTcp]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=StringSpan, Transport=StreamFrame]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=64, CodecMode=Bytes, Transport=DirectTcp]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=64, CodecMode=Bytes, Transport=StreamFrame]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=64, CodecMode=StringAlloc, Transport=DirectTcp]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=64, CodecMode=StringAlloc, Transport=StreamFrame]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=64, CodecMode=StringSpan, Transport=DirectTcp]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=64, CodecMode=StringSpan, Transport=StreamFrame]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=1024, CodecMode=Bytes, Transport=DirectTcp]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=1024, CodecMode=Bytes, Transport=StreamFrame]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=1024, CodecMode=StringAlloc, Transport=DirectTcp]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=1024, CodecMode=StringAlloc, Transport=StreamFrame]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=1024, CodecMode=StringSpan, Transport=DirectTcp]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=1024, CodecMode=StringSpan, Transport=StreamFrame]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=65536, CodecMode=Bytes, Transport=DirectTcp]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=65536, CodecMode=Bytes, Transport=StreamFrame]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=65536, CodecMode=StringAlloc, Transport=DirectTcp]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=65536, CodecMode=StringAlloc, Transport=StreamFrame]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=65536, CodecMode=StringSpan, Transport=DirectTcp]
+//   RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=65536, CodecMode=StringSpan, Transport=StreamFrame]
+
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=Bytes, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1440 1428 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 64, CodecMode: \"Bytes\", Transport: \"DirectTcp\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 0 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+OverheadJitting  1: 256 op, 157600.00 ns, 615.6250 ns/op
+WorkloadJitting  1: 256 op, 24653600.00 ns, 96.3031 us/op
+
+WorkloadPilot    1: 1024 op, 70646200.00 ns, 68.9904 us/op
+WorkloadPilot    2: 3584 op, 256156600.00 ns, 71.4723 us/op
+
+WorkloadWarmup   1: 3584 op, 173912500.00 ns, 48.5247 us/op
+WorkloadWarmup   2: 3584 op, 142297300.00 ns, 39.7035 us/op
+WorkloadWarmup   3: 3584 op, 168178500.00 ns, 46.9248 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 3584 op, 122833700.00 ns, 34.2728 us/op
+WorkloadActual   2: 3584 op, 158447000.00 ns, 44.2095 us/op
+WorkloadActual   3: 3584 op, 133212700.00 ns, 37.1687 us/op
+WorkloadActual   4: 3584 op, 120040300.00 ns, 33.4934 us/op
+WorkloadActual   5: 3584 op, 106937000.00 ns, 29.8373 us/op
+WorkloadActual   6: 3584 op, 119393400.00 ns, 33.3129 us/op
+WorkloadActual   7: 3584 op, 131128300.00 ns, 36.5871 us/op
+WorkloadActual   8: 3584 op, 132468700.00 ns, 36.9611 us/op
+WorkloadActual   9: 3584 op, 123650500.00 ns, 34.5007 us/op
+WorkloadActual  10: 3584 op, 123391000.00 ns, 34.4283 us/op
+
+// AfterActualRun
+WorkloadResult   1: 3584 op, 122833700.00 ns, 34.2728 us/op
+WorkloadResult   2: 3584 op, 158447000.00 ns, 44.2095 us/op
+WorkloadResult   3: 3584 op, 133212700.00 ns, 37.1687 us/op
+WorkloadResult   4: 3584 op, 120040300.00 ns, 33.4934 us/op
+WorkloadResult   5: 3584 op, 106937000.00 ns, 29.8373 us/op
+WorkloadResult   6: 3584 op, 119393400.00 ns, 33.3129 us/op
+WorkloadResult   7: 3584 op, 131128300.00 ns, 36.5871 us/op
+WorkloadResult   8: 3584 op, 132468700.00 ns, 36.9611 us/op
+WorkloadResult   9: 3584 op, 123650500.00 ns, 34.5007 us/op
+WorkloadResult  10: 3584 op, 123391000.00 ns, 34.4283 us/op
+// GC:  0 0 0 1782808 3584
+// Threading:  7100 0 3584
+
+// AfterAll
+// Benchmark Process 48224 has exited with code 0.
+
+Mean = 35.477 us, StdErr = 1.185 us (3.34%), N = 10, StdDev = 3.749 us
+Min = 29.837 us, Q1 = 33.688 us, Median = 34.464 us, Q3 = 36.868 us, Max = 44.210 us
+IQR = 3.179 us, LowerFence = 28.919 us, UpperFence = 41.637 us
+ConfidenceInterval = [29.810 us; 41.145 us] (CI 99.9%), Margin = 5.668 us (15.98% of Mean)
+Skewness = 0.9, Kurtosis = 3.48, MValue = 2.4
+
+// ** Remained 35 (97.2%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 1m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=Bytes, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 640 636 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 64, CodecMode: \"Bytes\", Transport: \"StreamFrame\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 1 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+OverheadJitting  1: 256 op, 466800.00 ns, 1.8234 us/op
+WorkloadJitting  1: 256 op, 47815500.00 ns, 186.7793 us/op
+
+WorkloadPilot    1: 1024 op, 118620500.00 ns, 115.8403 us/op
+WorkloadPilot    2: 2048 op, 174617500.00 ns, 85.2625 us/op
+WorkloadPilot    3: 2816 op, 192471400.00 ns, 68.3492 us/op
+WorkloadPilot    4: 3584 op, 259024100.00 ns, 72.2723 us/op
+
+WorkloadWarmup   1: 3584 op, 221015700.00 ns, 61.6673 us/op
+WorkloadWarmup   2: 3584 op, 235052700.00 ns, 65.5839 us/op
+WorkloadWarmup   3: 3584 op, 221097500.00 ns, 61.6902 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 3584 op, 204876700.00 ns, 57.1643 us/op
+WorkloadActual   2: 3584 op, 198848900.00 ns, 55.4824 us/op
+WorkloadActual   3: 3584 op, 153062500.00 ns, 42.7072 us/op
+WorkloadActual   4: 3584 op, 170113000.00 ns, 47.4646 us/op
+WorkloadActual   5: 3584 op, 188755800.00 ns, 52.6662 us/op
+WorkloadActual   6: 3584 op, 186899300.00 ns, 52.1482 us/op
+WorkloadActual   7: 3584 op, 171607400.00 ns, 47.8815 us/op
+WorkloadActual   8: 3584 op, 147713100.00 ns, 41.2146 us/op
+WorkloadActual   9: 3584 op, 159699300.00 ns, 44.5590 us/op
+WorkloadActual  10: 3584 op, 156162400.00 ns, 43.5721 us/op
+
+// AfterActualRun
+WorkloadResult   1: 3584 op, 204876700.00 ns, 57.1643 us/op
+WorkloadResult   2: 3584 op, 198848900.00 ns, 55.4824 us/op
+WorkloadResult   3: 3584 op, 153062500.00 ns, 42.7072 us/op
+WorkloadResult   4: 3584 op, 170113000.00 ns, 47.4646 us/op
+WorkloadResult   5: 3584 op, 188755800.00 ns, 52.6662 us/op
+WorkloadResult   6: 3584 op, 186899300.00 ns, 52.1482 us/op
+WorkloadResult   7: 3584 op, 171607400.00 ns, 47.8815 us/op
+WorkloadResult   8: 3584 op, 147713100.00 ns, 41.2146 us/op
+WorkloadResult   9: 3584 op, 159699300.00 ns, 44.5590 us/op
+WorkloadResult  10: 3584 op, 156162400.00 ns, 43.5721 us/op
+// GC:  0 0 0 5917760 3584
+// Threading:  28666 0 3584
+
+// AfterAll
+// Benchmark Process 13792 has exited with code 0.
+
+Mean = 48.486 us, StdErr = 1.771 us (3.65%), N = 10, StdDev = 5.602 us
+Min = 41.215 us, Q1 = 43.819 us, Median = 47.673 us, Q3 = 52.537 us, Max = 57.164 us
+IQR = 8.718 us, LowerFence = 30.742 us, UpperFence = 65.614 us
+ConfidenceInterval = [40.017 us; 56.955 us] (CI 99.9%), Margin = 8.469 us (17.47% of Mean)
+Skewness = 0.2, Kurtosis = 1.35, MValue = 3.33
+
+// ** Remained 34 (94.4%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 1m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=StringAlloc, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1488 1484 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 64, CodecMode: \"StringAlloc\", Transport: \"DirectTcp\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 2 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+OverheadJitting  1: 256 op, 139800.00 ns, 546.0938 ns/op
+WorkloadJitting  1: 256 op, 18360000.00 ns, 71.7188 us/op
+
+WorkloadPilot    1: 1024 op, 38148000.00 ns, 37.2539 us/op
+WorkloadPilot    2: 6656 op, 259069700.00 ns, 38.9227 us/op
+
+WorkloadWarmup   1: 6656 op, 274191900.00 ns, 41.1947 us/op
+WorkloadWarmup   2: 6656 op, 289482000.00 ns, 43.4919 us/op
+WorkloadWarmup   3: 6656 op, 332691000.00 ns, 49.9836 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 6656 op, 294637600.00 ns, 44.2665 us/op
+WorkloadActual   2: 6656 op, 239723700.00 ns, 36.0162 us/op
+WorkloadActual   3: 6656 op, 227866400.00 ns, 34.2347 us/op
+WorkloadActual   4: 6656 op, 199773200.00 ns, 30.0140 us/op
+WorkloadActual   5: 6656 op, 193311400.00 ns, 29.0432 us/op
+WorkloadActual   6: 6656 op, 197437000.00 ns, 29.6630 us/op
+WorkloadActual   7: 6656 op, 257247500.00 ns, 38.6490 us/op
+WorkloadActual   8: 6656 op, 334586900.00 ns, 50.2685 us/op
+WorkloadActual   9: 6656 op, 216056500.00 ns, 32.4604 us/op
+WorkloadActual  10: 6656 op, 211646300.00 ns, 31.7978 us/op
+
+// AfterActualRun
+WorkloadResult   1: 6656 op, 294637600.00 ns, 44.2665 us/op
+WorkloadResult   2: 6656 op, 239723700.00 ns, 36.0162 us/op
+WorkloadResult   3: 6656 op, 227866400.00 ns, 34.2347 us/op
+WorkloadResult   4: 6656 op, 199773200.00 ns, 30.0140 us/op
+WorkloadResult   5: 6656 op, 193311400.00 ns, 29.0432 us/op
+WorkloadResult   6: 6656 op, 197437000.00 ns, 29.6630 us/op
+WorkloadResult   7: 6656 op, 257247500.00 ns, 38.6490 us/op
+WorkloadResult   8: 6656 op, 334586900.00 ns, 50.2685 us/op
+WorkloadResult   9: 6656 op, 216056500.00 ns, 32.4604 us/op
+WorkloadResult  10: 6656 op, 211646300.00 ns, 31.7978 us/op
+// GC:  0 0 0 5334208 6656
+// Threading:  13174 0 6656
+
+// AfterAll
+// Benchmark Process 31400 has exited with code 0.
+
+Mean = 35.641 us, StdErr = 2.199 us (6.17%), N = 10, StdDev = 6.955 us
+Min = 29.043 us, Q1 = 30.460 us, Median = 33.348 us, Q3 = 37.991 us, Max = 50.268 us
+IQR = 7.531 us, LowerFence = 19.164 us, UpperFence = 49.287 us
+ConfidenceInterval = [25.126 us; 46.156 us] (CI 99.9%), Margin = 10.515 us (29.50% of Mean)
+Skewness = 0.9, Kurtosis = 2.39, MValue = 2
+
+// ** Remained 33 (91.7%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 1m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=StringAlloc, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1040 992 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 64, CodecMode: \"StringAlloc\", Transport: \"StreamFrame\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 3 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+OverheadJitting  1: 256 op, 144100.00 ns, 562.8906 ns/op
+WorkloadJitting  1: 256 op, 35187000.00 ns, 137.4492 us/op
+
+WorkloadPilot    1: 1024 op, 69334200.00 ns, 67.7092 us/op
+WorkloadPilot    2: 3584 op, 247644200.00 ns, 69.0972 us/op
+
+WorkloadWarmup   1: 3584 op, 262513900.00 ns, 73.2461 us/op
+WorkloadWarmup   2: 3584 op, 362700900.00 ns, 101.2000 us/op
+WorkloadWarmup   3: 3584 op, 315253400.00 ns, 87.9613 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 3584 op, 337107100.00 ns, 94.0589 us/op
+WorkloadActual   2: 3584 op, 379310000.00 ns, 105.8343 us/op
+WorkloadActual   3: 3584 op, 221496400.00 ns, 61.8015 us/op
+WorkloadActual   4: 3584 op, 214494700.00 ns, 59.8479 us/op
+WorkloadActual   5: 3584 op, 327331400.00 ns, 91.3313 us/op
+WorkloadActual   6: 3584 op, 278627900.00 ns, 77.7422 us/op
+WorkloadActual   7: 3584 op, 188104200.00 ns, 52.4844 us/op
+WorkloadActual   8: 3584 op, 165266700.00 ns, 46.1124 us/op
+WorkloadActual   9: 3584 op, 161761800.00 ns, 45.1344 us/op
+WorkloadActual  10: 3584 op, 154781300.00 ns, 43.1867 us/op
+
+// AfterActualRun
+WorkloadResult   1: 3584 op, 337107100.00 ns, 94.0589 us/op
+WorkloadResult   2: 3584 op, 379310000.00 ns, 105.8343 us/op
+WorkloadResult   3: 3584 op, 221496400.00 ns, 61.8015 us/op
+WorkloadResult   4: 3584 op, 214494700.00 ns, 59.8479 us/op
+WorkloadResult   5: 3584 op, 327331400.00 ns, 91.3313 us/op
+WorkloadResult   6: 3584 op, 278627900.00 ns, 77.7422 us/op
+WorkloadResult   7: 3584 op, 188104200.00 ns, 52.4844 us/op
+WorkloadResult   8: 3584 op, 165266700.00 ns, 46.1124 us/op
+WorkloadResult   9: 3584 op, 161761800.00 ns, 45.1344 us/op
+WorkloadResult  10: 3584 op, 154781300.00 ns, 43.1867 us/op
+// GC:  0 0 0 7007120 3584
+// Threading:  28664 0 3584
+
+// AfterAll
+// Benchmark Process 42276 has exited with code 0.
+
+Mean = 67.753 us, StdErr = 7.236 us (10.68%), N = 10, StdDev = 22.882 us
+Min = 43.187 us, Q1 = 47.705 us, Median = 60.825 us, Q3 = 87.934 us, Max = 105.834 us
+IQR = 40.229 us, LowerFence = -12.638 us, UpperFence = 148.277 us
+ConfidenceInterval = [33.159 us; 102.348 us] (CI 99.9%), Margin = 34.595 us (51.06% of Mean)
+Skewness = 0.39, Kurtosis = 1.39, MValue = 2.67
+
+// ** Remained 32 (88.9%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 1m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=StringSpan, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1368 1372 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 64, CodecMode: \"StringSpan\", Transport: \"DirectTcp\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 4 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+OverheadJitting  1: 256 op, 135000.00 ns, 527.3438 ns/op
+WorkloadJitting  1: 256 op, 20504300.00 ns, 80.0949 us/op
+
+WorkloadPilot    1: 1024 op, 39578600.00 ns, 38.6510 us/op
+WorkloadPilot    2: 6400 op, 273753100.00 ns, 42.7739 us/op
+WorkloadPilot    3: 5888 op, 263718200.00 ns, 44.7891 us/op
+
+WorkloadWarmup   1: 5888 op, 251306000.00 ns, 42.6810 us/op
+WorkloadWarmup   2: 5888 op, 223879500.00 ns, 38.0230 us/op
+WorkloadWarmup   3: 5888 op, 222742100.00 ns, 37.8298 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 5888 op, 227049800.00 ns, 38.5614 us/op
+WorkloadActual   2: 5888 op, 202977300.00 ns, 34.4730 us/op
+WorkloadActual   3: 5888 op, 216660100.00 ns, 36.7969 us/op
+WorkloadActual   4: 5888 op, 200386900.00 ns, 34.0331 us/op
+WorkloadActual   5: 5888 op, 185390100.00 ns, 31.4861 us/op
+WorkloadActual   6: 5888 op, 175349900.00 ns, 29.7809 us/op
+WorkloadActual   7: 5888 op, 183498700.00 ns, 31.1649 us/op
+WorkloadActual   8: 5888 op, 168508600.00 ns, 28.6190 us/op
+WorkloadActual   9: 5888 op, 170398600.00 ns, 28.9400 us/op
+WorkloadActual  10: 5888 op, 205400900.00 ns, 34.8847 us/op
+
+// AfterActualRun
+WorkloadResult   1: 5888 op, 227049800.00 ns, 38.5614 us/op
+WorkloadResult   2: 5888 op, 202977300.00 ns, 34.4730 us/op
+WorkloadResult   3: 5888 op, 216660100.00 ns, 36.7969 us/op
+WorkloadResult   4: 5888 op, 200386900.00 ns, 34.0331 us/op
+WorkloadResult   5: 5888 op, 185390100.00 ns, 31.4861 us/op
+WorkloadResult   6: 5888 op, 175349900.00 ns, 29.7809 us/op
+WorkloadResult   7: 5888 op, 183498700.00 ns, 31.1649 us/op
+WorkloadResult   8: 5888 op, 168508600.00 ns, 28.6190 us/op
+WorkloadResult   9: 5888 op, 170398600.00 ns, 28.9400 us/op
+WorkloadResult  10: 5888 op, 205400900.00 ns, 34.8847 us/op
+// GC:  0 0 0 3675888 5888
+// Threading:  11620 0 5888
+
+// AfterAll
+// Benchmark Process 51924 has exited with code 0.
+
+Mean = 32.874 us, StdErr = 1.073 us (3.26%), N = 10, StdDev = 3.394 us
+Min = 28.619 us, Q1 = 30.127 us, Median = 32.760 us, Q3 = 34.782 us, Max = 38.561 us
+IQR = 4.655 us, LowerFence = 23.145 us, UpperFence = 41.764 us
+ConfidenceInterval = [27.743 us; 38.005 us] (CI 99.9%), Margin = 5.131 us (15.61% of Mean)
+Skewness = 0.21, Kurtosis = 1.49, MValue = 2
+
+// ** Remained 31 (86.1%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 1m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=StringSpan, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1380 1384 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 64, CodecMode: \"StringSpan\", Transport: \"StreamFrame\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 5 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+OverheadJitting  1: 256 op, 148100.00 ns, 578.5156 ns/op
+WorkloadJitting  1: 256 op, 38094700.00 ns, 148.8074 us/op
+
+WorkloadPilot    1: 1024 op, 85385700.00 ns, 83.3845 us/op
+WorkloadPilot    2: 3072 op, 291748600.00 ns, 94.9702 us/op
+WorkloadPilot    3: 2560 op, 234555700.00 ns, 91.6233 us/op
+
+WorkloadWarmup   1: 2560 op, 307896700.00 ns, 120.2721 us/op
+WorkloadWarmup   2: 2560 op, 313629100.00 ns, 122.5114 us/op
+WorkloadWarmup   3: 2560 op, 153181900.00 ns, 59.8367 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 2560 op, 153315200.00 ns, 59.8888 us/op
+WorkloadActual   2: 2560 op, 165508800.00 ns, 64.6519 us/op
+WorkloadActual   3: 2560 op, 169246100.00 ns, 66.1118 us/op
+WorkloadActual   4: 2560 op, 164120900.00 ns, 64.1097 us/op
+WorkloadActual   5: 2560 op, 120795100.00 ns, 47.1856 us/op
+WorkloadActual   6: 2560 op, 109303200.00 ns, 42.6966 us/op
+WorkloadActual   7: 2560 op, 119645500.00 ns, 46.7365 us/op
+WorkloadActual   8: 2560 op, 129523700.00 ns, 50.5952 us/op
+WorkloadActual   9: 2560 op, 141397700.00 ns, 55.2335 us/op
+WorkloadActual  10: 2560 op, 109383000.00 ns, 42.7277 us/op
+
+// AfterActualRun
+WorkloadResult   1: 2560 op, 153315200.00 ns, 59.8888 us/op
+WorkloadResult   2: 2560 op, 165508800.00 ns, 64.6519 us/op
+WorkloadResult   3: 2560 op, 169246100.00 ns, 66.1118 us/op
+WorkloadResult   4: 2560 op, 164120900.00 ns, 64.1097 us/op
+WorkloadResult   5: 2560 op, 120795100.00 ns, 47.1856 us/op
+WorkloadResult   6: 2560 op, 109303200.00 ns, 42.6966 us/op
+WorkloadResult   7: 2560 op, 119645500.00 ns, 46.7365 us/op
+WorkloadResult   8: 2560 op, 129523700.00 ns, 50.5952 us/op
+WorkloadResult   9: 2560 op, 141397700.00 ns, 55.2335 us/op
+WorkloadResult  10: 2560 op, 109383000.00 ns, 42.7277 us/op
+// GC:  0 0 0 4554752 2560
+// Threading:  20477 1 2560
+
+// AfterAll
+// Benchmark Process 55468 has exited with code 0.
+
+Mean = 53.994 us, StdErr = 2.914 us (5.40%), N = 10, StdDev = 9.215 us
+Min = 42.697 us, Q1 = 46.849 us, Median = 52.914 us, Q3 = 63.054 us, Max = 66.112 us
+IQR = 16.206 us, LowerFence = 22.540 us, UpperFence = 87.363 us
+ConfidenceInterval = [40.063 us; 67.925 us] (CI 99.9%), Margin = 13.931 us (25.80% of Mean)
+Skewness = 0.08, Kurtosis = 1.16, MValue = 2
+
+// ** Remained 30 (83.3%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 1m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=Bytes, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1380 1384 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 1024, CodecMode: \"Bytes\", Transport: \"DirectTcp\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 6 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+OverheadJitting  1: 256 op, 146900.00 ns, 573.8281 ns/op
+WorkloadJitting  1: 256 op, 22077300.00 ns, 86.2395 us/op
+
+WorkloadPilot    1: 1024 op, 63410300.00 ns, 61.9241 us/op
+WorkloadPilot    2: 4096 op, 206991300.00 ns, 50.5350 us/op
+WorkloadPilot    3: 4864 op, 236869200.00 ns, 48.6984 us/op
+
+WorkloadWarmup   1: 4864 op, 247772800.00 ns, 50.9401 us/op
+WorkloadWarmup   2: 4864 op, 199814600.00 ns, 41.0803 us/op
+WorkloadWarmup   3: 4864 op, 196898800.00 ns, 40.4808 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 4864 op, 182073800.00 ns, 37.4329 us/op
+WorkloadActual   2: 4864 op, 172536200.00 ns, 35.4721 us/op
+WorkloadActual   3: 4864 op, 157370100.00 ns, 32.3541 us/op
+WorkloadActual   4: 4864 op, 151882700.00 ns, 31.2259 us/op
+WorkloadActual   5: 4864 op, 163993200.00 ns, 33.7157 us/op
+WorkloadActual   6: 4864 op, 212097000.00 ns, 43.6055 us/op
+WorkloadActual   7: 4864 op, 208973300.00 ns, 42.9633 us/op
+WorkloadActual   8: 4864 op, 198658200.00 ns, 40.8426 us/op
+WorkloadActual   9: 4864 op, 202509200.00 ns, 41.6343 us/op
+WorkloadActual  10: 4864 op, 194594600.00 ns, 40.0071 us/op
+
+// AfterActualRun
+WorkloadResult   1: 4864 op, 182073800.00 ns, 37.4329 us/op
+WorkloadResult   2: 4864 op, 172536200.00 ns, 35.4721 us/op
+WorkloadResult   3: 4864 op, 157370100.00 ns, 32.3541 us/op
+WorkloadResult   4: 4864 op, 151882700.00 ns, 31.2259 us/op
+WorkloadResult   5: 4864 op, 163993200.00 ns, 33.7157 us/op
+WorkloadResult   6: 4864 op, 212097000.00 ns, 43.6055 us/op
+WorkloadResult   7: 4864 op, 208973300.00 ns, 42.9633 us/op
+WorkloadResult   8: 4864 op, 198658200.00 ns, 40.8426 us/op
+WorkloadResult   9: 4864 op, 202509200.00 ns, 41.6343 us/op
+WorkloadResult  10: 4864 op, 194594600.00 ns, 40.0071 us/op
+// GC:  1 0 0 11753536 4864
+// Threading:  9601 0 4864
+
+// AfterAll
+// Benchmark Process 56124 has exited with code 0.
+
+Mean = 37.925 us, StdErr = 1.430 us (3.77%), N = 10, StdDev = 4.523 us
+Min = 31.226 us, Q1 = 34.155 us, Median = 38.720 us, Q3 = 41.436 us, Max = 43.605 us
+IQR = 7.282 us, LowerFence = 23.232 us, UpperFence = 52.359 us
+ConfidenceInterval = [31.087 us; 44.764 us] (CI 99.9%), Margin = 6.839 us (18.03% of Mean)
+Skewness = -0.18, Kurtosis = 1.26, MValue = 3.2
+
+// ** Remained 29 (80.6%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 1m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=Bytes, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1332 1480 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 1024, CodecMode: \"Bytes\", Transport: \"StreamFrame\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 7 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+OverheadJitting  1: 256 op, 135900.00 ns, 530.8594 ns/op
+WorkloadJitting  1: 256 op, 47049900.00 ns, 183.7887 us/op
+
+WorkloadPilot    1: 1024 op, 102072300.00 ns, 99.6800 us/op
+WorkloadPilot    2: 2560 op, 201018200.00 ns, 78.5227 us/op
+WorkloadPilot    3: 3072 op, 255718400.00 ns, 83.2417 us/op
+
+WorkloadWarmup   1: 3072 op, 267189100.00 ns, 86.9756 us/op
+WorkloadWarmup   2: 3072 op, 279606300.00 ns, 91.0177 us/op
+WorkloadWarmup   3: 3072 op, 278986900.00 ns, 90.8160 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 3072 op, 405124000.00 ns, 131.8763 us/op
+WorkloadActual   2: 3072 op, 295227400.00 ns, 96.1027 us/op
+WorkloadActual   3: 3072 op, 198393000.00 ns, 64.5811 us/op
+WorkloadActual   4: 3072 op, 140497600.00 ns, 45.7349 us/op
+WorkloadActual   5: 3072 op, 153796400.00 ns, 50.0639 us/op
+WorkloadActual   6: 3072 op, 161069600.00 ns, 52.4315 us/op
+WorkloadActual   7: 3072 op, 161625700.00 ns, 52.6125 us/op
+WorkloadActual   8: 3072 op, 131659600.00 ns, 42.8579 us/op
+WorkloadActual   9: 3072 op, 133744800.00 ns, 43.5367 us/op
+WorkloadActual  10: 3072 op, 159871900.00 ns, 52.0416 us/op
+
+// AfterActualRun
+WorkloadResult   1: 3072 op, 405124000.00 ns, 131.8763 us/op
+WorkloadResult   2: 3072 op, 295227400.00 ns, 96.1027 us/op
+WorkloadResult   3: 3072 op, 198393000.00 ns, 64.5811 us/op
+WorkloadResult   4: 3072 op, 140497600.00 ns, 45.7349 us/op
+WorkloadResult   5: 3072 op, 153796400.00 ns, 50.0639 us/op
+WorkloadResult   6: 3072 op, 161069600.00 ns, 52.4315 us/op
+WorkloadResult   7: 3072 op, 161625700.00 ns, 52.6125 us/op
+WorkloadResult   8: 3072 op, 131659600.00 ns, 42.8579 us/op
+WorkloadResult   9: 3072 op, 133744800.00 ns, 43.5367 us/op
+WorkloadResult  10: 3072 op, 159871900.00 ns, 52.0416 us/op
+// GC:  1 0 0 10970304 3072
+// Threading:  24568 0 3072
+
+// AfterAll
+// Benchmark Process 65256 has exited with code 0.
+
+Mean = 63.184 us, StdErr = 9.087 us (14.38%), N = 10, StdDev = 28.735 us
+Min = 42.858 us, Q1 = 46.817 us, Median = 52.237 us, Q3 = 61.589 us, Max = 131.876 us
+IQR = 14.772 us, LowerFence = 24.660 us, UpperFence = 83.747 us
+ConfidenceInterval = [19.740 us; 106.628 us] (CI 99.9%), Margin = 43.444 us (68.76% of Mean)
+Skewness = 1.4, Kurtosis = 3.51, MValue = 2.33
+
+// ** Remained 28 (77.8%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 1m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=StringAlloc, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1092 1356 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 1024, CodecMode: \"StringAlloc\", Transport: \"DirectTcp\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 8 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+OverheadJitting  1: 256 op, 172300.00 ns, 673.0469 ns/op
+WorkloadJitting  1: 256 op, 23523300.00 ns, 91.8879 us/op
+
+WorkloadPilot    1: 1024 op, 43835200.00 ns, 42.8078 us/op
+WorkloadPilot    2: 5888 op, 302921300.00 ns, 51.4472 us/op
+WorkloadPilot    3: 4864 op, 409436400.00 ns, 84.1769 us/op
+WorkloadPilot    4: 3072 op, 175760000.00 ns, 57.2135 us/op
+WorkloadPilot    5: 4352 op, 216478700.00 ns, 49.7423 us/op
+WorkloadPilot    6: 5120 op, 267953300.00 ns, 52.3346 us/op
+
+WorkloadWarmup   1: 5120 op, 206341600.00 ns, 40.3011 us/op
+WorkloadWarmup   2: 5120 op, 174033800.00 ns, 33.9910 us/op
+WorkloadWarmup   3: 5120 op, 166048200.00 ns, 32.4313 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 5120 op, 157811300.00 ns, 30.8225 us/op
+WorkloadActual   2: 5120 op, 201958200.00 ns, 39.4450 us/op
+WorkloadActual   3: 5120 op, 230408800.00 ns, 45.0017 us/op
+WorkloadActual   4: 5120 op, 241644600.00 ns, 47.1962 us/op
+WorkloadActual   5: 5120 op, 226126900.00 ns, 44.1654 us/op
+WorkloadActual   6: 5120 op, 216938300.00 ns, 42.3708 us/op
+WorkloadActual   7: 5120 op, 183260600.00 ns, 35.7931 us/op
+WorkloadActual   8: 5120 op, 210435000.00 ns, 41.1006 us/op
+WorkloadActual   9: 5120 op, 184132300.00 ns, 35.9633 us/op
+WorkloadActual  10: 5120 op, 186872300.00 ns, 36.4985 us/op
+
+// AfterActualRun
+WorkloadResult   1: 5120 op, 157811300.00 ns, 30.8225 us/op
+WorkloadResult   2: 5120 op, 201958200.00 ns, 39.4450 us/op
+WorkloadResult   3: 5120 op, 230408800.00 ns, 45.0017 us/op
+WorkloadResult   4: 5120 op, 241644600.00 ns, 47.1962 us/op
+WorkloadResult   5: 5120 op, 226126900.00 ns, 44.1654 us/op
+WorkloadResult   6: 5120 op, 216938300.00 ns, 42.3708 us/op
+WorkloadResult   7: 5120 op, 183260600.00 ns, 35.7931 us/op
+WorkloadResult   8: 5120 op, 210435000.00 ns, 41.1006 us/op
+WorkloadResult   9: 5120 op, 184132300.00 ns, 35.9633 us/op
+WorkloadResult  10: 5120 op, 186872300.00 ns, 36.4985 us/op
+// GC:  4 0 0 33589600 5120
+// Threading:  10098 0 5120
+
+// AfterAll
+// Benchmark Process 24980 has exited with code 0.
+
+Mean = 39.836 us, StdErr = 1.604 us (4.03%), N = 10, StdDev = 5.072 us
+Min = 30.823 us, Q1 = 36.097 us, Median = 40.273 us, Q3 = 43.717 us, Max = 47.196 us
+IQR = 7.620 us, LowerFence = 24.668 us, UpperFence = 55.146 us
+ConfidenceInterval = [32.168 us; 47.503 us] (CI 99.9%), Margin = 7.668 us (19.25% of Mean)
+Skewness = -0.2, Kurtosis = 1.7, MValue = 2
+
+// ** Remained 27 (75.0%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 1m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=StringAlloc, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1040 1392 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 1024, CodecMode: \"StringAlloc\", Transport: \"StreamFrame\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 9 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+OverheadJitting  1: 256 op, 140100.00 ns, 547.2656 ns/op
+WorkloadJitting  1: 256 op, 48932900.00 ns, 191.1441 us/op
+
+WorkloadPilot    1: 1024 op, 84475600.00 ns, 82.4957 us/op
+WorkloadPilot    2: 3072 op, 268609200.00 ns, 87.4379 us/op
+
+WorkloadWarmup   1: 3072 op, 361568100.00 ns, 117.6979 us/op
+WorkloadWarmup   2: 3072 op, 327416800.00 ns, 106.5810 us/op
+WorkloadWarmup   3: 3072 op, 241143300.00 ns, 78.4972 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 3072 op, 216840800.00 ns, 70.5862 us/op
+WorkloadActual   2: 3072 op, 221349400.00 ns, 72.0538 us/op
+WorkloadActual   3: 3072 op, 279433500.00 ns, 90.9614 us/op
+WorkloadActual   4: 3072 op, 261236300.00 ns, 85.0379 us/op
+WorkloadActual   5: 3072 op, 227121900.00 ns, 73.9329 us/op
+WorkloadActual   6: 3072 op, 181523200.00 ns, 59.0896 us/op
+WorkloadActual   7: 3072 op, 158717700.00 ns, 51.6659 us/op
+WorkloadActual   8: 3072 op, 174558900.00 ns, 56.8226 us/op
+WorkloadActual   9: 3072 op, 163659300.00 ns, 53.2745 us/op
+WorkloadActual  10: 3072 op, 161313800.00 ns, 52.5110 us/op
+
+// AfterActualRun
+WorkloadResult   1: 3072 op, 216840800.00 ns, 70.5862 us/op
+WorkloadResult   2: 3072 op, 221349400.00 ns, 72.0538 us/op
+WorkloadResult   3: 3072 op, 279433500.00 ns, 90.9614 us/op
+WorkloadResult   4: 3072 op, 261236300.00 ns, 85.0379 us/op
+WorkloadResult   5: 3072 op, 227121900.00 ns, 73.9329 us/op
+WorkloadResult   6: 3072 op, 181523200.00 ns, 59.0896 us/op
+WorkloadResult   7: 3072 op, 158717700.00 ns, 51.6659 us/op
+WorkloadResult   8: 3072 op, 174558900.00 ns, 56.8226 us/op
+WorkloadResult   9: 3072 op, 163659300.00 ns, 53.2745 us/op
+WorkloadResult  10: 3072 op, 161313800.00 ns, 52.5110 us/op
+// GC:  2 0 0 23698280 3072
+// Threading:  24549 4 3072
+
+// AfterAll
+// Benchmark Process 49380 has exited with code 0.
+
+Mean = 66.594 us, StdErr = 4.452 us (6.69%), N = 10, StdDev = 14.079 us
+Min = 51.666 us, Q1 = 54.162 us, Median = 64.838 us, Q3 = 73.463 us, Max = 90.961 us
+IQR = 19.302 us, LowerFence = 25.209 us, UpperFence = 102.416 us
+ConfidenceInterval = [45.308 us; 87.879 us] (CI 99.9%), Margin = 21.285 us (31.96% of Mean)
+Skewness = 0.41, Kurtosis = 1.54, MValue = 2
+
+// ** Remained 26 (72.2%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 1m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=StringSpan, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 888 916 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 1024, CodecMode: \"StringSpan\", Transport: \"DirectTcp\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 10 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+OverheadJitting  1: 256 op, 128600.00 ns, 502.3438 ns/op
+WorkloadJitting  1: 256 op, 28201000.00 ns, 110.1602 us/op
+
+WorkloadPilot    1: 1024 op, 64592000.00 ns, 63.0781 us/op
+WorkloadPilot    2: 3840 op, 246588300.00 ns, 64.2157 us/op
+
+WorkloadWarmup   1: 3840 op, 236924800.00 ns, 61.6992 us/op
+WorkloadWarmup   2: 3840 op, 232621700.00 ns, 60.5786 us/op
+WorkloadWarmup   3: 3840 op, 221777900.00 ns, 57.7547 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 3840 op, 206438200.00 ns, 53.7599 us/op
+WorkloadActual   2: 3840 op, 221017300.00 ns, 57.5566 us/op
+WorkloadActual   3: 3840 op, 203917000.00 ns, 53.1034 us/op
+WorkloadActual   4: 3840 op, 189821600.00 ns, 49.4327 us/op
+WorkloadActual   5: 3840 op, 217369300.00 ns, 56.6066 us/op
+WorkloadActual   6: 3840 op, 271466600.00 ns, 70.6944 us/op
+WorkloadActual   7: 3840 op, 198208700.00 ns, 51.6168 us/op
+WorkloadActual   8: 3840 op, 153533800.00 ns, 39.9828 us/op
+WorkloadActual   9: 3840 op, 142041900.00 ns, 36.9901 us/op
+WorkloadActual  10: 3840 op, 138024400.00 ns, 35.9439 us/op
+
+// AfterActualRun
+WorkloadResult   1: 3840 op, 206438200.00 ns, 53.7599 us/op
+WorkloadResult   2: 3840 op, 221017300.00 ns, 57.5566 us/op
+WorkloadResult   3: 3840 op, 203917000.00 ns, 53.1034 us/op
+WorkloadResult   4: 3840 op, 189821600.00 ns, 49.4327 us/op
+WorkloadResult   5: 3840 op, 217369300.00 ns, 56.6066 us/op
+WorkloadResult   6: 3840 op, 271466600.00 ns, 70.6944 us/op
+WorkloadResult   7: 3840 op, 198208700.00 ns, 51.6168 us/op
+WorkloadResult   8: 3840 op, 153533800.00 ns, 39.9828 us/op
+WorkloadResult   9: 3840 op, 142041900.00 ns, 36.9901 us/op
+WorkloadResult  10: 3840 op, 138024400.00 ns, 35.9439 us/op
+// GC:  2 0 0 17146272 3840
+// Threading:  7599 0 3840
+
+// AfterAll
+// Benchmark Process 49960 has exited with code 0.
+
+Mean = 50.569 us, StdErr = 3.366 us (6.66%), N = 10, StdDev = 10.644 us
+Min = 35.944 us, Q1 = 42.345 us, Median = 52.360 us, Q3 = 55.895 us, Max = 70.694 us
+IQR = 13.550 us, LowerFence = 22.021 us, UpperFence = 76.219 us
+ConfidenceInterval = [34.476 us; 66.661 us] (CI 99.9%), Margin = 16.092 us (31.82% of Mean)
+Skewness = 0.16, Kurtosis = 2.03, MValue = 2
+
+// ** Remained 25 (69.4%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 1m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=StringSpan, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1032 1036 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 1024, CodecMode: \"StringSpan\", Transport: \"StreamFrame\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 11 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+OverheadJitting  1: 256 op, 134200.00 ns, 524.2188 ns/op
+WorkloadJitting  1: 256 op, 42796100.00 ns, 167.1723 us/op
+
+WorkloadPilot    1: 1024 op, 100698900.00 ns, 98.3388 us/op
+WorkloadPilot    2: 2560 op, 335905700.00 ns, 131.2132 us/op
+WorkloadPilot    3: 1792 op, 210115900.00 ns, 117.2522 us/op
+
+WorkloadWarmup   1: 1792 op, 253376700.00 ns, 141.3932 us/op
+WorkloadWarmup   2: 1792 op, 178810100.00 ns, 99.7824 us/op
+WorkloadWarmup   3: 1792 op, 169096800.00 ns, 94.3621 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 1792 op, 189460100.00 ns, 105.7255 us/op
+WorkloadActual   2: 1792 op, 188947100.00 ns, 105.4392 us/op
+WorkloadActual   3: 1792 op, 164222400.00 ns, 91.6420 us/op
+WorkloadActual   4: 1792 op, 206827100.00 ns, 115.4169 us/op
+WorkloadActual   5: 1792 op, 143046900.00 ns, 79.8253 us/op
+WorkloadActual   6: 1792 op, 162420800.00 ns, 90.6366 us/op
+WorkloadActual   7: 1792 op, 124484000.00 ns, 69.4665 us/op
+WorkloadActual   8: 1792 op, 145708400.00 ns, 81.3105 us/op
+WorkloadActual   9: 1792 op, 177686200.00 ns, 99.1552 us/op
+WorkloadActual  10: 1792 op, 107015300.00 ns, 59.7184 us/op
+
+// AfterActualRun
+WorkloadResult   1: 1792 op, 189460100.00 ns, 105.7255 us/op
+WorkloadResult   2: 1792 op, 188947100.00 ns, 105.4392 us/op
+WorkloadResult   3: 1792 op, 164222400.00 ns, 91.6420 us/op
+WorkloadResult   4: 1792 op, 206827100.00 ns, 115.4169 us/op
+WorkloadResult   5: 1792 op, 143046900.00 ns, 79.8253 us/op
+WorkloadResult   6: 1792 op, 162420800.00 ns, 90.6366 us/op
+WorkloadResult   7: 1792 op, 124484000.00 ns, 69.4665 us/op
+WorkloadResult   8: 1792 op, 145708400.00 ns, 81.3105 us/op
+WorkloadResult   9: 1792 op, 177686200.00 ns, 99.1552 us/op
+WorkloadResult  10: 1792 op, 107015300.00 ns, 59.7184 us/op
+// GC:  1 0 0 10068784 1792
+// Threading:  14326 2 1792
+
+// AfterAll
+// Benchmark Process 37496 has exited with code 0.
+
+Mean = 89.834 us, StdErr = 5.514 us (6.14%), N = 10, StdDev = 17.435 us
+Min = 59.718 us, Q1 = 80.197 us, Median = 91.139 us, Q3 = 103.868 us, Max = 115.417 us
+IQR = 23.672 us, LowerFence = 44.689 us, UpperFence = 139.376 us
+ConfidenceInterval = [63.474 us; 116.194 us] (CI 99.9%), Margin = 26.360 us (29.34% of Mean)
+Skewness = -0.23, Kurtosis = 1.7, MValue = 2
+
+// ** Remained 24 (66.7%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 1m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=Bytes, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1032 1036 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 65536, CodecMode: \"Bytes\", Transport: \"DirectTcp\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 12 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+OverheadJitting  1: 256 op, 882300.00 ns, 3.4465 us/op
+WorkloadJitting  1: 256 op, 47858800.00 ns, 186.9484 us/op
+
+WorkloadPilot    1: 1024 op, 137645900.00 ns, 134.4198 us/op
+WorkloadPilot    2: 1792 op, 217972500.00 ns, 121.6364 us/op
+
+WorkloadWarmup   1: 1792 op, 238611800.00 ns, 133.1539 us/op
+WorkloadWarmup   2: 1792 op, 209513400.00 ns, 116.9160 us/op
+WorkloadWarmup   3: 1792 op, 237674000.00 ns, 132.6306 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 1792 op, 214291300.00 ns, 119.5822 us/op
+WorkloadActual   2: 1792 op, 179545300.00 ns, 100.1927 us/op
+WorkloadActual   3: 1792 op, 190473900.00 ns, 106.2912 us/op
+WorkloadActual   4: 1792 op, 183718800.00 ns, 102.5217 us/op
+WorkloadActual   5: 1792 op, 168041200.00 ns, 93.7730 us/op
+WorkloadActual   6: 1792 op, 173816600.00 ns, 96.9959 us/op
+WorkloadActual   7: 1792 op, 167965000.00 ns, 93.7305 us/op
+WorkloadActual   8: 1792 op, 177043100.00 ns, 98.7964 us/op
+WorkloadActual   9: 1792 op, 176308000.00 ns, 98.3862 us/op
+WorkloadActual  10: 1792 op, 177062200.00 ns, 98.8070 us/op
+
+// AfterActualRun
+WorkloadResult   1: 1792 op, 214291300.00 ns, 119.5822 us/op
+WorkloadResult   2: 1792 op, 179545300.00 ns, 100.1927 us/op
+WorkloadResult   3: 1792 op, 190473900.00 ns, 106.2912 us/op
+WorkloadResult   4: 1792 op, 183718800.00 ns, 102.5217 us/op
+WorkloadResult   5: 1792 op, 168041200.00 ns, 93.7730 us/op
+WorkloadResult   6: 1792 op, 173816600.00 ns, 96.9959 us/op
+WorkloadResult   7: 1792 op, 167965000.00 ns, 93.7305 us/op
+WorkloadResult   8: 1792 op, 177043100.00 ns, 98.7964 us/op
+WorkloadResult   9: 1792 op, 176308000.00 ns, 98.3862 us/op
+WorkloadResult  10: 1792 op, 177062200.00 ns, 98.8070 us/op
+// GC:  25 7 0 235546784 1792
+// Threading:  3577 0 1792
+
+// AfterAll
+// Benchmark Process 32256 has exited with code 0.
+
+Mean = 100.908 us, StdErr = 2.389 us (2.37%), N = 10, StdDev = 7.556 us
+Min = 93.730 us, Q1 = 97.343 us, Median = 98.802 us, Q3 = 101.939 us, Max = 119.582 us
+IQR = 4.596 us, LowerFence = 90.449 us, UpperFence = 108.833 us
+ConfidenceInterval = [89.485 us; 112.331 us] (CI 99.9%), Margin = 11.423 us (11.32% of Mean)
+Skewness = 1.36, Kurtosis = 3.93, MValue = 2
+
+// ** Remained 23 (63.9%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 1m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=Bytes, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1392 1032 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 65536, CodecMode: \"Bytes\", Transport: \"StreamFrame\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 13 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+OverheadJitting  1: 256 op, 133000.00 ns, 519.5313 ns/op
+WorkloadJitting  1: 256 op, 73675500.00 ns, 287.7949 us/op
+
+WorkloadPilot    1: 1024 op, 213612500.00 ns, 208.6060 us/op
+
+WorkloadWarmup   1: 1024 op, 224910200.00 ns, 219.6389 us/op
+WorkloadWarmup   2: 1024 op, 232528800.00 ns, 227.0789 us/op
+WorkloadWarmup   3: 1024 op, 228614500.00 ns, 223.2563 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 1024 op, 206570000.00 ns, 201.7285 us/op
+WorkloadActual   2: 1024 op, 223747400.00 ns, 218.5033 us/op
+WorkloadActual   3: 1024 op, 207107300.00 ns, 202.2532 us/op
+WorkloadActual   4: 1024 op, 172482800.00 ns, 168.4402 us/op
+WorkloadActual   5: 1024 op, 176042800.00 ns, 171.9168 us/op
+WorkloadActual   6: 1024 op, 222999900.00 ns, 217.7733 us/op
+WorkloadActual   7: 1024 op, 259254200.00 ns, 253.1779 us/op
+WorkloadActual   8: 1024 op, 133715200.00 ns, 130.5813 us/op
+WorkloadActual   9: 1024 op, 136092500.00 ns, 132.9028 us/op
+WorkloadActual  10: 1024 op, 130955500.00 ns, 127.8862 us/op
+
+// AfterActualRun
+WorkloadResult   1: 1024 op, 206570000.00 ns, 201.7285 us/op
+WorkloadResult   2: 1024 op, 223747400.00 ns, 218.5033 us/op
+WorkloadResult   3: 1024 op, 207107300.00 ns, 202.2532 us/op
+WorkloadResult   4: 1024 op, 172482800.00 ns, 168.4402 us/op
+WorkloadResult   5: 1024 op, 176042800.00 ns, 171.9168 us/op
+WorkloadResult   6: 1024 op, 222999900.00 ns, 217.7733 us/op
+WorkloadResult   7: 1024 op, 259254200.00 ns, 253.1779 us/op
+WorkloadResult   8: 1024 op, 133715200.00 ns, 130.5813 us/op
+WorkloadResult   9: 1024 op, 136092500.00 ns, 132.9028 us/op
+WorkloadResult  10: 1024 op, 130955500.00 ns, 127.8862 us/op
+// GC:  15 3 0 135777408 1024
+// Threading:  12227 0 1024
+
+// AfterAll
+// Benchmark Process 36556 has exited with code 0.
+
+Mean = 182.516 us, StdErr = 13.640 us (7.47%), N = 10, StdDev = 43.132 us
+Min = 127.886 us, Q1 = 141.787 us, Median = 186.823 us, Q3 = 213.893 us, Max = 253.178 us
+IQR = 72.106 us, LowerFence = 33.628 us, UpperFence = 322.053 us
+ConfidenceInterval = [117.307 us; 247.726 us] (CI 99.9%), Margin = 65.210 us (35.73% of Mean)
+Skewness = 0.04, Kurtosis = 1.47, MValue = 2
+
+// ** Remained 22 (61.1%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 1m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=StringAlloc, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1360 1352 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 65536, CodecMode: \"StringAlloc\", Transport: \"DirectTcp\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 14 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+OverheadJitting  1: 256 op, 135600.00 ns, 529.6875 ns/op
+WorkloadJitting  1: 256 op, 67731400.00 ns, 264.5758 us/op
+
+WorkloadPilot    1: 1024 op, 222726300.00 ns, 217.5062 us/op
+
+WorkloadWarmup   1: 1024 op, 243335500.00 ns, 237.6323 us/op
+WorkloadWarmup   2: 1024 op, 235116700.00 ns, 229.6062 us/op
+WorkloadWarmup   3: 1024 op, 250031600.00 ns, 244.1715 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 1024 op, 248293900.00 ns, 242.4745 us/op
+WorkloadActual   2: 1024 op, 207814400.00 ns, 202.9438 us/op
+WorkloadActual   3: 1024 op, 200496600.00 ns, 195.7975 us/op
+WorkloadActual   4: 1024 op, 195344800.00 ns, 190.7664 us/op
+WorkloadActual   5: 1024 op, 193472300.00 ns, 188.9378 us/op
+WorkloadActual   6: 1024 op, 201750900.00 ns, 197.0224 us/op
+WorkloadActual   7: 1024 op, 183735600.00 ns, 179.4293 us/op
+WorkloadActual   8: 1024 op, 185656300.00 ns, 181.3050 us/op
+WorkloadActual   9: 1024 op, 184858600.00 ns, 180.5260 us/op
+WorkloadActual  10: 1024 op, 188695200.00 ns, 184.2727 us/op
+
+// AfterActualRun
+WorkloadResult   1: 1024 op, 248293900.00 ns, 242.4745 us/op
+WorkloadResult   2: 1024 op, 207814400.00 ns, 202.9438 us/op
+WorkloadResult   3: 1024 op, 200496600.00 ns, 195.7975 us/op
+WorkloadResult   4: 1024 op, 195344800.00 ns, 190.7664 us/op
+WorkloadResult   5: 1024 op, 193472300.00 ns, 188.9378 us/op
+WorkloadResult   6: 1024 op, 201750900.00 ns, 197.0224 us/op
+WorkloadResult   7: 1024 op, 183735600.00 ns, 179.4293 us/op
+WorkloadResult   8: 1024 op, 185656300.00 ns, 181.3050 us/op
+WorkloadResult   9: 1024 op, 184858600.00 ns, 180.5260 us/op
+WorkloadResult  10: 1024 op, 188695200.00 ns, 184.2727 us/op
+// GC:  85 85 85 403164600 1024
+// Threading:  2049 0 1024
+
+// AfterAll
+// Benchmark Process 24788 has exited with code 0.
+
+Mean = 194.348 us, StdErr = 5.894 us (3.03%), N = 10, StdDev = 18.639 us
+Min = 179.429 us, Q1 = 182.047 us, Median = 189.852 us, Q3 = 196.716 us, Max = 242.475 us
+IQR = 14.669 us, LowerFence = 160.043 us, UpperFence = 218.720 us
+ConfidenceInterval = [166.168 us; 222.527 us] (CI 99.9%), Margin = 28.179 us (14.50% of Mean)
+Skewness = 1.59, Kurtosis = 4.55, MValue = 2
+
+// ** Remained 21 (58.3%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 1m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=StringAlloc, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 984 1492 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 65536, CodecMode: \"StringAlloc\", Transport: \"StreamFrame\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 15 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+OverheadJitting  1: 256 op, 134800.00 ns, 526.5625 ns/op
+WorkloadJitting  1: 256 op, 92922600.00 ns, 362.9789 us/op
+
+WorkloadPilot    1: 1024 op, 287988600.00 ns, 281.2389 us/op
+
+WorkloadWarmup   1: 1024 op, 276614800.00 ns, 270.1316 us/op
+WorkloadWarmup   2: 1024 op, 306523500.00 ns, 299.3394 us/op
+WorkloadWarmup   3: 1024 op, 415565500.00 ns, 405.8257 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 1024 op, 421305900.00 ns, 411.4315 us/op
+WorkloadActual   2: 1024 op, 305824000.00 ns, 298.6563 us/op
+WorkloadActual   3: 1024 op, 305369200.00 ns, 298.2121 us/op
+WorkloadActual   4: 1024 op, 254290500.00 ns, 248.3306 us/op
+WorkloadActual   5: 1024 op, 249948000.00 ns, 244.0898 us/op
+WorkloadActual   6: 1024 op, 269950900.00 ns, 263.6239 us/op
+WorkloadActual   7: 1024 op, 288505600.00 ns, 281.7438 us/op
+WorkloadActual   8: 1024 op, 329430300.00 ns, 321.7093 us/op
+WorkloadActual   9: 1024 op, 431875700.00 ns, 421.7536 us/op
+WorkloadActual  10: 1024 op, 269379800.00 ns, 263.0662 us/op
+
+// AfterActualRun
+WorkloadResult   1: 1024 op, 421305900.00 ns, 411.4315 us/op
+WorkloadResult   2: 1024 op, 305824000.00 ns, 298.6563 us/op
+WorkloadResult   3: 1024 op, 305369200.00 ns, 298.2121 us/op
+WorkloadResult   4: 1024 op, 254290500.00 ns, 248.3306 us/op
+WorkloadResult   5: 1024 op, 249948000.00 ns, 244.0898 us/op
+WorkloadResult   6: 1024 op, 269950900.00 ns, 263.6239 us/op
+WorkloadResult   7: 1024 op, 288505600.00 ns, 281.7438 us/op
+WorkloadResult   8: 1024 op, 329430300.00 ns, 321.7093 us/op
+WorkloadResult   9: 1024 op, 431875700.00 ns, 421.7536 us/op
+WorkloadResult  10: 1024 op, 269379800.00 ns, 263.0662 us/op
+// GC:  93 78 78 405852352 1024
+// Threading:  12254 0 1024
+
+// AfterAll
+// Benchmark Process 58512 has exited with code 0.
+
+Mean = 305.262 us, StdErr = 20.071 us (6.58%), N = 10, StdDev = 63.471 us
+Min = 244.090 us, Q1 = 263.206 us, Median = 289.978 us, Q3 = 315.946 us, Max = 421.754 us
+IQR = 52.740 us, LowerFence = 184.095 us, UpperFence = 395.057 us
+ConfidenceInterval = [209.303 us; 401.220 us] (CI 99.9%), Margin = 95.958 us (31.43% of Mean)
+Skewness = 0.86, Kurtosis = 2.11, MValue = 2
+
+// ** Remained 20 (55.6%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 1m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=StringSpan, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 984 1492 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 65536, CodecMode: \"StringSpan\", Transport: \"DirectTcp\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 16 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+OverheadJitting  1: 256 op, 134500.00 ns, 525.3906 ns/op
+WorkloadJitting  1: 256 op, 56930200.00 ns, 222.3836 us/op
+
+WorkloadPilot    1: 1024 op, 211622600.00 ns, 206.6627 us/op
+
+WorkloadWarmup   1: 1024 op, 257845200.00 ns, 251.8020 us/op
+WorkloadWarmup   2: 1024 op, 315353700.00 ns, 307.9626 us/op
+WorkloadWarmup   3: 1024 op, 197803600.00 ns, 193.1676 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 1024 op, 203387300.00 ns, 198.6204 us/op
+WorkloadActual   2: 1024 op, 195417900.00 ns, 190.8378 us/op
+WorkloadActual   3: 1024 op, 186961800.00 ns, 182.5799 us/op
+WorkloadActual   4: 1024 op, 200869200.00 ns, 196.1613 us/op
+WorkloadActual   5: 1024 op, 182343200.00 ns, 178.0695 us/op
+WorkloadActual   6: 1024 op, 178243900.00 ns, 174.0663 us/op
+WorkloadActual   7: 1024 op, 176472400.00 ns, 172.3363 us/op
+WorkloadActual   8: 1024 op, 197389600.00 ns, 192.7633 us/op
+WorkloadActual   9: 1024 op, 188934300.00 ns, 184.5062 us/op
+WorkloadActual  10: 1024 op, 183664300.00 ns, 179.3597 us/op
+
+// AfterActualRun
+WorkloadResult   1: 1024 op, 203387300.00 ns, 198.6204 us/op
+WorkloadResult   2: 1024 op, 195417900.00 ns, 190.8378 us/op
+WorkloadResult   3: 1024 op, 186961800.00 ns, 182.5799 us/op
+WorkloadResult   4: 1024 op, 200869200.00 ns, 196.1613 us/op
+WorkloadResult   5: 1024 op, 182343200.00 ns, 178.0695 us/op
+WorkloadResult   6: 1024 op, 178243900.00 ns, 174.0663 us/op
+WorkloadResult   7: 1024 op, 176472400.00 ns, 172.3363 us/op
+WorkloadResult   8: 1024 op, 197389600.00 ns, 192.7633 us/op
+WorkloadResult   9: 1024 op, 188934300.00 ns, 184.5062 us/op
+WorkloadResult  10: 1024 op, 183664300.00 ns, 179.3597 us/op
+// GC:  85 85 85 268897512 1024
+// Threading:  2045 0 1024
+
+// AfterAll
+// Benchmark Process 46116 has exited with code 0.
+
+Mean = 184.930 us, StdErr = 2.925 us (1.58%), N = 10, StdDev = 9.251 us
+Min = 172.336 us, Q1 = 178.392 us, Median = 183.543 us, Q3 = 192.282 us, Max = 198.620 us
+IQR = 13.890 us, LowerFence = 157.557 us, UpperFence = 213.117 us
+ConfidenceInterval = [170.944 us; 198.916 us] (CI 99.9%), Margin = 13.986 us (7.56% of Mean)
+Skewness = 0.11, Kurtosis = 1.34, MValue = 3.2
+
+// ** Remained 19 (52.8%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 1m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=StringSpan, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1360 1444 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 65536, CodecMode: \"StringSpan\", Transport: \"StreamFrame\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 17 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+OverheadJitting  1: 256 op, 151800.00 ns, 592.9688 ns/op
+WorkloadJitting  1: 256 op, 87884400.00 ns, 343.2984 us/op
+
+WorkloadPilot    1: 1024 op, 264367300.00 ns, 258.1712 us/op
+
+WorkloadWarmup   1: 1024 op, 303892000.00 ns, 296.7695 us/op
+WorkloadWarmup   2: 1024 op, 276247400.00 ns, 269.7729 us/op
+WorkloadWarmup   3: 1024 op, 292278500.00 ns, 285.4282 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 1024 op, 281511800.00 ns, 274.9139 us/op
+WorkloadActual   2: 1024 op, 251374200.00 ns, 245.4826 us/op
+WorkloadActual   3: 1024 op, 226716500.00 ns, 221.4028 us/op
+WorkloadActual   4: 1024 op, 244442300.00 ns, 238.7132 us/op
+WorkloadActual   5: 1024 op, 216703000.00 ns, 211.6240 us/op
+WorkloadActual   6: 1024 op, 200032300.00 ns, 195.3440 us/op
+WorkloadActual   7: 1024 op, 212315700.00 ns, 207.3396 us/op
+WorkloadActual   8: 1024 op, 252493200.00 ns, 246.5754 us/op
+WorkloadActual   9: 1024 op, 277977100.00 ns, 271.4620 us/op
+WorkloadActual  10: 1024 op, 216433700.00 ns, 211.3610 us/op
+
+// AfterActualRun
+WorkloadResult   1: 1024 op, 281511800.00 ns, 274.9139 us/op
+WorkloadResult   2: 1024 op, 251374200.00 ns, 245.4826 us/op
+WorkloadResult   3: 1024 op, 226716500.00 ns, 221.4028 us/op
+WorkloadResult   4: 1024 op, 244442300.00 ns, 238.7132 us/op
+WorkloadResult   5: 1024 op, 216703000.00 ns, 211.6240 us/op
+WorkloadResult   6: 1024 op, 200032300.00 ns, 195.3440 us/op
+WorkloadResult   7: 1024 op, 212315700.00 ns, 207.3396 us/op
+WorkloadResult   8: 1024 op, 252493200.00 ns, 246.5754 us/op
+WorkloadResult   9: 1024 op, 277977100.00 ns, 271.4620 us/op
+WorkloadResult  10: 1024 op, 216433700.00 ns, 211.3610 us/op
+// GC:  78 78 78 271232432 1024
+// Threading:  12240 1 1024
+
+// AfterAll
+// Benchmark Process 68696 has exited with code 0.
+
+Mean = 232.422 us, StdErr = 8.655 us (3.72%), N = 10, StdDev = 27.369 us
+Min = 195.344 us, Q1 = 211.427 us, Median = 230.058 us, Q3 = 246.302 us, Max = 274.914 us
+IQR = 34.875 us, LowerFence = 159.114 us, UpperFence = 298.615 us
+ConfidenceInterval = [191.044 us; 273.800 us] (CI 99.9%), Margin = 41.378 us (17.80% of Mean)
+Skewness = 0.27, Kurtosis = 1.49, MValue = 3.2
+
+// ** Remained 18 (50.0%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 1m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=64, CodecMode=Bytes, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1028 1088 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 64, CodecMode: \"Bytes\", Transport: \"DirectTcp\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 18 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+OverheadJitting  1: 256 op, 119000.00 ns, 464.8438 ns/op
+WorkloadJitting  1: 256 op, 27178100.00 ns, 106.1645 us/op
+
+WorkloadPilot    1: 1024 op, 44352700.00 ns, 43.3132 us/op
+WorkloadPilot    2: 5888 op, 258063000.00 ns, 43.8286 us/op
+
+WorkloadWarmup   1: 5888 op, 284477900.00 ns, 48.3149 us/op
+WorkloadWarmup   2: 5888 op, 272496900.00 ns, 46.2800 us/op
+WorkloadWarmup   3: 5888 op, 254199200.00 ns, 43.1724 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 5888 op, 244116500.00 ns, 41.4600 us/op
+WorkloadActual   2: 5888 op, 227383400.00 ns, 38.6181 us/op
+WorkloadActual   3: 5888 op, 190391200.00 ns, 32.3355 us/op
+WorkloadActual   4: 5888 op, 210645700.00 ns, 35.7754 us/op
+WorkloadActual   5: 5888 op, 196561400.00 ns, 33.3834 us/op
+WorkloadActual   6: 5888 op, 224172900.00 ns, 38.0728 us/op
+WorkloadActual   7: 5888 op, 228882400.00 ns, 38.8727 us/op
+WorkloadActual   8: 5888 op, 252135600.00 ns, 42.8219 us/op
+WorkloadActual   9: 5888 op, 363990300.00 ns, 61.8190 us/op
+WorkloadActual  10: 5888 op, 216196600.00 ns, 36.7182 us/op
+
+// AfterActualRun
+WorkloadResult   1: 5888 op, 244116500.00 ns, 41.4600 us/op
+WorkloadResult   2: 5888 op, 227383400.00 ns, 38.6181 us/op
+WorkloadResult   3: 5888 op, 190391200.00 ns, 32.3355 us/op
+WorkloadResult   4: 5888 op, 210645700.00 ns, 35.7754 us/op
+WorkloadResult   5: 5888 op, 196561400.00 ns, 33.3834 us/op
+WorkloadResult   6: 5888 op, 224172900.00 ns, 38.0728 us/op
+WorkloadResult   7: 5888 op, 228882400.00 ns, 38.8727 us/op
+WorkloadResult   8: 5888 op, 252135600.00 ns, 42.8219 us/op
+WorkloadResult   9: 5888 op, 363990300.00 ns, 61.8190 us/op
+WorkloadResult  10: 5888 op, 216196600.00 ns, 36.7182 us/op
+// GC:  0 0 0 2928968 5888
+// Threading:  11662 0 5888
+
+// AfterAll
+// Benchmark Process 35572 has exited with code 0.
+
+Mean = 39.988 us, StdErr = 2.634 us (6.59%), N = 10, StdDev = 8.328 us
+Min = 32.335 us, Q1 = 36.011 us, Median = 38.345 us, Q3 = 40.813 us, Max = 61.819 us
+IQR = 4.802 us, LowerFence = 28.808 us, UpperFence = 48.016 us
+ConfidenceInterval = [27.397 us; 52.578 us] (CI 99.9%), Margin = 12.591 us (31.49% of Mean)
+Skewness = 1.66, Kurtosis = 4.84, MValue = 2
+
+// ** Remained 17 (47.2%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 1m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=64, CodecMode=Bytes, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1360 1112 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 64, CodecMode: \"Bytes\", Transport: \"StreamFrame\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 19 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+OverheadJitting  1: 256 op, 131800.00 ns, 514.8438 ns/op
+WorkloadJitting  1: 256 op, 39175200.00 ns, 153.0281 us/op
+
+WorkloadPilot    1: 1024 op, 100867300.00 ns, 98.5032 us/op
+WorkloadPilot    2: 2560 op, 237720100.00 ns, 92.8594 us/op
+
+WorkloadWarmup   1: 2560 op, 270921000.00 ns, 105.8285 us/op
+WorkloadWarmup   2: 2560 op, 250749600.00 ns, 97.9491 us/op
+WorkloadWarmup   3: 2560 op, 262134300.00 ns, 102.3962 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 2560 op, 281818500.00 ns, 110.0854 us/op
+WorkloadActual   2: 2560 op, 240699400.00 ns, 94.0232 us/op
+WorkloadActual   3: 2560 op, 240849000.00 ns, 94.0816 us/op
+WorkloadActual   4: 2560 op, 206654500.00 ns, 80.7244 us/op
+WorkloadActual   5: 2560 op, 208473500.00 ns, 81.4350 us/op
+WorkloadActual   6: 2560 op, 204624300.00 ns, 79.9314 us/op
+WorkloadActual   7: 2560 op, 175605300.00 ns, 68.5958 us/op
+WorkloadActual   8: 2560 op, 152002800.00 ns, 59.3761 us/op
+WorkloadActual   9: 2560 op, 146234200.00 ns, 57.1227 us/op
+WorkloadActual  10: 2560 op, 155265100.00 ns, 60.6504 us/op
+
+// AfterActualRun
+WorkloadResult   1: 2560 op, 281818500.00 ns, 110.0854 us/op
+WorkloadResult   2: 2560 op, 240699400.00 ns, 94.0232 us/op
+WorkloadResult   3: 2560 op, 240849000.00 ns, 94.0816 us/op
+WorkloadResult   4: 2560 op, 206654500.00 ns, 80.7244 us/op
+WorkloadResult   5: 2560 op, 208473500.00 ns, 81.4350 us/op
+WorkloadResult   6: 2560 op, 204624300.00 ns, 79.9314 us/op
+WorkloadResult   7: 2560 op, 175605300.00 ns, 68.5958 us/op
+WorkloadResult   8: 2560 op, 152002800.00 ns, 59.3761 us/op
+WorkloadResult   9: 2560 op, 146234200.00 ns, 57.1227 us/op
+WorkloadResult  10: 2560 op, 155265100.00 ns, 60.6504 us/op
+// GC:  0 0 0 4226928 2560
+// Threading:  20479 0 2560
+
+// AfterAll
+// Benchmark Process 53656 has exited with code 0.
+
+Mean = 78.603 us, StdErr = 5.514 us (7.01%), N = 10, StdDev = 17.437 us
+Min = 57.123 us, Q1 = 62.637 us, Median = 80.328 us, Q3 = 90.876 us, Max = 110.085 us
+IQR = 28.239 us, LowerFence = 20.278 us, UpperFence = 133.235 us
+ConfidenceInterval = [52.241 us; 104.964 us] (CI 99.9%), Margin = 26.362 us (33.54% of Mean)
+Skewness = 0.28, Kurtosis = 1.69, MValue = 2
+
+// ** Remained 16 (44.4%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=64, CodecMode=StringAlloc, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 896 1332 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 64, CodecMode: \"StringAlloc\", Transport: \"DirectTcp\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 20 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+OverheadJitting  1: 256 op, 138300.00 ns, 540.2344 ns/op
+WorkloadJitting  1: 256 op, 24650300.00 ns, 96.2902 us/op
+
+WorkloadPilot    1: 1024 op, 45566300.00 ns, 44.4983 us/op
+WorkloadPilot    2: 5632 op, 241225900.00 ns, 42.8313 us/op
+
+WorkloadWarmup   1: 5632 op, 286021200.00 ns, 50.7850 us/op
+WorkloadWarmup   2: 5632 op, 308224600.00 ns, 54.7274 us/op
+WorkloadWarmup   3: 5632 op, 251773200.00 ns, 44.7040 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 5632 op, 204002200.00 ns, 36.2220 us/op
+WorkloadActual   2: 5632 op, 214528500.00 ns, 38.0910 us/op
+WorkloadActual   3: 5632 op, 179636900.00 ns, 31.8958 us/op
+WorkloadActual   4: 5632 op, 224418600.00 ns, 39.8471 us/op
+WorkloadActual   5: 5632 op, 222584300.00 ns, 39.5214 us/op
+WorkloadActual   6: 5632 op, 162410600.00 ns, 28.8371 us/op
+WorkloadActual   7: 5632 op, 162712100.00 ns, 28.8906 us/op
+WorkloadActual   8: 5632 op, 162323900.00 ns, 28.8217 us/op
+WorkloadActual   9: 5632 op, 165879200.00 ns, 29.4530 us/op
+WorkloadActual  10: 5632 op, 194293500.00 ns, 34.4981 us/op
+
+// AfterActualRun
+WorkloadResult   1: 5632 op, 204002200.00 ns, 36.2220 us/op
+WorkloadResult   2: 5632 op, 214528500.00 ns, 38.0910 us/op
+WorkloadResult   3: 5632 op, 179636900.00 ns, 31.8958 us/op
+WorkloadResult   4: 5632 op, 224418600.00 ns, 39.8471 us/op
+WorkloadResult   5: 5632 op, 222584300.00 ns, 39.5214 us/op
+WorkloadResult   6: 5632 op, 162410600.00 ns, 28.8371 us/op
+WorkloadResult   7: 5632 op, 162712100.00 ns, 28.8906 us/op
+WorkloadResult   8: 5632 op, 162323900.00 ns, 28.8217 us/op
+WorkloadResult   9: 5632 op, 165879200.00 ns, 29.4530 us/op
+WorkloadResult  10: 5632 op, 194293500.00 ns, 34.4981 us/op
+// GC:  0 0 0 4513136 5632
+// Threading:  11154 0 5632
+
+// AfterAll
+// Benchmark Process 6920 has exited with code 0.
+
+Mean = 33.608 us, StdErr = 1.452 us (4.32%), N = 10, StdDev = 4.591 us
+Min = 28.822 us, Q1 = 29.031 us, Median = 33.197 us, Q3 = 37.624 us, Max = 39.847 us
+IQR = 8.593 us, LowerFence = 16.142 us, UpperFence = 50.513 us
+ConfidenceInterval = [26.666 us; 40.549 us] (CI 99.9%), Margin = 6.942 us (20.65% of Mean)
+Skewness = 0.16, Kurtosis = 1.13, MValue = 2
+
+// ** Remained 15 (41.7%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=64, CodecMode=StringAlloc, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1320 1088 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 64, CodecMode: \"StringAlloc\", Transport: \"StreamFrame\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 21 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+OverheadJitting  1: 256 op, 145700.00 ns, 569.1406 ns/op
+WorkloadJitting  1: 256 op, 42119400.00 ns, 164.5289 us/op
+
+WorkloadPilot    1: 1024 op, 71593400.00 ns, 69.9154 us/op
+WorkloadPilot    2: 3584 op, 273121500.00 ns, 76.2058 us/op
+
+WorkloadWarmup   1: 3584 op, 426532100.00 ns, 119.0101 us/op
+WorkloadWarmup   2: 3584 op, 268568300.00 ns, 74.9354 us/op
+WorkloadWarmup   3: 3584 op, 241674000.00 ns, 67.4314 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 3584 op, 251359400.00 ns, 70.1338 us/op
+WorkloadActual   2: 3584 op, 229608300.00 ns, 64.0648 us/op
+WorkloadActual   3: 3584 op, 338956900.00 ns, 94.5750 us/op
+WorkloadActual   4: 3584 op, 277043400.00 ns, 77.3001 us/op
+WorkloadActual   5: 3584 op, 183619300.00 ns, 51.2331 us/op
+WorkloadActual   6: 3584 op, 177682100.00 ns, 49.5765 us/op
+WorkloadActual   7: 3584 op, 177850900.00 ns, 49.6236 us/op
+WorkloadActual   8: 3584 op, 182872600.00 ns, 51.0247 us/op
+WorkloadActual   9: 3584 op, 173886100.00 ns, 48.5173 us/op
+WorkloadActual  10: 3584 op, 168157900.00 ns, 46.9191 us/op
+
+// AfterActualRun
+WorkloadResult   1: 3584 op, 251359400.00 ns, 70.1338 us/op
+WorkloadResult   2: 3584 op, 229608300.00 ns, 64.0648 us/op
+WorkloadResult   3: 3584 op, 338956900.00 ns, 94.5750 us/op
+WorkloadResult   4: 3584 op, 277043400.00 ns, 77.3001 us/op
+WorkloadResult   5: 3584 op, 183619300.00 ns, 51.2331 us/op
+WorkloadResult   6: 3584 op, 177682100.00 ns, 49.5765 us/op
+WorkloadResult   7: 3584 op, 177850900.00 ns, 49.6236 us/op
+WorkloadResult   8: 3584 op, 182872600.00 ns, 51.0247 us/op
+WorkloadResult   9: 3584 op, 173886100.00 ns, 48.5173 us/op
+WorkloadResult  10: 3584 op, 168157900.00 ns, 46.9191 us/op
+// GC:  0 0 0 7007152 3584
+// Threading:  28663 0 3584
+
+// AfterAll
+// Benchmark Process 736 has exited with code 0.
+
+Mean = 60.297 us, StdErr = 5.044 us (8.37%), N = 10, StdDev = 15.950 us
+Min = 46.919 us, Q1 = 49.588 us, Median = 51.129 us, Q3 = 68.617 us, Max = 94.575 us
+IQR = 19.028 us, LowerFence = 21.046 us, UpperFence = 97.159 us
+ConfidenceInterval = [36.182 us; 84.412 us] (CI 99.9%), Margin = 24.115 us (39.99% of Mean)
+Skewness = 0.94, Kurtosis = 2.42, MValue = 2
+
+// ** Remained 14 (38.9%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=64, CodecMode=StringSpan, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1536 1492 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 64, CodecMode: \"StringSpan\", Transport: \"DirectTcp\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 22 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+OverheadJitting  1: 256 op, 118900.00 ns, 464.4531 ns/op
+WorkloadJitting  1: 256 op, 19855600.00 ns, 77.5609 us/op
+
+WorkloadPilot    1: 1024 op, 41362800.00 ns, 40.3934 us/op
+WorkloadPilot    2: 6144 op, 271510000.00 ns, 44.1911 us/op
+WorkloadPilot    3: 5632 op, 233905000.00 ns, 41.5314 us/op
+WorkloadPilot    4: 6144 op, 247148300.00 ns, 40.2260 us/op
+
+WorkloadWarmup   1: 6144 op, 294986800.00 ns, 48.0122 us/op
+WorkloadWarmup   2: 6144 op, 278476400.00 ns, 45.3249 us/op
+WorkloadWarmup   3: 6144 op, 237923600.00 ns, 38.7245 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 6144 op, 267229800.00 ns, 43.4944 us/op
+WorkloadActual   2: 6144 op, 233895100.00 ns, 38.0689 us/op
+WorkloadActual   3: 6144 op, 225713600.00 ns, 36.7372 us/op
+WorkloadActual   4: 6144 op, 190214200.00 ns, 30.9593 us/op
+WorkloadActual   5: 6144 op, 179362200.00 ns, 29.1931 us/op
+WorkloadActual   6: 6144 op, 179407700.00 ns, 29.2005 us/op
+WorkloadActual   7: 6144 op, 192668300.00 ns, 31.3588 us/op
+WorkloadActual   8: 6144 op, 184816800.00 ns, 30.0809 us/op
+WorkloadActual   9: 6144 op, 180454100.00 ns, 29.3708 us/op
+WorkloadActual  10: 6144 op, 178616500.00 ns, 29.0717 us/op
+
+// AfterActualRun
+WorkloadResult   1: 6144 op, 267229800.00 ns, 43.4944 us/op
+WorkloadResult   2: 6144 op, 233895100.00 ns, 38.0689 us/op
+WorkloadResult   3: 6144 op, 225713600.00 ns, 36.7372 us/op
+WorkloadResult   4: 6144 op, 190214200.00 ns, 30.9593 us/op
+WorkloadResult   5: 6144 op, 179362200.00 ns, 29.1931 us/op
+WorkloadResult   6: 6144 op, 179407700.00 ns, 29.2005 us/op
+WorkloadResult   7: 6144 op, 192668300.00 ns, 31.3588 us/op
+WorkloadResult   8: 6144 op, 184816800.00 ns, 30.0809 us/op
+WorkloadResult   9: 6144 op, 180454100.00 ns, 29.3708 us/op
+WorkloadResult  10: 6144 op, 178616500.00 ns, 29.0717 us/op
+// GC:  0 0 0 3847704 6144
+// Threading:  12205 0 6144
+
+// AfterAll
+// Benchmark Process 61840 has exited with code 0.
+
+Mean = 32.754 us, StdErr = 1.571 us (4.80%), N = 10, StdDev = 4.968 us
+Min = 29.072 us, Q1 = 29.243 us, Median = 30.520 us, Q3 = 35.393 us, Max = 43.494 us
+IQR = 6.150 us, LowerFence = 20.019 us, UpperFence = 44.617 us
+ConfidenceInterval = [25.243 us; 40.264 us] (CI 99.9%), Margin = 7.510 us (22.93% of Mean)
+Skewness = 1.02, Kurtosis = 2.47, MValue = 2
+
+// ** Remained 13 (36.1%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=64, CodecMode=StringSpan, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1568 1556 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 64, CodecMode: \"StringSpan\", Transport: \"StreamFrame\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 23 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+OverheadJitting  1: 256 op, 147700.00 ns, 576.9531 ns/op
+WorkloadJitting  1: 256 op, 39847000.00 ns, 155.6523 us/op
+
+WorkloadPilot    1: 1024 op, 93692400.00 ns, 91.4965 us/op
+WorkloadPilot    2: 2816 op, 294455900.00 ns, 104.5653 us/op
+WorkloadPilot    3: 2304 op, 270954300.00 ns, 117.6017 us/op
+
+WorkloadWarmup   1: 2304 op, 333596600.00 ns, 144.7902 us/op
+WorkloadWarmup   2: 2304 op, 257719200.00 ns, 111.8573 us/op
+WorkloadWarmup   3: 2304 op, 240359000.00 ns, 104.3225 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 2304 op, 174699400.00 ns, 75.8244 us/op
+WorkloadActual   2: 2304 op, 231217300.00 ns, 100.3547 us/op
+WorkloadActual   3: 2304 op, 200352400.00 ns, 86.9585 us/op
+WorkloadActual   4: 2304 op, 204900300.00 ns, 88.9324 us/op
+WorkloadActual   5: 2304 op, 193747100.00 ns, 84.0916 us/op
+WorkloadActual   6: 2304 op, 147907600.00 ns, 64.1960 us/op
+WorkloadActual   7: 2304 op, 147771700.00 ns, 64.1370 us/op
+WorkloadActual   8: 2304 op, 162183300.00 ns, 70.3921 us/op
+WorkloadActual   9: 2304 op, 128070700.00 ns, 55.5862 us/op
+WorkloadActual  10: 2304 op, 109855700.00 ns, 47.6804 us/op
+
+// AfterActualRun
+WorkloadResult   1: 2304 op, 174699400.00 ns, 75.8244 us/op
+WorkloadResult   2: 2304 op, 231217300.00 ns, 100.3547 us/op
+WorkloadResult   3: 2304 op, 200352400.00 ns, 86.9585 us/op
+WorkloadResult   4: 2304 op, 204900300.00 ns, 88.9324 us/op
+WorkloadResult   5: 2304 op, 193747100.00 ns, 84.0916 us/op
+WorkloadResult   6: 2304 op, 147907600.00 ns, 64.1960 us/op
+WorkloadResult   7: 2304 op, 147771700.00 ns, 64.1370 us/op
+WorkloadResult   8: 2304 op, 162183300.00 ns, 70.3921 us/op
+WorkloadResult   9: 2304 op, 128070700.00 ns, 55.5862 us/op
+WorkloadResult  10: 2304 op, 109855700.00 ns, 47.6804 us/op
+// GC:  0 0 0 4098688 2304
+// Threading:  18422 0 2304
+
+// AfterAll
+// Benchmark Process 13336 has exited with code 0.
+
+Mean = 73.815 us, StdErr = 5.195 us (7.04%), N = 10, StdDev = 16.427 us
+Min = 47.680 us, Q1 = 64.152 us, Median = 73.108 us, Q3 = 86.242 us, Max = 100.355 us
+IQR = 22.090 us, LowerFence = 31.017 us, UpperFence = 119.377 us
+ConfidenceInterval = [48.981 us; 98.650 us] (CI 99.9%), Margin = 24.835 us (33.64% of Mean)
+Skewness = -0.01, Kurtosis = 1.63, MValue = 2
+
+// ** Remained 12 (33.3%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=1024, CodecMode=Bytes, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1636 1632 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 1024, CodecMode: \"Bytes\", Transport: \"DirectTcp\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 24 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+OverheadJitting  1: 256 op, 138500.00 ns, 541.0156 ns/op
+WorkloadJitting  1: 256 op, 23040700.00 ns, 90.0027 us/op
+
+WorkloadPilot    1: 1024 op, 61646000.00 ns, 60.2012 us/op
+WorkloadPilot    2: 4096 op, 316630600.00 ns, 77.3024 us/op
+WorkloadPilot    3: 3328 op, 309848200.00 ns, 93.1034 us/op
+WorkloadPilot    4: 2560 op, 116908200.00 ns, 45.6673 us/op
+WorkloadPilot    5: 5376 op, 242811800.00 ns, 45.1659 us/op
+
+WorkloadWarmup   1: 5376 op, 176487300.00 ns, 32.8287 us/op
+WorkloadWarmup   2: 5376 op, 222486500.00 ns, 41.3851 us/op
+WorkloadWarmup   3: 5376 op, 234044600.00 ns, 43.5351 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 5376 op, 267435800.00 ns, 49.7462 us/op
+WorkloadActual   2: 5376 op, 284453500.00 ns, 52.9117 us/op
+WorkloadActual   3: 5376 op, 296036000.00 ns, 55.0662 us/op
+WorkloadActual   4: 5376 op, 257467200.00 ns, 47.8920 us/op
+WorkloadActual   5: 5376 op, 187939200.00 ns, 34.9589 us/op
+WorkloadActual   6: 5376 op, 197426400.00 ns, 36.7237 us/op
+WorkloadActual   7: 5376 op, 248420200.00 ns, 46.2091 us/op
+WorkloadActual   8: 5376 op, 240369900.00 ns, 44.7117 us/op
+WorkloadActual   9: 5376 op, 197886700.00 ns, 36.8093 us/op
+WorkloadActual  10: 5376 op, 219810600.00 ns, 40.8874 us/op
+
+// AfterActualRun
+WorkloadResult   1: 5376 op, 267435800.00 ns, 49.7462 us/op
+WorkloadResult   2: 5376 op, 284453500.00 ns, 52.9117 us/op
+WorkloadResult   3: 5376 op, 296036000.00 ns, 55.0662 us/op
+WorkloadResult   4: 5376 op, 257467200.00 ns, 47.8920 us/op
+WorkloadResult   5: 5376 op, 187939200.00 ns, 34.9589 us/op
+WorkloadResult   6: 5376 op, 197426400.00 ns, 36.7237 us/op
+WorkloadResult   7: 5376 op, 248420200.00 ns, 46.2091 us/op
+WorkloadResult   8: 5376 op, 240369900.00 ns, 44.7117 us/op
+WorkloadResult   9: 5376 op, 197886700.00 ns, 36.8093 us/op
+WorkloadResult  10: 5376 op, 219810600.00 ns, 40.8874 us/op
+// GC:  1 0 0 12999280 5376
+// Threading:  10669 1 5376
+
+// AfterAll
+// Benchmark Process 42460 has exited with code 0.
+
+Mean = 44.592 us, StdErr = 2.231 us (5.00%), N = 10, StdDev = 7.055 us
+Min = 34.959 us, Q1 = 37.829 us, Median = 45.460 us, Q3 = 49.283 us, Max = 55.066 us
+IQR = 11.454 us, LowerFence = 20.648 us, UpperFence = 66.463 us
+ConfidenceInterval = [33.925 us; 55.258 us] (CI 99.9%), Margin = 10.667 us (23.92% of Mean)
+Skewness = -0, Kurtosis = 1.37, MValue = 2
+
+// ** Remained 11 (30.6%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=1024, CodecMode=Bytes, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1648 1640 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 1024, CodecMode: \"Bytes\", Transport: \"StreamFrame\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 25 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+OverheadJitting  1: 256 op, 153300.00 ns, 598.8281 ns/op
+WorkloadJitting  1: 256 op, 52778900.00 ns, 206.1676 us/op
+
+WorkloadPilot    1: 1024 op, 116153600.00 ns, 113.4313 us/op
+WorkloadPilot    2: 2304 op, 263403500.00 ns, 114.3244 us/op
+
+WorkloadWarmup   1: 2304 op, 243677600.00 ns, 105.7628 us/op
+WorkloadWarmup   2: 2304 op, 222296700.00 ns, 96.4829 us/op
+WorkloadWarmup   3: 2304 op, 215512200.00 ns, 93.5383 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 2304 op, 235898100.00 ns, 102.3863 us/op
+WorkloadActual   2: 2304 op, 214626500.00 ns, 93.1539 us/op
+WorkloadActual   3: 2304 op, 171889800.00 ns, 74.6049 us/op
+WorkloadActual   4: 2304 op, 162204400.00 ns, 70.4012 us/op
+WorkloadActual   5: 2304 op, 141235000.00 ns, 61.2999 us/op
+WorkloadActual   6: 2304 op, 140428700.00 ns, 60.9500 us/op
+WorkloadActual   7: 2304 op, 152545700.00 ns, 66.2091 us/op
+WorkloadActual   8: 2304 op, 156056900.00 ns, 67.7330 us/op
+WorkloadActual   9: 2304 op, 178221600.00 ns, 77.3531 us/op
+WorkloadActual  10: 2304 op, 172781200.00 ns, 74.9918 us/op
+
+// AfterActualRun
+WorkloadResult   1: 2304 op, 235898100.00 ns, 102.3863 us/op
+WorkloadResult   2: 2304 op, 214626500.00 ns, 93.1539 us/op
+WorkloadResult   3: 2304 op, 171889800.00 ns, 74.6049 us/op
+WorkloadResult   4: 2304 op, 162204400.00 ns, 70.4012 us/op
+WorkloadResult   5: 2304 op, 141235000.00 ns, 61.2999 us/op
+WorkloadResult   6: 2304 op, 140428700.00 ns, 60.9500 us/op
+WorkloadResult   7: 2304 op, 152545700.00 ns, 66.2091 us/op
+WorkloadResult   8: 2304 op, 156056900.00 ns, 67.7330 us/op
+WorkloadResult   9: 2304 op, 178221600.00 ns, 77.3531 us/op
+WorkloadResult  10: 2304 op, 172781200.00 ns, 74.9918 us/op
+// GC:  0 0 0 8228208 2304
+// Threading:  18431 2 2304
+
+// AfterAll
+// Benchmark Process 29668 has exited with code 0.
+
+Mean = 74.908 us, StdErr = 4.245 us (5.67%), N = 10, StdDev = 13.423 us
+Min = 60.950 us, Q1 = 66.590 us, Median = 72.503 us, Q3 = 76.763 us, Max = 102.386 us
+IQR = 10.173 us, LowerFence = 51.331 us, UpperFence = 92.022 us
+ConfidenceInterval = [54.615 us; 95.202 us] (CI 99.9%), Margin = 20.293 us (27.09% of Mean)
+Skewness = 0.85, Kurtosis = 2.35, MValue = 2
+
+// ** Remained 10 (27.8%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=1024, CodecMode=StringAlloc, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1480 1020 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 1024, CodecMode: \"StringAlloc\", Transport: \"DirectTcp\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 26 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+OverheadJitting  1: 256 op, 179200.00 ns, 700.0000 ns/op
+WorkloadJitting  1: 256 op, 37311900.00 ns, 145.7496 us/op
+
+WorkloadPilot    1: 1024 op, 84921500.00 ns, 82.9312 us/op
+WorkloadPilot    2: 3072 op, 239717200.00 ns, 78.0329 us/op
+
+WorkloadWarmup   1: 3072 op, 162941900.00 ns, 53.0410 us/op
+WorkloadWarmup   2: 3072 op, 155068800.00 ns, 50.4781 us/op
+WorkloadWarmup   3: 3072 op, 229104300.00 ns, 74.5782 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 3072 op, 173844700.00 ns, 56.5901 us/op
+WorkloadActual   2: 3072 op, 194772800.00 ns, 63.4026 us/op
+WorkloadActual   3: 3072 op, 179810500.00 ns, 58.5321 us/op
+WorkloadActual   4: 3072 op, 216368300.00 ns, 70.4324 us/op
+WorkloadActual   5: 3072 op, 144519200.00 ns, 47.0440 us/op
+WorkloadActual   6: 3072 op, 133356900.00 ns, 43.4104 us/op
+WorkloadActual   7: 3072 op, 112515700.00 ns, 36.6262 us/op
+WorkloadActual   8: 3072 op, 98814900.00 ns, 32.1663 us/op
+WorkloadActual   9: 3072 op, 116982600.00 ns, 38.0803 us/op
+WorkloadActual  10: 3072 op, 170663700.00 ns, 55.5546 us/op
+
+// AfterActualRun
+WorkloadResult   1: 3072 op, 173844700.00 ns, 56.5901 us/op
+WorkloadResult   2: 3072 op, 194772800.00 ns, 63.4026 us/op
+WorkloadResult   3: 3072 op, 179810500.00 ns, 58.5321 us/op
+WorkloadResult   4: 3072 op, 216368300.00 ns, 70.4324 us/op
+WorkloadResult   5: 3072 op, 144519200.00 ns, 47.0440 us/op
+WorkloadResult   6: 3072 op, 133356900.00 ns, 43.4104 us/op
+WorkloadResult   7: 3072 op, 112515700.00 ns, 36.6262 us/op
+WorkloadResult   8: 3072 op, 98814900.00 ns, 32.1663 us/op
+WorkloadResult   9: 3072 op, 116982600.00 ns, 38.0803 us/op
+WorkloadResult  10: 3072 op, 170663700.00 ns, 55.5546 us/op
+// GC:  2 0 0 20160056 3072
+// Threading:  6113 0 3072
+
+// AfterAll
+// Benchmark Process 32880 has exited with code 0.
+
+Mean = 50.184 us, StdErr = 3.993 us (7.96%), N = 10, StdDev = 12.627 us
+Min = 32.166 us, Q1 = 39.413 us, Median = 51.299 us, Q3 = 58.047 us, Max = 70.432 us
+IQR = 18.634 us, LowerFence = 11.462 us, UpperFence = 85.997 us
+ConfidenceInterval = [31.094 us; 69.274 us] (CI 99.9%), Margin = 19.090 us (38.04% of Mean)
+Skewness = 0.06, Kurtosis = 1.45, MValue = 4
+
+// ** Remained 9 (25.0%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=1024, CodecMode=StringAlloc, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1532 1116 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 1024, CodecMode: \"StringAlloc\", Transport: \"StreamFrame\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 27 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+OverheadJitting  1: 256 op, 152900.00 ns, 597.2656 ns/op
+WorkloadJitting  1: 256 op, 37546400.00 ns, 146.6656 us/op
+
+WorkloadPilot    1: 1024 op, 64910800.00 ns, 63.3895 us/op
+WorkloadPilot    2: 3840 op, 342717000.00 ns, 89.2492 us/op
+WorkloadPilot    3: 2816 op, 281333500.00 ns, 99.9054 us/op
+
+WorkloadWarmup   1: 2816 op, 214575600.00 ns, 76.1987 us/op
+WorkloadWarmup   2: 2816 op, 297236700.00 ns, 105.5528 us/op
+WorkloadWarmup   3: 2816 op, 239072400.00 ns, 84.8979 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 2816 op, 241159800.00 ns, 85.6391 us/op
+WorkloadActual   2: 2816 op, 233655000.00 ns, 82.9741 us/op
+WorkloadActual   3: 2816 op, 254604500.00 ns, 90.4135 us/op
+WorkloadActual   4: 2816 op, 227866000.00 ns, 80.9183 us/op
+WorkloadActual   5: 2816 op, 193067600.00 ns, 68.5609 us/op
+WorkloadActual   6: 2816 op, 182445000.00 ns, 64.7887 us/op
+WorkloadActual   7: 2816 op, 180084900.00 ns, 63.9506 us/op
+WorkloadActual   8: 2816 op, 148727200.00 ns, 52.8151 us/op
+WorkloadActual   9: 2816 op, 148986000.00 ns, 52.9070 us/op
+WorkloadActual  10: 2816 op, 155985300.00 ns, 55.3925 us/op
+
+// AfterActualRun
+WorkloadResult   1: 2816 op, 241159800.00 ns, 85.6391 us/op
+WorkloadResult   2: 2816 op, 233655000.00 ns, 82.9741 us/op
+WorkloadResult   3: 2816 op, 254604500.00 ns, 90.4135 us/op
+WorkloadResult   4: 2816 op, 227866000.00 ns, 80.9183 us/op
+WorkloadResult   5: 2816 op, 193067600.00 ns, 68.5609 us/op
+WorkloadResult   6: 2816 op, 182445000.00 ns, 64.7887 us/op
+WorkloadResult   7: 2816 op, 180084900.00 ns, 63.9506 us/op
+WorkloadResult   8: 2816 op, 148727200.00 ns, 52.8151 us/op
+WorkloadResult   9: 2816 op, 148986000.00 ns, 52.9070 us/op
+WorkloadResult  10: 2816 op, 155985300.00 ns, 55.3925 us/op
+// GC:  2 0 0 21723696 2816
+// Threading:  22506 1 2816
+
+// AfterAll
+// Benchmark Process 52248 has exited with code 0.
+
+Mean = 69.836 us, StdErr = 4.491 us (6.43%), N = 10, StdDev = 14.202 us
+Min = 52.815 us, Q1 = 57.532 us, Median = 66.675 us, Q3 = 82.460 us, Max = 90.414 us
+IQR = 24.928 us, LowerFence = 20.140 us, UpperFence = 119.852 us
+ConfidenceInterval = [48.365 us; 91.307 us] (CI 99.9%), Margin = 21.471 us (30.75% of Mean)
+Skewness = 0.11, Kurtosis = 1.22, MValue = 3.33
+
+// ** Remained 8 (22.2%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=1024, CodecMode=StringSpan, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1028 1020 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 1024, CodecMode: \"StringSpan\", Transport: \"DirectTcp\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 28 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+OverheadJitting  1: 256 op, 147100.00 ns, 574.6094 ns/op
+WorkloadJitting  1: 256 op, 22581200.00 ns, 88.2078 us/op
+
+WorkloadPilot    1: 1024 op, 52801100.00 ns, 51.5636 us/op
+WorkloadPilot    2: 4864 op, 251376500.00 ns, 51.6810 us/op
+
+WorkloadWarmup   1: 4864 op, 226793600.00 ns, 46.6270 us/op
+WorkloadWarmup   2: 4864 op, 222685600.00 ns, 45.7824 us/op
+WorkloadWarmup   3: 4864 op, 204872600.00 ns, 42.1202 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 4864 op, 200329300.00 ns, 41.1861 us/op
+WorkloadActual   2: 4864 op, 285336900.00 ns, 58.6630 us/op
+WorkloadActual   3: 4864 op, 223699000.00 ns, 45.9907 us/op
+WorkloadActual   4: 4864 op, 195971100.00 ns, 40.2901 us/op
+WorkloadActual   5: 4864 op, 199232100.00 ns, 40.9605 us/op
+WorkloadActual   6: 4864 op, 192734700.00 ns, 39.6247 us/op
+WorkloadActual   7: 4864 op, 170313100.00 ns, 35.0150 us/op
+WorkloadActual   8: 4864 op, 169224200.00 ns, 34.7912 us/op
+WorkloadActual   9: 4864 op, 176772800.00 ns, 36.3431 us/op
+WorkloadActual  10: 4864 op, 181530100.00 ns, 37.3212 us/op
+
+// AfterActualRun
+WorkloadResult   1: 4864 op, 200329300.00 ns, 41.1861 us/op
+WorkloadResult   2: 4864 op, 285336900.00 ns, 58.6630 us/op
+WorkloadResult   3: 4864 op, 223699000.00 ns, 45.9907 us/op
+WorkloadResult   4: 4864 op, 195971100.00 ns, 40.2901 us/op
+WorkloadResult   5: 4864 op, 199232100.00 ns, 40.9605 us/op
+WorkloadResult   6: 4864 op, 192734700.00 ns, 39.6247 us/op
+WorkloadResult   7: 4864 op, 170313100.00 ns, 35.0150 us/op
+WorkloadResult   8: 4864 op, 169224200.00 ns, 34.7912 us/op
+WorkloadResult   9: 4864 op, 176772800.00 ns, 36.3431 us/op
+WorkloadResult  10: 4864 op, 181530100.00 ns, 37.3212 us/op
+// GC:  2 0 0 21725208 4864
+// Threading:  9673 0 4864
+
+// AfterAll
+// Benchmark Process 46188 has exited with code 0.
+
+Mean = 41.019 us, StdErr = 2.233 us (5.44%), N = 10, StdDev = 7.062 us
+Min = 34.791 us, Q1 = 36.588 us, Median = 39.957 us, Q3 = 41.130 us, Max = 58.663 us
+IQR = 4.542 us, LowerFence = 29.774 us, UpperFence = 47.943 us
+ConfidenceInterval = [30.341 us; 51.696 us] (CI 99.9%), Margin = 10.677 us (26.03% of Mean)
+Skewness = 1.42, Kurtosis = 4.06, MValue = 2.4
+
+// ** Remained 7 (19.4%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=1024, CodecMode=StringSpan, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1608 1612 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 1024, CodecMode: \"StringSpan\", Transport: \"StreamFrame\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 29 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+OverheadJitting  1: 256 op, 172100.00 ns, 672.2656 ns/op
+WorkloadJitting  1: 256 op, 53524700.00 ns, 209.0809 us/op
+
+WorkloadPilot    1: 1024 op, 152679100.00 ns, 149.1007 us/op
+WorkloadPilot    2: 1792 op, 233159800.00 ns, 130.1115 us/op
+
+WorkloadWarmup   1: 1792 op, 191192000.00 ns, 106.6920 us/op
+WorkloadWarmup   2: 1792 op, 211403700.00 ns, 117.9708 us/op
+WorkloadWarmup   3: 1792 op, 211554000.00 ns, 118.0547 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 1792 op, 212842400.00 ns, 118.7737 us/op
+WorkloadActual   2: 1792 op, 133429400.00 ns, 74.4584 us/op
+WorkloadActual   3: 1792 op, 131200000.00 ns, 73.2143 us/op
+WorkloadActual   4: 1792 op, 121867600.00 ns, 68.0065 us/op
+WorkloadActual   5: 1792 op, 128456100.00 ns, 71.6831 us/op
+WorkloadActual   6: 1792 op, 132956100.00 ns, 74.1943 us/op
+WorkloadActual   7: 1792 op, 125456400.00 ns, 70.0092 us/op
+WorkloadActual   8: 1792 op, 211784200.00 ns, 118.1831 us/op
+WorkloadActual   9: 1792 op, 179329400.00 ns, 100.0722 us/op
+WorkloadActual  10: 1792 op, 170001800.00 ns, 94.8671 us/op
+
+// AfterActualRun
+WorkloadResult   1: 1792 op, 212842400.00 ns, 118.7737 us/op
+WorkloadResult   2: 1792 op, 133429400.00 ns, 74.4584 us/op
+WorkloadResult   3: 1792 op, 131200000.00 ns, 73.2143 us/op
+WorkloadResult   4: 1792 op, 121867600.00 ns, 68.0065 us/op
+WorkloadResult   5: 1792 op, 128456100.00 ns, 71.6831 us/op
+WorkloadResult   6: 1792 op, 132956100.00 ns, 74.1943 us/op
+WorkloadResult   7: 1792 op, 125456400.00 ns, 70.0092 us/op
+WorkloadResult   8: 1792 op, 211784200.00 ns, 118.1831 us/op
+WorkloadResult   9: 1792 op, 179329400.00 ns, 100.0722 us/op
+WorkloadResult  10: 1792 op, 170001800.00 ns, 94.8671 us/op
+// GC:  1 0 0 10069616 1792
+// Threading:  14334 0 1792
+
+// AfterAll
+// Benchmark Process 13536 has exited with code 0.
+
+Mean = 86.346 us, StdErr = 6.330 us (7.33%), N = 10, StdDev = 20.016 us
+Min = 68.006 us, Q1 = 72.066 us, Median = 74.326 us, Q3 = 98.771 us, Max = 118.774 us
+IQR = 26.705 us, LowerFence = 32.008 us, UpperFence = 138.828 us
+ConfidenceInterval = [56.085 us; 116.608 us] (CI 99.9%), Margin = 30.262 us (35.05% of Mean)
+Skewness = 0.63, Kurtosis = 1.54, MValue = 3.33
+
+// ** Remained 6 (16.7%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=65536, CodecMode=Bytes, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1480 1008 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 65536, CodecMode: \"Bytes\", Transport: \"DirectTcp\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 30 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+OverheadJitting  1: 256 op, 245500.00 ns, 958.9844 ns/op
+WorkloadJitting  1: 256 op, 41408500.00 ns, 161.7520 us/op
+
+WorkloadPilot    1: 1024 op, 127453800.00 ns, 124.4666 us/op
+WorkloadPilot    2: 2048 op, 272186300.00 ns, 132.9035 us/op
+
+WorkloadWarmup   1: 2048 op, 273737300.00 ns, 133.6608 us/op
+WorkloadWarmup   2: 2048 op, 287842900.00 ns, 140.5483 us/op
+WorkloadWarmup   3: 2048 op, 248593600.00 ns, 121.3836 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 2048 op, 244349900.00 ns, 119.3115 us/op
+WorkloadActual   2: 2048 op, 195038800.00 ns, 95.2338 us/op
+WorkloadActual   3: 2048 op, 197974700.00 ns, 96.6673 us/op
+WorkloadActual   4: 2048 op, 192185400.00 ns, 93.8405 us/op
+WorkloadActual   5: 2048 op, 187719300.00 ns, 91.6598 us/op
+WorkloadActual   6: 2048 op, 185440200.00 ns, 90.5470 us/op
+WorkloadActual   7: 2048 op, 185196200.00 ns, 90.4278 us/op
+WorkloadActual   8: 2048 op, 184659500.00 ns, 90.1658 us/op
+WorkloadActual   9: 2048 op, 188772100.00 ns, 92.1739 us/op
+WorkloadActual  10: 2048 op, 197856100.00 ns, 96.6094 us/op
+
+// AfterActualRun
+WorkloadResult   1: 2048 op, 244349900.00 ns, 119.3115 us/op
+WorkloadResult   2: 2048 op, 195038800.00 ns, 95.2338 us/op
+WorkloadResult   3: 2048 op, 197974700.00 ns, 96.6673 us/op
+WorkloadResult   4: 2048 op, 192185400.00 ns, 93.8405 us/op
+WorkloadResult   5: 2048 op, 187719300.00 ns, 91.6598 us/op
+WorkloadResult   6: 2048 op, 185440200.00 ns, 90.5470 us/op
+WorkloadResult   7: 2048 op, 185196200.00 ns, 90.4278 us/op
+WorkloadResult   8: 2048 op, 184659500.00 ns, 90.1658 us/op
+WorkloadResult   9: 2048 op, 188772100.00 ns, 92.1739 us/op
+WorkloadResult  10: 2048 op, 197856100.00 ns, 96.6094 us/op
+// GC:  28 8 0 269195768 2048
+// Threading:  4083 0 2048
+
+// AfterAll
+// Benchmark Process 40704 has exited with code 0.
+
+Mean = 95.664 us, StdErr = 2.742 us (2.87%), N = 10, StdDev = 8.671 us
+Min = 90.166 us, Q1 = 90.825 us, Median = 93.007 us, Q3 = 96.266 us, Max = 119.311 us
+IQR = 5.440 us, LowerFence = 82.665 us, UpperFence = 104.426 us
+ConfidenceInterval = [82.555 us; 108.773 us] (CI 99.9%), Margin = 13.109 us (13.70% of Mean)
+Skewness = 1.94, Kurtosis = 5.58, MValue = 2
+
+// ** Remained 5 (13.9%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=65536, CodecMode=Bytes, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 920 1344 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 65536, CodecMode: \"Bytes\", Transport: \"StreamFrame\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 31 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+OverheadJitting  1: 256 op, 204300.00 ns, 798.0469 ns/op
+WorkloadJitting  1: 256 op, 97377200.00 ns, 380.3797 us/op
+
+WorkloadPilot    1: 1024 op, 254913500.00 ns, 248.9390 us/op
+
+WorkloadWarmup   1: 1024 op, 247160400.00 ns, 241.3676 us/op
+WorkloadWarmup   2: 1024 op, 251898400.00 ns, 245.9945 us/op
+WorkloadWarmup   3: 1024 op, 241991100.00 ns, 236.3194 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 1024 op, 259007700.00 ns, 252.9372 us/op
+WorkloadActual   2: 1024 op, 234226700.00 ns, 228.7370 us/op
+WorkloadActual   3: 1024 op, 191251600.00 ns, 186.7691 us/op
+WorkloadActual   4: 1024 op, 187166700.00 ns, 182.7800 us/op
+WorkloadActual   5: 1024 op, 164973400.00 ns, 161.1068 us/op
+WorkloadActual   6: 1024 op, 157194800.00 ns, 153.5105 us/op
+WorkloadActual   7: 1024 op, 159878300.00 ns, 156.1312 us/op
+WorkloadActual   8: 1024 op, 179808100.00 ns, 175.5938 us/op
+WorkloadActual   9: 1024 op, 158374400.00 ns, 154.6625 us/op
+WorkloadActual  10: 1024 op, 171710600.00 ns, 167.6861 us/op
+
+// AfterActualRun
+WorkloadResult   1: 1024 op, 259007700.00 ns, 252.9372 us/op
+WorkloadResult   2: 1024 op, 234226700.00 ns, 228.7370 us/op
+WorkloadResult   3: 1024 op, 191251600.00 ns, 186.7691 us/op
+WorkloadResult   4: 1024 op, 187166700.00 ns, 182.7800 us/op
+WorkloadResult   5: 1024 op, 164973400.00 ns, 161.1068 us/op
+WorkloadResult   6: 1024 op, 157194800.00 ns, 153.5105 us/op
+WorkloadResult   7: 1024 op, 159878300.00 ns, 156.1312 us/op
+WorkloadResult   8: 1024 op, 179808100.00 ns, 175.5938 us/op
+WorkloadResult   9: 1024 op, 158374400.00 ns, 154.6625 us/op
+WorkloadResult  10: 1024 op, 171710600.00 ns, 167.6861 us/op
+// GC:  15 3 0 135777024 1024
+// Threading:  12282 0 1024
+
+// AfterAll
+// Benchmark Process 55776 has exited with code 0.
+
+Mean = 181.991 us, StdErr = 10.620 us (5.84%), N = 10, StdDev = 33.583 us
+Min = 153.511 us, Q1 = 157.375 us, Median = 171.640 us, Q3 = 185.772 us, Max = 252.937 us
+IQR = 28.397 us, LowerFence = 114.780 us, UpperFence = 228.367 us
+ConfidenceInterval = [131.219 us; 232.764 us] (CI 99.9%), Margin = 50.773 us (27.90% of Mean)
+Skewness = 1.02, Kurtosis = 2.52, MValue = 2
+
+// ** Remained 4 (11.1%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=65536, CodecMode=StringAlloc, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1560 1584 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 65536, CodecMode: \"StringAlloc\", Transport: \"DirectTcp\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 32 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+OverheadJitting  1: 256 op, 135000.00 ns, 527.3438 ns/op
+WorkloadJitting  1: 256 op, 73828200.00 ns, 288.3914 us/op
+
+WorkloadPilot    1: 1024 op, 258800600.00 ns, 252.7350 us/op
+
+WorkloadWarmup   1: 1024 op, 260467600.00 ns, 254.3629 us/op
+WorkloadWarmup   2: 1024 op, 283809000.00 ns, 277.1572 us/op
+WorkloadWarmup   3: 1024 op, 250892000.00 ns, 245.0117 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 1024 op, 242557500.00 ns, 236.8726 us/op
+WorkloadActual   2: 1024 op, 219955100.00 ns, 214.7999 us/op
+WorkloadActual   3: 1024 op, 198719200.00 ns, 194.0617 us/op
+WorkloadActual   4: 1024 op, 179595700.00 ns, 175.3864 us/op
+WorkloadActual   5: 1024 op, 223012500.00 ns, 217.7856 us/op
+WorkloadActual   6: 1024 op, 244272000.00 ns, 238.5469 us/op
+WorkloadActual   7: 1024 op, 190140700.00 ns, 185.6843 us/op
+WorkloadActual   8: 1024 op, 151331300.00 ns, 147.7845 us/op
+WorkloadActual   9: 1024 op, 151345200.00 ns, 147.7980 us/op
+WorkloadActual  10: 1024 op, 152249900.00 ns, 148.6815 us/op
+
+// AfterActualRun
+WorkloadResult   1: 1024 op, 242557500.00 ns, 236.8726 us/op
+WorkloadResult   2: 1024 op, 219955100.00 ns, 214.7999 us/op
+WorkloadResult   3: 1024 op, 198719200.00 ns, 194.0617 us/op
+WorkloadResult   4: 1024 op, 179595700.00 ns, 175.3864 us/op
+WorkloadResult   5: 1024 op, 223012500.00 ns, 217.7856 us/op
+WorkloadResult   6: 1024 op, 244272000.00 ns, 238.5469 us/op
+WorkloadResult   7: 1024 op, 190140700.00 ns, 185.6843 us/op
+WorkloadResult   8: 1024 op, 151331300.00 ns, 147.7845 us/op
+WorkloadResult   9: 1024 op, 151345200.00 ns, 147.7980 us/op
+WorkloadResult  10: 1024 op, 152249900.00 ns, 148.6815 us/op
+// GC:  95 80 80 403716152 1024
+// Threading:  2048 1 1024
+
+// AfterAll
+// Benchmark Process 48600 has exited with code 0.
+
+Mean = 190.740 us, StdErr = 11.281 us (5.91%), N = 10, StdDev = 35.675 us
+Min = 147.784 us, Q1 = 155.358 us, Median = 189.873 us, Q3 = 217.039 us, Max = 238.547 us
+IQR = 61.681 us, LowerFence = 62.836 us, UpperFence = 309.561 us
+ConfidenceInterval = [136.804 us; 244.676 us] (CI 99.9%), Margin = 53.936 us (28.28% of Mean)
+Skewness = 0.01, Kurtosis = 1.27, MValue = 3.2
+
+// ** Remained 3 (8.3%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=65536, CodecMode=StringAlloc, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1492 888 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 65536, CodecMode: \"StringAlloc\", Transport: \"StreamFrame\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 33 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+OverheadJitting  1: 256 op, 142800.00 ns, 557.8125 ns/op
+WorkloadJitting  1: 256 op, 94242400.00 ns, 368.1344 us/op
+
+WorkloadPilot    1: 1024 op, 295421300.00 ns, 288.4974 us/op
+
+WorkloadWarmup   1: 1024 op, 339720000.00 ns, 331.7578 us/op
+WorkloadWarmup   2: 1024 op, 367663300.00 ns, 359.0462 us/op
+WorkloadWarmup   3: 1024 op, 309221900.00 ns, 301.9745 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 1024 op, 302047600.00 ns, 294.9684 us/op
+WorkloadActual   2: 1024 op, 274019600.00 ns, 267.5973 us/op
+WorkloadActual   3: 1024 op, 230963900.00 ns, 225.5507 us/op
+WorkloadActual   4: 1024 op, 214015500.00 ns, 208.9995 us/op
+WorkloadActual   5: 1024 op, 216162600.00 ns, 211.0963 us/op
+WorkloadActual   6: 1024 op, 232697400.00 ns, 227.2436 us/op
+WorkloadActual   7: 1024 op, 219836500.00 ns, 214.6841 us/op
+WorkloadActual   8: 1024 op, 231169900.00 ns, 225.7519 us/op
+WorkloadActual   9: 1024 op, 258704700.00 ns, 252.6413 us/op
+WorkloadActual  10: 1024 op, 298743700.00 ns, 291.7419 us/op
+
+// AfterActualRun
+WorkloadResult   1: 1024 op, 302047600.00 ns, 294.9684 us/op
+WorkloadResult   2: 1024 op, 274019600.00 ns, 267.5973 us/op
+WorkloadResult   3: 1024 op, 230963900.00 ns, 225.5507 us/op
+WorkloadResult   4: 1024 op, 214015500.00 ns, 208.9995 us/op
+WorkloadResult   5: 1024 op, 216162600.00 ns, 211.0963 us/op
+WorkloadResult   6: 1024 op, 232697400.00 ns, 227.2436 us/op
+WorkloadResult   7: 1024 op, 219836500.00 ns, 214.6841 us/op
+WorkloadResult   8: 1024 op, 231169900.00 ns, 225.7519 us/op
+WorkloadResult   9: 1024 op, 258704700.00 ns, 252.6413 us/op
+WorkloadResult  10: 1024 op, 298743700.00 ns, 291.7419 us/op
+// GC:  93 78 78 405776112 1024
+// Threading:  12286 0 1024
+
+// AfterAll
+// Benchmark Process 68544 has exited with code 0.
+
+Mean = 242.027 us, StdErr = 10.323 us (4.27%), N = 10, StdDev = 32.644 us
+Min = 209.000 us, Q1 = 217.401 us, Median = 226.498 us, Q3 = 263.858 us, Max = 294.968 us
+IQR = 46.458 us, LowerFence = 147.714 us, UpperFence = 333.545 us
+ConfidenceInterval = [192.674 us; 291.381 us] (CI 99.9%), Margin = 49.354 us (20.39% of Mean)
+Skewness = 0.55, Kurtosis = 1.52, MValue = 2.67
+
+// ** Remained 2 (5.6%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=65536, CodecMode=StringSpan, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1008 1504 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 65536, CodecMode: \"StringSpan\", Transport: \"DirectTcp\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 34 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+OverheadJitting  1: 256 op, 138500.00 ns, 541.0156 ns/op
+WorkloadJitting  1: 256 op, 67169300.00 ns, 262.3801 us/op
+
+WorkloadPilot    1: 1024 op, 213179700.00 ns, 208.1833 us/op
+
+WorkloadWarmup   1: 1024 op, 199657300.00 ns, 194.9778 us/op
+WorkloadWarmup   2: 1024 op, 202914300.00 ns, 198.1585 us/op
+WorkloadWarmup   3: 1024 op, 212916500.00 ns, 207.9263 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 1024 op, 213741800.00 ns, 208.7322 us/op
+WorkloadActual   2: 1024 op, 245084400.00 ns, 239.3402 us/op
+WorkloadActual   3: 1024 op, 221092900.00 ns, 215.9110 us/op
+WorkloadActual   4: 1024 op, 220068800.00 ns, 214.9109 us/op
+WorkloadActual   5: 1024 op, 201227000.00 ns, 196.5107 us/op
+WorkloadActual   6: 1024 op, 184782700.00 ns, 180.4519 us/op
+WorkloadActual   7: 1024 op, 167132800.00 ns, 163.2156 us/op
+WorkloadActual   8: 1024 op, 171328500.00 ns, 167.3130 us/op
+WorkloadActual   9: 1024 op, 155115100.00 ns, 151.4796 us/op
+WorkloadActual  10: 1024 op, 183256800.00 ns, 178.9617 us/op
+
+// AfterActualRun
+WorkloadResult   1: 1024 op, 213741800.00 ns, 208.7322 us/op
+WorkloadResult   2: 1024 op, 245084400.00 ns, 239.3402 us/op
+WorkloadResult   3: 1024 op, 221092900.00 ns, 215.9110 us/op
+WorkloadResult   4: 1024 op, 220068800.00 ns, 214.9109 us/op
+WorkloadResult   5: 1024 op, 201227000.00 ns, 196.5107 us/op
+WorkloadResult   6: 1024 op, 184782700.00 ns, 180.4519 us/op
+WorkloadResult   7: 1024 op, 167132800.00 ns, 163.2156 us/op
+WorkloadResult   8: 1024 op, 171328500.00 ns, 167.3130 us/op
+WorkloadResult   9: 1024 op, 155115100.00 ns, 151.4796 us/op
+WorkloadResult  10: 1024 op, 183256800.00 ns, 178.9617 us/op
+// GC:  85 85 85 268897080 1024
+// Threading:  2044 0 1024
+
+// AfterAll
+// Benchmark Process 38792 has exited with code 0.
+
+Mean = 191.683 us, StdErr = 8.832 us (4.61%), N = 10, StdDev = 27.929 us
+Min = 151.480 us, Q1 = 170.225 us, Median = 188.481 us, Q3 = 213.366 us, Max = 239.340 us
+IQR = 43.141 us, LowerFence = 105.514 us, UpperFence = 278.078 us
+ConfidenceInterval = [149.458 us; 233.907 us] (CI 99.9%), Margin = 42.225 us (22.03% of Mean)
+Skewness = 0.16, Kurtosis = 1.57, MValue = 2
+
+// ** Remained 1 (2.8%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=65536, CodecMode=StringSpan, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Job-JTGOSM-1.dll --anonymousPipes 1108 1584 --benchmarkName "StreamFrame.Benchmarks.RoundTripLatencyBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 65536, CodecMode: \"StringSpan\", Transport: \"StreamFrame\")" --job "OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3" --benchmarkId 35 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Job-JTGOSM-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+OverheadJitting  1: 256 op, 142900.00 ns, 558.2031 ns/op
+WorkloadJitting  1: 256 op, 108826300.00 ns, 425.1027 us/op
+
+WorkloadPilot    1: 1024 op, 333413800.00 ns, 325.5994 us/op
+
+WorkloadWarmup   1: 1024 op, 345022200.00 ns, 336.9357 us/op
+WorkloadWarmup   2: 1024 op, 519693300.00 ns, 507.5130 us/op
+WorkloadWarmup   3: 1024 op, 344155500.00 ns, 336.0894 us/op
+
+// BeforeActualRun
+WorkloadActual   1: 1024 op, 303109400.00 ns, 296.0053 us/op
+WorkloadActual   2: 1024 op, 290600600.00 ns, 283.7896 us/op
+WorkloadActual   3: 1024 op, 195113000.00 ns, 190.5400 us/op
+WorkloadActual   4: 1024 op, 206132800.00 ns, 201.3016 us/op
+WorkloadActual   5: 1024 op, 205860500.00 ns, 201.0356 us/op
+WorkloadActual   6: 1024 op, 240354900.00 ns, 234.7216 us/op
+WorkloadActual   7: 1024 op, 204596600.00 ns, 199.8014 us/op
+WorkloadActual   8: 1024 op, 203458300.00 ns, 198.6897 us/op
+WorkloadActual   9: 1024 op, 211620200.00 ns, 206.6604 us/op
+WorkloadActual  10: 1024 op, 209190900.00 ns, 204.2880 us/op
+
+// AfterActualRun
+WorkloadResult   1: 1024 op, 303109400.00 ns, 296.0053 us/op
+WorkloadResult   2: 1024 op, 290600600.00 ns, 283.7896 us/op
+WorkloadResult   3: 1024 op, 195113000.00 ns, 190.5400 us/op
+WorkloadResult   4: 1024 op, 206132800.00 ns, 201.3016 us/op
+WorkloadResult   5: 1024 op, 205860500.00 ns, 201.0356 us/op
+WorkloadResult   6: 1024 op, 240354900.00 ns, 234.7216 us/op
+WorkloadResult   7: 1024 op, 204596600.00 ns, 199.8014 us/op
+WorkloadResult   8: 1024 op, 203458300.00 ns, 198.6897 us/op
+WorkloadResult   9: 1024 op, 211620200.00 ns, 206.6604 us/op
+WorkloadResult  10: 1024 op, 209190900.00 ns, 204.2880 us/op
+// GC:  78 78 78 271375912 1024
+// Threading:  12287 1 1024
+
+// AfterAll
+// Benchmark Process 23096 has exited with code 0.
+
+Mean = 221.683 us, StdErr = 11.971 us (5.40%), N = 10, StdDev = 37.857 us
+Min = 190.540 us, Q1 = 200.110 us, Median = 202.795 us, Q3 = 227.706 us, Max = 296.005 us
+IQR = 27.596 us, LowerFence = 158.715 us, UpperFence = 269.101 us
+ConfidenceInterval = [164.449 us; 278.918 us] (CI 99.9%), Margin = 57.234 us (25.82% of Mean)
+Skewness = 1.06, Kurtosis = 2.31, MValue = 2.29
+
+// ** Remained 0 (0.0%) benchmark(s) to run. Estimated finish 2026-09-08 18:12 (0h 0m from now) **
+Successfully reverted power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// ***** BenchmarkRunner: Finish  *****
+
+// * Export *
+  bench\results\issue-70\rtt\results\StreamFrame.Benchmarks.RoundTripLatencyBenchmarks-report.csv
+  bench\results\issue-70\rtt\results\StreamFrame.Benchmarks.RoundTripLatencyBenchmarks-report-github.md
+  bench\results\issue-70\rtt\results\StreamFrame.Benchmarks.RoundTripLatencyBenchmarks-report.html
+  bench\results\issue-70\rtt\results\StreamFrame.Benchmarks.RoundTripLatencyBenchmarks-report-full-compressed.json
+
+// * Detailed results *
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=Bytes, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 35.477 us, StdErr = 1.185 us (3.34%), N = 10, StdDev = 3.749 us
+Min = 29.837 us, Q1 = 33.688 us, Median = 34.464 us, Q3 = 36.868 us, Max = 44.210 us
+IQR = 3.179 us, LowerFence = 28.919 us, UpperFence = 41.637 us
+ConfidenceInterval = [29.810 us; 41.145 us] (CI 99.9%), Margin = 5.668 us (15.98% of Mean)
+Skewness = 0.9, Kurtosis = 3.48, MValue = 2.4
+-------------------- Histogram --------------------
+[27.554 us ; 32.957 us) | @
+[32.957 us ; 37.525 us) | @@@@@@@@
+[37.525 us ; 41.926 us) | 
+[41.926 us ; 46.493 us) | @
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=Bytes, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 48.486 us, StdErr = 1.771 us (3.65%), N = 10, StdDev = 5.602 us
+Min = 41.215 us, Q1 = 43.819 us, Median = 47.673 us, Q3 = 52.537 us, Max = 57.164 us
+IQR = 8.718 us, LowerFence = 30.742 us, UpperFence = 65.614 us
+ConfidenceInterval = [40.017 us; 56.955 us] (CI 99.9%), Margin = 8.469 us (17.47% of Mean)
+Skewness = 0.2, Kurtosis = 1.35, MValue = 3.33
+-------------------- Histogram --------------------
+[41.136 us ; 47.961 us) | @@@@@@
+[47.961 us ; 51.244 us) | 
+[51.244 us ; 58.069 us) | @@@@
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=StringAlloc, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 35.641 us, StdErr = 2.199 us (6.17%), N = 10, StdDev = 6.955 us
+Min = 29.043 us, Q1 = 30.460 us, Median = 33.348 us, Q3 = 37.991 us, Max = 50.268 us
+IQR = 7.531 us, LowerFence = 19.164 us, UpperFence = 49.287 us
+ConfidenceInterval = [25.126 us; 46.156 us] (CI 99.9%), Margin = 10.515 us (29.50% of Mean)
+Skewness = 0.9, Kurtosis = 2.39, MValue = 2
+-------------------- Histogram --------------------
+[28.293 us ; 36.767 us) | @@@@@@@
+[36.767 us ; 45.695 us) | @@
+[45.695 us ; 54.505 us) | @
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=StringAlloc, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 67.753 us, StdErr = 7.236 us (10.68%), N = 10, StdDev = 22.882 us
+Min = 43.187 us, Q1 = 47.705 us, Median = 60.825 us, Q3 = 87.934 us, Max = 105.834 us
+IQR = 40.229 us, LowerFence = -12.638 us, UpperFence = 148.277 us
+ConfidenceInterval = [33.159 us; 102.348 us] (CI 99.9%), Margin = 34.595 us (51.06% of Mean)
+Skewness = 0.39, Kurtosis = 1.39, MValue = 2.67
+-------------------- Histogram --------------------
+[38.554 us ;  66.434 us) | @@@@@@
+[66.434 us ;  84.643 us) | @
+[84.643 us ; 112.523 us) | @@@
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=StringSpan, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 32.874 us, StdErr = 1.073 us (3.26%), N = 10, StdDev = 3.394 us
+Min = 28.619 us, Q1 = 30.127 us, Median = 32.760 us, Q3 = 34.782 us, Max = 38.561 us
+IQR = 4.655 us, LowerFence = 23.145 us, UpperFence = 41.764 us
+ConfidenceInterval = [27.743 us; 38.005 us] (CI 99.9%), Margin = 5.131 us (15.61% of Mean)
+Skewness = 0.21, Kurtosis = 1.49, MValue = 2
+-------------------- Histogram --------------------
+[27.985 us ; 32.120 us) | @@@@@
+[32.120 us ; 37.483 us) | @@@@
+[37.483 us ; 40.629 us) | @
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=StringSpan, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 53.994 us, StdErr = 2.914 us (5.40%), N = 10, StdDev = 9.215 us
+Min = 42.697 us, Q1 = 46.849 us, Median = 52.914 us, Q3 = 63.054 us, Max = 66.112 us
+IQR = 16.206 us, LowerFence = 22.540 us, UpperFence = 87.363 us
+ConfidenceInterval = [40.063 us; 67.925 us] (CI 99.9%), Margin = 13.931 us (25.80% of Mean)
+Skewness = 0.08, Kurtosis = 1.16, MValue = 2
+-------------------- Histogram --------------------
+[41.032 us ; 52.259 us) | @@@@@
+[52.259 us ; 66.286 us) | @@@@@
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=Bytes, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 37.925 us, StdErr = 1.430 us (3.77%), N = 10, StdDev = 4.523 us
+Min = 31.226 us, Q1 = 34.155 us, Median = 38.720 us, Q3 = 41.436 us, Max = 43.605 us
+IQR = 7.282 us, LowerFence = 23.232 us, UpperFence = 52.359 us
+ConfidenceInterval = [31.087 us; 44.764 us] (CI 99.9%), Margin = 6.839 us (18.03% of Mean)
+Skewness = -0.18, Kurtosis = 1.26, MValue = 3.2
+-------------------- Histogram --------------------
+[30.593 us ; 36.105 us) | @@@@
+[36.105 us ; 39.051 us) | @
+[39.051 us ; 44.562 us) | @@@@@
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=Bytes, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 63.184 us, StdErr = 9.087 us (14.38%), N = 10, StdDev = 28.735 us
+Min = 42.858 us, Q1 = 46.817 us, Median = 52.237 us, Q3 = 61.589 us, Max = 131.876 us
+IQR = 14.772 us, LowerFence = 24.660 us, UpperFence = 83.747 us
+ConfidenceInterval = [19.740 us; 106.628 us] (CI 99.9%), Margin = 43.444 us (68.76% of Mean)
+Skewness = 1.4, Kurtosis = 3.51, MValue = 2.33
+-------------------- Histogram --------------------
+[ 36.214 us ;  71.225 us) | @@@@@@@@
+[ 71.225 us ; 113.609 us) | @
+[113.609 us ; 149.382 us) | @
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=StringAlloc, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 39.836 us, StdErr = 1.604 us (4.03%), N = 10, StdDev = 5.072 us
+Min = 30.823 us, Q1 = 36.097 us, Median = 40.273 us, Q3 = 43.717 us, Max = 47.196 us
+IQR = 7.620 us, LowerFence = 24.668 us, UpperFence = 55.146 us
+ConfidenceInterval = [32.168 us; 47.503 us] (CI 99.9%), Margin = 7.668 us (19.25% of Mean)
+Skewness = -0.2, Kurtosis = 1.7, MValue = 2
+-------------------- Histogram --------------------
+[27.733 us ; 33.912 us) | @
+[33.912 us ; 41.537 us) | @@@@@
+[41.537 us ; 47.873 us) | @@@@
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=StringAlloc, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 66.594 us, StdErr = 4.452 us (6.69%), N = 10, StdDev = 14.079 us
+Min = 51.666 us, Q1 = 54.162 us, Median = 64.838 us, Q3 = 73.463 us, Max = 90.961 us
+IQR = 19.302 us, LowerFence = 25.209 us, UpperFence = 102.416 us
+ConfidenceInterval = [45.308 us; 87.879 us] (CI 99.9%), Margin = 21.285 us (31.96% of Mean)
+Skewness = 0.41, Kurtosis = 1.54, MValue = 2
+-------------------- Histogram --------------------
+[46.801 us ; 63.955 us) | @@@@@
+[63.955 us ; 86.389 us) | @@@@
+[86.389 us ; 99.538 us) | @
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=StringSpan, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 50.569 us, StdErr = 3.366 us (6.66%), N = 10, StdDev = 10.644 us
+Min = 35.944 us, Q1 = 42.345 us, Median = 52.360 us, Q3 = 55.895 us, Max = 70.694 us
+IQR = 13.550 us, LowerFence = 22.021 us, UpperFence = 76.219 us
+ConfidenceInterval = [34.476 us; 66.661 us] (CI 99.9%), Margin = 16.092 us (31.82% of Mean)
+Skewness = 0.16, Kurtosis = 2.03, MValue = 2
+-------------------- Histogram --------------------
+[31.479 us ; 47.010 us) | @@@
+[47.010 us ; 64.210 us) | @@@@@@
+[64.210 us ; 77.179 us) | @
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=StringSpan, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 89.834 us, StdErr = 5.514 us (6.14%), N = 10, StdDev = 17.435 us
+Min = 59.718 us, Q1 = 80.197 us, Median = 91.139 us, Q3 = 103.868 us, Max = 115.417 us
+IQR = 23.672 us, LowerFence = 44.689 us, UpperFence = 139.376 us
+ConfidenceInterval = [63.474 us; 116.194 us] (CI 99.9%), Margin = 26.360 us (29.34% of Mean)
+Skewness = -0.23, Kurtosis = 1.7, MValue = 2
+-------------------- Histogram --------------------
+[ 49.097 us ;  64.767 us) | @
+[ 64.767 us ;  87.559 us) | @@@
+[ 87.559 us ; 108.803 us) | @@@@@
+[108.803 us ; 126.039 us) | @
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=Bytes, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 100.908 us, StdErr = 2.389 us (2.37%), N = 10, StdDev = 7.556 us
+Min = 93.730 us, Q1 = 97.343 us, Median = 98.802 us, Q3 = 101.939 us, Max = 119.582 us
+IQR = 4.596 us, LowerFence = 90.449 us, UpperFence = 108.833 us
+ConfidenceInterval = [89.485 us; 112.331 us] (CI 99.9%), Margin = 11.423 us (11.32% of Mean)
+Skewness = 1.36, Kurtosis = 3.93, MValue = 2
+-------------------- Histogram --------------------
+[ 93.523 us ; 102.729 us) | @@@@@@@@
+[102.729 us ; 110.894 us) | @
+[110.894 us ; 114.979 us) | 
+[114.979 us ; 124.185 us) | @
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=Bytes, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 182.516 us, StdErr = 13.640 us (7.47%), N = 10, StdDev = 43.132 us
+Min = 127.886 us, Q1 = 141.787 us, Median = 186.823 us, Q3 = 213.893 us, Max = 253.178 us
+IQR = 72.106 us, LowerFence = 33.628 us, UpperFence = 322.053 us
+ConfidenceInterval = [117.307 us; 247.726 us] (CI 99.9%), Margin = 65.210 us (35.73% of Mean)
+Skewness = 0.04, Kurtosis = 1.47, MValue = 2
+-------------------- Histogram --------------------
+[101.610 us ; 156.671 us) | @@@
+[156.671 us ; 219.748 us) | @@@@@@
+[219.748 us ; 279.454 us) | @
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=StringAlloc, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 194.348 us, StdErr = 5.894 us (3.03%), N = 10, StdDev = 18.639 us
+Min = 179.429 us, Q1 = 182.047 us, Median = 189.852 us, Q3 = 196.716 us, Max = 242.475 us
+IQR = 14.669 us, LowerFence = 160.043 us, UpperFence = 218.720 us
+ConfidenceInterval = [166.168 us; 222.527 us] (CI 99.9%), Margin = 28.179 us (14.50% of Mean)
+Skewness = 1.59, Kurtosis = 4.55, MValue = 2
+-------------------- Histogram --------------------
+[176.871 us ; 199.581 us) | @@@@@@@@
+[199.581 us ; 214.299 us) | @
+[214.299 us ; 231.120 us) | 
+[231.120 us ; 253.829 us) | @
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=StringAlloc, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 305.262 us, StdErr = 20.071 us (6.58%), N = 10, StdDev = 63.471 us
+Min = 244.090 us, Q1 = 263.206 us, Median = 289.978 us, Q3 = 315.946 us, Max = 421.754 us
+IQR = 52.740 us, LowerFence = 184.095 us, UpperFence = 395.057 us
+ConfidenceInterval = [209.303 us; 401.220 us] (CI 99.9%), Margin = 95.958 us (31.43% of Mean)
+Skewness = 0.86, Kurtosis = 2.11, MValue = 2
+-------------------- Histogram --------------------
+[232.706 us ; 310.040 us) | @@@@@@@
+[310.040 us ; 377.926 us) | @
+[377.926 us ; 460.420 us) | @@
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=StringSpan, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 184.930 us, StdErr = 2.925 us (1.58%), N = 10, StdDev = 9.251 us
+Min = 172.336 us, Q1 = 178.392 us, Median = 183.543 us, Q3 = 192.282 us, Max = 198.620 us
+IQR = 13.890 us, LowerFence = 157.557 us, UpperFence = 213.117 us
+ConfidenceInterval = [170.944 us; 198.916 us] (CI 99.9%), Margin = 13.986 us (7.56% of Mean)
+Skewness = 0.11, Kurtosis = 1.34, MValue = 3.2
+-------------------- Histogram --------------------
+[171.822 us ; 183.094 us) | @@@@@
+[183.094 us ; 189.093 us) | @
+[189.093 us ; 200.365 us) | @@@@
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=StringSpan, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 232.422 us, StdErr = 8.655 us (3.72%), N = 10, StdDev = 27.369 us
+Min = 195.344 us, Q1 = 211.427 us, Median = 230.058 us, Q3 = 246.302 us, Max = 274.914 us
+IQR = 34.875 us, LowerFence = 159.114 us, UpperFence = 298.615 us
+ConfidenceInterval = [191.044 us; 273.800 us] (CI 99.9%), Margin = 41.378 us (17.80% of Mean)
+Skewness = 0.27, Kurtosis = 1.49, MValue = 3.2
+-------------------- Histogram --------------------
+[191.700 us ; 225.047 us) | @@@@@
+[225.047 us ; 243.525 us) | @
+[243.525 us ; 276.872 us) | @@@@
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=64, CodecMode=Bytes, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 39.988 us, StdErr = 2.634 us (6.59%), N = 10, StdDev = 8.328 us
+Min = 32.335 us, Q1 = 36.011 us, Median = 38.345 us, Q3 = 40.813 us, Max = 61.819 us
+IQR = 4.802 us, LowerFence = 28.808 us, UpperFence = 48.016 us
+ConfidenceInterval = [27.397 us; 52.578 us] (CI 99.9%), Margin = 12.591 us (31.49% of Mean)
+Skewness = 1.66, Kurtosis = 4.84, MValue = 2
+-------------------- Histogram --------------------
+[31.824 us ; 41.971 us) | @@@@@@@@
+[41.971 us ; 47.895 us) | @
+[47.895 us ; 56.746 us) | 
+[56.746 us ; 66.892 us) | @
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=64, CodecMode=Bytes, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 78.603 us, StdErr = 5.514 us (7.01%), N = 10, StdDev = 17.437 us
+Min = 57.123 us, Q1 = 62.637 us, Median = 80.328 us, Q3 = 90.876 us, Max = 110.085 us
+IQR = 28.239 us, LowerFence = 20.278 us, UpperFence = 133.235 us
+ConfidenceInterval = [52.241 us; 104.964 us] (CI 99.9%), Margin = 26.362 us (33.54% of Mean)
+Skewness = 0.28, Kurtosis = 1.69, MValue = 2
+-------------------- Histogram --------------------
+[52.237 us ;  76.384 us) | @@@@
+[76.384 us ;  97.629 us) | @@@@@
+[97.629 us ; 120.708 us) | @
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=64, CodecMode=StringAlloc, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 33.608 us, StdErr = 1.452 us (4.32%), N = 10, StdDev = 4.591 us
+Min = 28.822 us, Q1 = 29.031 us, Median = 33.197 us, Q3 = 37.624 us, Max = 39.847 us
+IQR = 8.593 us, LowerFence = 16.142 us, UpperFence = 50.513 us
+ConfidenceInterval = [26.666 us; 40.549 us] (CI 99.9%), Margin = 6.942 us (20.65% of Mean)
+Skewness = 0.16, Kurtosis = 1.13, MValue = 2
+-------------------- Histogram --------------------
+[27.562 us ; 33.156 us) | @@@@@
+[33.156 us ; 39.970 us) | @@@@@
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=64, CodecMode=StringAlloc, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 60.297 us, StdErr = 5.044 us (8.37%), N = 10, StdDev = 15.950 us
+Min = 46.919 us, Q1 = 49.588 us, Median = 51.129 us, Q3 = 68.617 us, Max = 94.575 us
+IQR = 19.028 us, LowerFence = 21.046 us, UpperFence = 97.159 us
+ConfidenceInterval = [36.182 us; 84.412 us] (CI 99.9%), Margin = 24.115 us (39.99% of Mean)
+Skewness = 0.94, Kurtosis = 2.42, MValue = 2
+-------------------- Histogram --------------------
+[45.775 us ;  65.209 us) | @@@@@@@
+[65.209 us ;  83.434 us) | @@
+[83.434 us ; 104.292 us) | @
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=64, CodecMode=StringSpan, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 32.754 us, StdErr = 1.571 us (4.80%), N = 10, StdDev = 4.968 us
+Min = 29.072 us, Q1 = 29.243 us, Median = 30.520 us, Q3 = 35.393 us, Max = 43.494 us
+IQR = 6.150 us, LowerFence = 20.019 us, UpperFence = 44.617 us
+ConfidenceInterval = [25.243 us; 40.264 us] (CI 99.9%), Margin = 7.510 us (22.93% of Mean)
+Skewness = 1.02, Kurtosis = 2.47, MValue = 2
+-------------------- Histogram --------------------
+[27.189 us ; 33.242 us) | @@@@@@@
+[33.242 us ; 40.429 us) | @@
+[40.429 us ; 46.521 us) | @
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=64, CodecMode=StringSpan, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 73.815 us, StdErr = 5.195 us (7.04%), N = 10, StdDev = 16.427 us
+Min = 47.680 us, Q1 = 64.152 us, Median = 73.108 us, Q3 = 86.242 us, Max = 100.355 us
+IQR = 22.090 us, LowerFence = 31.017 us, UpperFence = 119.377 us
+ConfidenceInterval = [48.981 us; 98.650 us] (CI 99.9%), Margin = 24.835 us (33.64% of Mean)
+Skewness = -0.01, Kurtosis = 1.63, MValue = 2
+-------------------- Histogram --------------------
+[45.931 us ;  69.655 us) | @@@@
+[69.655 us ;  89.669 us) | @@@@@
+[89.669 us ; 110.362 us) | @
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=1024, CodecMode=Bytes, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 44.592 us, StdErr = 2.231 us (5.00%), N = 10, StdDev = 7.055 us
+Min = 34.959 us, Q1 = 37.829 us, Median = 45.460 us, Q3 = 49.283 us, Max = 55.066 us
+IQR = 11.454 us, LowerFence = 20.648 us, UpperFence = 66.463 us
+ConfidenceInterval = [33.925 us; 55.258 us] (CI 99.9%), Margin = 10.667 us (23.92% of Mean)
+Skewness = -0, Kurtosis = 1.37, MValue = 2
+-------------------- Histogram --------------------
+[33.625 us ; 42.221 us) | @@@@
+[42.221 us ; 53.110 us) | @@@@@
+[53.110 us ; 59.364 us) | @
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=1024, CodecMode=Bytes, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 74.908 us, StdErr = 4.245 us (5.67%), N = 10, StdDev = 13.423 us
+Min = 60.950 us, Q1 = 66.590 us, Median = 72.503 us, Q3 = 76.763 us, Max = 102.386 us
+IQR = 10.173 us, LowerFence = 51.331 us, UpperFence = 92.022 us
+ConfidenceInterval = [54.615 us; 95.202 us] (CI 99.9%), Margin = 20.293 us (27.09% of Mean)
+Skewness = 0.85, Kurtosis = 2.35, MValue = 2
+-------------------- Histogram --------------------
+[59.794 us ;  76.148 us) | @@@@@@@
+[76.148 us ;  89.593 us) | @
+[89.593 us ; 105.947 us) | @@
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=1024, CodecMode=StringAlloc, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 50.184 us, StdErr = 3.993 us (7.96%), N = 10, StdDev = 12.627 us
+Min = 32.166 us, Q1 = 39.413 us, Median = 51.299 us, Q3 = 58.047 us, Max = 70.432 us
+IQR = 18.634 us, LowerFence = 11.462 us, UpperFence = 85.997 us
+ConfidenceInterval = [31.094 us; 69.274 us] (CI 99.9%), Margin = 19.090 us (38.04% of Mean)
+Skewness = 0.06, Kurtosis = 1.45, MValue = 4
+-------------------- Histogram --------------------
+[31.913 us ; 47.298 us) | @@@@@
+[47.298 us ; 55.301 us) | 
+[55.301 us ; 70.686 us) | @@@@@
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=1024, CodecMode=StringAlloc, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 69.836 us, StdErr = 4.491 us (6.43%), N = 10, StdDev = 14.202 us
+Min = 52.815 us, Q1 = 57.532 us, Median = 66.675 us, Q3 = 82.460 us, Max = 90.414 us
+IQR = 24.928 us, LowerFence = 20.140 us, UpperFence = 119.852 us
+ConfidenceInterval = [48.365 us; 91.307 us] (CI 99.9%), Margin = 21.471 us (30.75% of Mean)
+Skewness = 0.11, Kurtosis = 1.22, MValue = 3.33
+-------------------- Histogram --------------------
+[52.036 us ; 69.340 us) | @@@@@@
+[69.340 us ; 77.014 us) | 
+[77.014 us ; 94.318 us) | @@@@
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=1024, CodecMode=StringSpan, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 41.019 us, StdErr = 2.233 us (5.44%), N = 10, StdDev = 7.062 us
+Min = 34.791 us, Q1 = 36.588 us, Median = 39.957 us, Q3 = 41.130 us, Max = 58.663 us
+IQR = 4.542 us, LowerFence = 29.774 us, UpperFence = 47.943 us
+ConfidenceInterval = [30.341 us; 51.696 us] (CI 99.9%), Margin = 10.677 us (26.03% of Mean)
+Skewness = 1.42, Kurtosis = 4.06, MValue = 2.4
+-------------------- Histogram --------------------
+[33.686 us ; 42.291 us) | @@@@@@@@
+[42.291 us ; 50.293 us) | @
+[50.293 us ; 54.360 us) | 
+[54.360 us ; 62.966 us) | @
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=1024, CodecMode=StringSpan, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 86.346 us, StdErr = 6.330 us (7.33%), N = 10, StdDev = 20.016 us
+Min = 68.006 us, Q1 = 72.066 us, Median = 74.326 us, Q3 = 98.771 us, Max = 118.774 us
+IQR = 26.705 us, LowerFence = 32.008 us, UpperFence = 138.828 us
+ConfidenceInterval = [56.085 us; 116.608 us] (CI 99.9%), Margin = 30.262 us (35.05% of Mean)
+Skewness = 0.63, Kurtosis = 1.54, MValue = 3.33
+-------------------- Histogram --------------------
+[59.038 us ;  83.426 us) | @@@@@@
+[83.426 us ;  94.626 us) | 
+[94.626 us ; 119.014 us) | @@@@
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=65536, CodecMode=Bytes, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 95.664 us, StdErr = 2.742 us (2.87%), N = 10, StdDev = 8.671 us
+Min = 90.166 us, Q1 = 90.825 us, Median = 93.007 us, Q3 = 96.266 us, Max = 119.311 us
+IQR = 5.440 us, LowerFence = 82.665 us, UpperFence = 104.426 us
+ConfidenceInterval = [82.555 us; 108.773 us] (CI 99.9%), Margin = 13.109 us (13.70% of Mean)
+Skewness = 1.94, Kurtosis = 5.58, MValue = 2
+-------------------- Histogram --------------------
+[ 88.134 us ;  98.699 us) | @@@@@@@@@
+[ 98.699 us ; 109.264 us) | 
+[109.264 us ; 114.029 us) | 
+[114.029 us ; 124.594 us) | @
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=65536, CodecMode=Bytes, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 181.991 us, StdErr = 10.620 us (5.84%), N = 10, StdDev = 33.583 us
+Min = 153.511 us, Q1 = 157.375 us, Median = 171.640 us, Q3 = 185.772 us, Max = 252.937 us
+IQR = 28.397 us, LowerFence = 114.780 us, UpperFence = 228.367 us
+ConfidenceInterval = [131.219 us; 232.764 us] (CI 99.9%), Margin = 50.773 us (27.90% of Mean)
+Skewness = 1.02, Kurtosis = 2.52, MValue = 2
+-------------------- Histogram --------------------
+[149.681 us ; 190.599 us) | @@@@@@@@
+[190.599 us ; 220.378 us) | 
+[220.378 us ; 261.296 us) | @@
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=65536, CodecMode=StringAlloc, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 190.740 us, StdErr = 11.281 us (5.91%), N = 10, StdDev = 35.675 us
+Min = 147.784 us, Q1 = 155.358 us, Median = 189.873 us, Q3 = 217.039 us, Max = 238.547 us
+IQR = 61.681 us, LowerFence = 62.836 us, UpperFence = 309.561 us
+ConfidenceInterval = [136.804 us; 244.676 us] (CI 99.9%), Margin = 53.936 us (28.28% of Mean)
+Skewness = 0.01, Kurtosis = 1.27, MValue = 3.2
+-------------------- Histogram --------------------
+[145.001 us ; 188.468 us) | @@@@@
+[188.468 us ; 204.940 us) | @
+[204.940 us ; 248.407 us) | @@@@
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=65536, CodecMode=StringAlloc, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 242.027 us, StdErr = 10.323 us (4.27%), N = 10, StdDev = 32.644 us
+Min = 209.000 us, Q1 = 217.401 us, Median = 226.498 us, Q3 = 263.858 us, Max = 294.968 us
+IQR = 46.458 us, LowerFence = 147.714 us, UpperFence = 333.545 us
+ConfidenceInterval = [192.674 us; 291.381 us] (CI 99.9%), Margin = 49.354 us (20.39% of Mean)
+Skewness = 0.55, Kurtosis = 1.52, MValue = 2.67
+-------------------- Histogram --------------------
+[198.234 us ; 238.009 us) | @@@@@@
+[238.009 us ; 261.396 us) | @
+[261.396 us ; 301.170 us) | @@@
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=65536, CodecMode=StringSpan, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 191.683 us, StdErr = 8.832 us (4.61%), N = 10, StdDev = 27.929 us
+Min = 151.480 us, Q1 = 170.225 us, Median = 188.481 us, Q3 = 213.366 us, Max = 239.340 us
+IQR = 43.141 us, LowerFence = 105.514 us, UpperFence = 278.078 us
+ConfidenceInterval = [149.458 us; 233.907 us] (CI 99.9%), Margin = 42.225 us (22.03% of Mean)
+Skewness = 0.16, Kurtosis = 1.57, MValue = 2
+-------------------- Histogram --------------------
+[148.951 us ; 182.980 us) | @@@@@
+[182.980 us ; 223.226 us) | @@@@
+[223.226 us ; 256.355 us) | @
+---------------------------------------------------
+
+RoundTripLatencyBenchmarks.Transfer: Job-JTGOSM(OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3) [Framer=StxEtx, PayloadBytes=65536, CodecMode=StringSpan, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 221.683 us, StdErr = 11.971 us (5.40%), N = 10, StdDev = 37.857 us
+Min = 190.540 us, Q1 = 200.110 us, Median = 202.795 us, Q3 = 227.706 us, Max = 296.005 us
+IQR = 27.596 us, LowerFence = 158.715 us, UpperFence = 269.101 us
+ConfidenceInterval = [164.449 us; 278.918 us] (CI 99.9%), Margin = 57.234 us (25.82% of Mean)
+Skewness = 1.06, Kurtosis = 2.31, MValue = 2.29
+-------------------- Histogram --------------------
+[189.568 us ; 235.694 us) | @@@@@@@@
+[235.694 us ; 266.835 us) | 
+[266.835 us ; 319.068 us) | @@
+---------------------------------------------------
+
+// * Summary *
+
+BenchmarkDotNet v0.15.8, Windows 10 (10.0.19045.6466/22H2/2022Update)
+12th Gen Intel Core i5-12500H 3.10GHz, 1 CPU, 16 logical and 12 physical cores
+.NET SDK 10.0.400
+  [Host]     : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+  Job-JTGOSM : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+
+OutlierMode=DontRemove  IterationCount=10  IterationTime=250ms  
+LaunchCount=1  WarmupCount=3  
+
+| Method   | Framer       | PayloadBytes | CodecMode   | Transport   | Mean      | Error     | StdDev    | Gen0    | Gen1    | Gen2    | Allocated |
+|--------- |------------- |------------- |------------ |------------ |----------:|----------:|----------:|--------:|--------:|--------:|----------:|
+| Transfer | LengthPrefix | 64           | Bytes       | DirectTcp   |  35.48 us |  5.668 us |  3.749 us |       - |       - |       - |     497 B |
+| Transfer | LengthPrefix | 64           | Bytes       | StreamFrame |  48.49 us |  8.469 us |  5.602 us |       - |       - |       - |    1651 B |
+| Transfer | LengthPrefix | 64           | StringAlloc | DirectTcp   |  35.64 us | 10.515 us |  6.955 us |       - |       - |       - |     801 B |
+| Transfer | LengthPrefix | 64           | StringAlloc | StreamFrame |  67.75 us | 34.595 us | 22.882 us |       - |       - |       - |    1955 B |
+| Transfer | LengthPrefix | 64           | StringSpan  | DirectTcp   |  32.87 us |  5.131 us |  3.394 us |       - |       - |       - |     624 B |
+| Transfer | LengthPrefix | 64           | StringSpan  | StreamFrame |  53.99 us | 13.931 us |  9.215 us |       - |       - |       - |    1779 B |
+| Transfer | LengthPrefix | 1024         | Bytes       | DirectTcp   |  37.93 us |  6.839 us |  4.523 us |  0.2056 |       - |       - |    2416 B |
+| Transfer | LengthPrefix | 1024         | Bytes       | StreamFrame |  63.18 us | 43.444 us | 28.735 us |  0.3255 |       - |       - |    3571 B |
+| Transfer | LengthPrefix | 1024         | StringAlloc | DirectTcp   |  39.84 us |  7.668 us |  5.072 us |  0.7813 |       - |       - |    6560 B |
+| Transfer | LengthPrefix | 1024         | StringAlloc | StreamFrame |  66.59 us | 21.285 us | 14.079 us |  0.6510 |       - |       - |    7714 B |
+| Transfer | LengthPrefix | 1024         | StringSpan  | DirectTcp   |  50.57 us | 16.092 us | 10.644 us |  0.5208 |       - |       - |    4465 B |
+| Transfer | LengthPrefix | 1024         | StringSpan  | StreamFrame |  89.83 us | 26.360 us | 17.435 us |  0.5580 |       - |       - |    5619 B |
+| Transfer | LengthPrefix | 65536        | Bytes       | DirectTcp   | 100.91 us | 11.423 us |  7.556 us | 13.9509 |  3.9063 |       - |  131444 B |
+| Transfer | LengthPrefix | 65536        | Bytes       | StreamFrame | 182.52 us | 65.210 us | 43.132 us | 14.6484 |  2.9297 |       - |  132595 B |
+| Transfer | LengthPrefix | 65536        | StringAlloc | DirectTcp   | 194.35 us | 28.179 us | 18.639 us | 83.0078 | 83.0078 | 83.0078 |  393715 B |
+| Transfer | LengthPrefix | 65536        | StringAlloc | StreamFrame | 305.26 us | 95.958 us | 63.471 us | 90.8203 | 76.1719 | 76.1719 |  396340 B |
+| Transfer | LengthPrefix | 65536        | StringSpan  | DirectTcp   | 184.93 us | 13.986 us |  9.251 us | 83.0078 | 83.0078 | 83.0078 |  262595 B |
+| Transfer | LengthPrefix | 65536        | StringSpan  | StreamFrame | 232.42 us | 41.378 us | 27.369 us | 76.1719 | 76.1719 | 76.1719 |  264875 B |
+| Transfer | StxEtx       | 64           | Bytes       | DirectTcp   |  39.99 us | 12.591 us |  8.328 us |       - |       - |       - |     497 B |
+| Transfer | StxEtx       | 64           | Bytes       | StreamFrame |  78.60 us | 26.362 us | 17.437 us |       - |       - |       - |    1651 B |
+| Transfer | StxEtx       | 64           | StringAlloc | DirectTcp   |  33.61 us |  6.942 us |  4.591 us |       - |       - |       - |     801 B |
+| Transfer | StxEtx       | 64           | StringAlloc | StreamFrame |  60.30 us | 24.115 us | 15.950 us |       - |       - |       - |    1955 B |
+| Transfer | StxEtx       | 64           | StringSpan  | DirectTcp   |  32.75 us |  7.510 us |  4.968 us |       - |       - |       - |     626 B |
+| Transfer | StxEtx       | 64           | StringSpan  | StreamFrame |  73.82 us | 24.835 us | 16.427 us |       - |       - |       - |    1779 B |
+| Transfer | StxEtx       | 1024         | Bytes       | DirectTcp   |  44.59 us | 10.667 us |  7.055 us |  0.1860 |       - |       - |    2418 B |
+| Transfer | StxEtx       | 1024         | Bytes       | StreamFrame |  74.91 us | 20.293 us | 13.423 us |       - |       - |       - |    3571 B |
+| Transfer | StxEtx       | 1024         | StringAlloc | DirectTcp   |  50.18 us | 19.090 us | 12.627 us |  0.6510 |       - |       - |    6563 B |
+| Transfer | StxEtx       | 1024         | StringAlloc | StreamFrame |  69.84 us | 21.471 us | 14.202 us |  0.7102 |       - |       - |    7714 B |
+| Transfer | StxEtx       | 1024         | StringSpan  | DirectTcp   |  41.02 us | 10.677 us |  7.062 us |  0.4112 |       - |       - |    4467 B |
+| Transfer | StxEtx       | 1024         | StringSpan  | StreamFrame |  86.35 us | 30.262 us | 20.016 us |  0.5580 |       - |       - |    5619 B |
+| Transfer | StxEtx       | 65536        | Bytes       | DirectTcp   |  95.66 us | 13.109 us |  8.671 us | 13.6719 |  3.9063 |       - |  131443 B |
+| Transfer | StxEtx       | 65536        | Bytes       | StreamFrame | 181.99 us | 50.773 us | 33.583 us | 14.6484 |  2.9297 |       - |  132595 B |
+| Transfer | StxEtx       | 65536        | StringAlloc | DirectTcp   | 190.74 us | 53.936 us | 35.675 us | 92.7734 | 78.1250 | 78.1250 |  394254 B |
+| Transfer | StxEtx       | 65536        | StringAlloc | StreamFrame | 242.03 us | 49.354 us | 32.644 us | 90.8203 | 76.1719 | 76.1719 |  396266 B |
+| Transfer | StxEtx       | 65536        | StringSpan  | DirectTcp   | 191.68 us | 42.225 us | 27.929 us | 83.0078 | 83.0078 | 83.0078 |  262595 B |
+| Transfer | StxEtx       | 65536        | StringSpan  | StreamFrame | 221.68 us | 57.234 us | 37.857 us | 76.1719 | 76.1719 | 76.1719 |  265016 B |
+
+// * Warnings *
+MinIterationTime
+  RoundTripLatencyBenchmarks.Transfer: OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3 -> The minimum observed iteration time is 98.815ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+
+// * Hints *
+Outliers
+  RoundTripLatencyBenchmarks.Transfer: OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3 -> 1 outlier  was  detected (44.21 us)
+  RoundTripLatencyBenchmarks.Transfer: OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3 -> 1 outlier  was  detected (50.27 us)
+  RoundTripLatencyBenchmarks.Transfer: OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3 -> 2 outliers were detected (96.10 us, 131.88 us)
+  RoundTripLatencyBenchmarks.Transfer: OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3 -> 1 outlier  was  detected (119.58 us)
+  RoundTripLatencyBenchmarks.Transfer: OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3 -> 1 outlier  was  detected (242.47 us)
+  RoundTripLatencyBenchmarks.Transfer: OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3 -> 2 outliers were detected (411.43 us, 421.75 us)
+  RoundTripLatencyBenchmarks.Transfer: OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3 -> 1 outlier  was  detected (61.82 us)
+  RoundTripLatencyBenchmarks.Transfer: OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3 -> 2 outliers were detected (93.15 us, 102.39 us)
+  RoundTripLatencyBenchmarks.Transfer: OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3 -> 1 outlier  was  detected (58.66 us)
+  RoundTripLatencyBenchmarks.Transfer: OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3 -> 1 outlier  was  detected (119.31 us)
+  RoundTripLatencyBenchmarks.Transfer: OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3 -> 2 outliers were detected (228.74 us, 252.94 us)
+  RoundTripLatencyBenchmarks.Transfer: OutlierMode=DontRemove, IterationCount=10, IterationTime=250ms, LaunchCount=1, WarmupCount=3 -> 2 outliers were detected (283.79 us, 296.01 us)
+
+// * Legends *
+  Framer       : Value of the 'Framer' parameter
+  PayloadBytes : Value of the 'PayloadBytes' parameter
+  CodecMode    : Value of the 'CodecMode' parameter
+  Transport    : Value of the 'Transport' parameter
+  Mean         : Arithmetic mean of all measurements
+  Error        : Half of 99.9% confidence interval
+  StdDev       : Standard deviation of all measurements
+  Gen0         : GC Generation 0 collects per 1000 operations
+  Gen1         : GC Generation 1 collects per 1000 operations
+  Gen2         : GC Generation 2 collects per 1000 operations
+  Allocated    : Allocated memory per single operation (managed only, inclusive, 1KB = 1024B)
+  1 us         : 1 Microsecond (0.000001 sec)
+
+// * Diagnostic Output - MemoryDiagnoser *
+
+
+// ***** BenchmarkRunner: End *****
+Run time: 00:02:12 (132.69 sec), executed benchmarks: 36
+
+Global total time: 00:02:26 (146.51 sec), executed benchmarks: 36
+// * Artifacts cleanup *
+Artifacts cleanup is finished
