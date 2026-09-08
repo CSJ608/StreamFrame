@@ -6,6 +6,7 @@
 ## [Unreleased]
 
 ### 修复
+- **NativeAOT 运行验收（[#71](https://github.com/CSJ608/StreamFrame/issues/71)）**：CI 发布后执行 linux-x64 原生产物；有界等待连接与三条消息，校验会话绑定/普通发送及内容，观察消费任务并释放资源。动态选择端口并仅在连接阶段有限重选；连接失败、少收、消费异常和内容错误以非零退出，通过受控故障反证检查有效。保留警告为错误和非必需 AOT 检查。
 - **Soak 队列续发与收尾（[#67](https://github.com/CSJ608/StreamFrame/issues/67)）**：发送 worker 在每次出队前检查会话取消，避免上一帧写完后拆除的旧 worker 取走并丢弃待续发普通条目；新增确定性门控回归。长流测试精确排空后关闭读 socket 并观察任务，修复 net48 仅取消令牌时读任务不收敛。
 - **TCP KeepAlive 单位（[#62](https://github.com/CSJ608/StreamFrame/issues/62)）**：现代 .NET 将正毫秒值安全向上取整为秒，默认 30000/5000ms 正确设置为 30/5s；保留 netstandard2.0 IOControl 毫秒语义及默认关闭。增加真实 Socket 配置读回与边界回归，双语文档明确粒度差异。
 - **终态连接等待（[#65](https://github.com/CSJ608/StreamFrame/issues/65)）**：取得连接等待器后复查停机状态，关闭首次注册与 Shutdown 的竞态；Dispose 或生命周期取消后的新等待也以任务取消结束，无需调用方令牌。补充终态调用、1000 次首次注册竞速及调用方取消隔离回归。

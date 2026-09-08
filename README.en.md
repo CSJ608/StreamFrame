@@ -347,6 +347,10 @@ dotnet run -c Release --project bench/StreamFrame.Benchmarks   # benchmarks (~5-
 dotnet test -f net8.0 --collect:"XPlat Code Coverage"  # coverage (CI also collects & summarizes)
 ```
 
+## NativeAOT validation
+
+The non-required `aot` CI check separately validates **NativeAOT publishing/trimming analysis** and **execution of the linux-x64 native binary**. The TCP loopback smoke verifies two session-bound sends, one ordinary send, and message contents; controlled faults verify nonzero exits. A successful publish alone does not prove runtime success. See the [AotSmoke guide](samples/StreamFrame.AotSmoke/README.md) for commands, deadlines, fault modes, and future transport coverage under [#55](https://github.com/CSJ608/StreamFrame/issues/55).
+
 ## Project layout
 
 ```

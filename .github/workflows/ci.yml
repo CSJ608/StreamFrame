@@ -119,4 +119,28 @@ jobs:
             10.0.x
 
       - name: PublishAot（NativeAOT + 裁剪警告门禁）
-        run: dotnet publish samples/StreamFrame.AotSmoke -c Release -r linux-x64
+        run: dotnet publish samples/StreamFrame.AotSmoke -c Release -r linux-x64 -o artifacts/aot
+
+      - name: Run NativeAOT smoke（连接、会话发送、普通发送与内容校验）
+        run: timeout 40s ./artifacts/aot/StreamFrame.AotSmoke
+
+      - name: Verify NativeAOT failure exit codes
+        shell: bash
+        run: |
+          set -euo pipefail
+          for fault in connect missing consumer content; do
+            category="$fault"
+            case "$fault" in
+              connect) category=connection ;;
+              missing) category=messages ;;
+            esac
+            status=0
+            timeout 40s ./artifacts/aot/StreamFrame.AotSmoke "--fault=$fault" > "$fault.log" 2>&1 || status=$?
+            cat "$fault.log"
+            # 只接受程序自身报告的指定故障：0、崩溃、启动失败或 timeout 的 124 均失败。
+            if [ "$status" -ne 1 ] || ! grep -Fq "AOT smoke FAILED [$category]:" "$fault.log"; then
+              echo "::error::Fault $fault was not detected correctly (exit=$status)"
+              exit 1
+            fi
+            echo "Verified expected failure: $fault (exit=$status)" | tee -a "$GITHUB_STEP_SUMMARY"
+          done

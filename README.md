@@ -341,6 +341,10 @@ dotnet run -c Release --project bench/StreamFrame.Benchmarks   # 性能基准（
 dotnet test -f net8.0 --collect:"XPlat Code Coverage"  # 覆盖率（CI 亦自动收集并写入运行摘要）
 ```
 
+## NativeAOT 验证
+
+CI 的非必需 `aot` 检查分别验证 **NativeAOT 发布/裁剪分析** 与 **linux-x64 原生产物运行**：真实 TCP 回环校验两条会话绑定发送、一条普通发送和消息内容，并用受控故障验证非零退出。发布成功不等于运行通过。命令、期限、故障模式及 [#55](https://github.com/CSJ608/StreamFrame/issues/55) 未来传输扩展边界见 [AotSmoke 说明](samples/StreamFrame.AotSmoke/README.md)。
+
 ## 项目结构
 
 ```
