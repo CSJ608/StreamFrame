@@ -14,6 +14,7 @@
 - **Soak 目标矩阵（[#66](https://github.com/CSJ608/StreamFrame/issues/66)）**：显式选择 Ubuntu net8.0/net10.0、Windows net8.0/net10.0/net48，避免 Ubuntu 启动 .NET Framework 测试；job 名、详细日志与始终尝试上传的 TRX 产物按 OS/TFM 区分，测试断言失败继续使 job 失败。普通 CI 必需检查名不变。
 
 ### 变更
+- **驱动所有权与并发文档（[#69](https://github.com/CSJ608/StreamFrame/issues/69)）**：补全 ICodec/IFramer/流式定界的缓冲借用及同连接收发、新旧会话、跨连接共享约束；双语 README 增加拥有独立数据的 byte[]/ReadOnlyMemory 示例、有界队列生产配置及单客户端边界，澄清终态等待、KeepAlive 粒度和入队非确认。示例纳入三目标编译并以主动覆写缓冲验证异步消费；不改变默认值或实现公共契约。
 - **Soak 可观测协议（[#67](https://github.com/CSJ608/StreamFrame/issues/67)）**：保持 SendAsync 仅入队契约，记录可重放 seed、动作、尝试 ID、会话及发送/读取阶段；业务测试使用 ACK、重试、去重并精确校验，重试前独立检查队列续发与会话边界。所有阶段有界等待，未启用长测报告 Skip；完整 600 秒五目标连续三次验收另行跟踪，见 docs/SOAK.md。
 
 ## [2.6.0] - 2026-08-29

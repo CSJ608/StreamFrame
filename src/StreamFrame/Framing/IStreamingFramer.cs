@@ -15,6 +15,13 @@ namespace StreamFrame;
 ///
 /// 协议语义（帧边界、超长防御）与对应 <see cref="IFramer"/> 完全一致。
 /// </summary>
+/// <remarks>
+/// 沿用 IFramer 的并发与借用约束。BeginFrame/EndFrame 的配对状态应存于本次 writer，
+/// 不应使用实例字段记录当前帧；两个调用之间可穿插解码或其它会话/连接的调用。
+/// writer 及缓冲不得被保留供方法返回后使用；EndFrame 使用调用方重新传入的 writer。
+/// IFramer concurrency rules apply. Keep pair state in the supplied writer, not a current-frame field:
+/// other decode/session/connection calls may interleave. Never retain writer/buffers after a method returns.
+/// </remarks>
 public interface IStreamingFramer : IFramer
 {
     /// <summary>帧编码的起始；BeginFrame 后 writer 的任何写入都属于帧内容。</summary>

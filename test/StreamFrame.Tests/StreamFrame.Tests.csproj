@@ -29,6 +29,8 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+    <!-- Compile the exact documented examples on every supported test runtime. -->
+    <Compile Include="../../samples/StreamFrame.Ownership/*.cs" Link="OwnershipSamples/%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
