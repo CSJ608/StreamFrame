@@ -438,10 +438,15 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
             _logger.LogWarning(ex, "SIO_KEEPALIVE_VALS 设置失败（非 Windows 平台？），回退系统默认 KeepAlive 参数。");
         }
 #else
-        socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveTime, _options.KeepAliveTimeMs);
-        socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveInterval, _options.KeepAliveIntervalMs);
+        socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveTime, KeepAliveSeconds(_options.KeepAliveTimeMs));
+        socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveInterval, KeepAliveSeconds(_options.KeepAliveIntervalMs));
 #endif
     }
+
+#if !NETSTANDARD2_0
+    // 选项已校验为正数；先减后除避免 int.MaxValue 向上取整时溢出。
+    internal static int KeepAliveSeconds(int milliseconds) => (milliseconds - 1) / 1000 + 1;
+#endif
 
     /// <summary>立即进入重连流程。</summary>
     /// <exception cref="InvalidOperationException">连接尚未 <see cref="Start"/>（无可重连的会话）。</exception>

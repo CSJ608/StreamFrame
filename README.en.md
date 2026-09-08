@@ -230,6 +230,8 @@ Without one, no logging happens (zero-dependency usage).
 
 ### Liveness & heartbeat pattern
 
+KeepAlive is disabled by default. When enabled, `KeepAliveTimeMs` / `KeepAliveIntervalMs` must be positive milliseconds (defaults: 30000 / 5000). Modern .NET Socket options use whole seconds, rounded up (1ms → 1s, 1500ms → 2s, defaults → 30s / 5s); the `netstandard2.0` `SIO_KEEPALIVE_VALS` path retains millisecond granularity.
+
 For production, enable `TcpKeepAlive = true`; an application-level heartbeat combined with `ReceiveIdleTimeoutMs` (3× the heartbeat period, tolerating 1-2 lost beats) is an even stronger combo. The framework does not ship a heartbeat (the message shape belongs to your protocol) — the pattern:
 
 ```csharp
