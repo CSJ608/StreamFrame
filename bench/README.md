@@ -1,125 +1,56 @@
 # StreamFrame 基准测试
 
-[BenchmarkDotNet](https://benchmarkdotnet.org/) 基准，为 README 的性能说法提供可复现数据。
+[English](README.en.md)
 
-## 运行
+## 复现
 
-```bash
-dotnet run -c Release --project bench/StreamFrame.Benchmarks                       # 全部（约 15 分钟）
-dotnet run -c Release --project bench/StreamFrame.Benchmarks -- --filter "*EndToEnd*"   # 只跑端到端
+从仓库根目录运行（.NET 10 SDK）：
+
+```powershell
+dotnet run -c Release --project bench/StreamFrame.Benchmarks -- --verify-network
+# 正式采样：逐个运行，不并行。每类36组，共72组。
+dotnet run -c Release --project bench/StreamFrame.Benchmarks -- --filter '*OneWayThroughputBenchmarks*' --warmupCount 3 --iterationCount 10 --launchCount 1 --iterationTime 250 --outliers DontRemove --exporters json --artifacts bench/results/local-oneway
+dotnet run -c Release --project bench/StreamFrame.Benchmarks -- --filter '*RoundTripLatencyBenchmarks*' --warmupCount 3 --iterationCount 10 --launchCount 1 --iterationTime 250 --outliers DontRemove --exporters json --artifacts bench/results/local-rtt
+# 独立微基准（不可直接与网络结果相减）
+dotnet run -c Release --project bench/StreamFrame.Benchmarks -- --filter '*CodecBenchmarks*'
+dotnet run -c Release --project bench/StreamFrame.Benchmarks -- --filter '*FramingBenchmarks*'
+dotnet run -c Release --project bench/StreamFrame.Benchmarks -- --filter '*MetricsOverheadBenchmarks*'
 ```
 
-> 该版本的 BenchmarkDotNet 不支持重复 `--filter`（一次只能一个模式），多个类请分次运行。
-> 基准项目已纳入解决方案（IDE 可见）；`dotnet test` 依 `IsTestProject` 机制自动跳过。
+先用 `--list flat` 核对类名。无筛选会运行全部基准，耗时取决于机器、矩阵与 BDN 自适应 pilot，不再承诺“5–15分钟”。`--verify-network` 是正确性检查，不是性能采样：72组每组连续两批，检查跨调用完成点与完整内容。
 
-## 测什么
+## 对照契约
 
-- **帧定界微基准**（`FramingBenchmarks`）：`Streaming`（`BeginFrame → 写负载 → EndFrame`，单缓冲，发送侧默认路径）vs `Plain`（负载先进缓冲 A，`EncodeFrame` 再整体拷贝进帧缓冲 B）× 64B/1KB/64KB；以及切帧吞吐（100 × 1KB 粘包）。
-- **Codec 基准**（`CodecBenchmarks`）：官方 XML 驱动 `XmlDocumentCodec` 对典型设备报文（~400B 单值上报 / ~4KB 批量明细）的编解码开销。
-- **端到端基准**（`EndToEndBenchmarks`）：真实 TCP 回环上的完整连接（收发队列 + Pipe + 定界 + codec + socket）——单向吞吐（连发 1 万条 1KB 消息，双 framer）与往返延迟（逐条乒乓 2000 次）。
+| 项目 | 两种传输共同执行的工作 |
+|---|---|
+| 场景 | `OneWayThroughputBenchmarks` 不回显；`RoundTripLatencyBenchmarks` 每条等待完整回显 |
+| 参数 | LengthPrefix/StxEtx × 64/1024/65536 字节 × Bytes/StringSpan/StringAlloc × DirectTcp/StreamFrame |
+| 负载 | Setup预建、重复使用的ASCII `x`；StxEtx负载不含定界符；线上帧额外4/2字节 |
+| 发送 | 每批256条，逐条调用并await发送；都在测量内运行同一个Codec及流式Framer，无预编码帧捷径 |
+| 接收 | 都实际定界、生成拥有数据的byte[]或string，并逐字节/字符校验完整内容 |
+| 单向完成 | 服务端完成256条解码和校验；客户端SendAsync仅入队不算完成 |
+| 往返完成 | 服务端解码校验后重新编码回显；客户端解码校验后才发送下一条；256次RTT |
+| 生命周期 | 连接/预建负载在GlobalSetup；每批30秒期限，失败取消并观察工作，不复用失败批次；GlobalCleanup释放 |
+| Socket | 同机IPv4回环，接收64KiB，NoDelay=false（Nagle开启），KeepAlive=false，发送缓冲用同机OS默认；本次读回两侧均64KiB |
 
-## 结果
+**仍有差异**：DirectTcp省略队列、Pipe、重连与通用流重组，已知固定帧长，用可复用数组`ReadExactlyAsync`逐帧读取后调用Framer/Codec；每帧使用同一个池化writer类型，但初始容量直接取已知帧长。StreamFrame使用有界队列、后台worker、Pipe批量接收与自适应池化发送缓冲。相同应用工作与最终完成点不代表相同调度、系统调用或缓冲工作。两者差值是这两个实现的场景差值，不能精确隔离“框架自身成本”，也不能推断普遍快于裸TCP。RTT与单向不能交叉相减。
 
-### 测量环境（2026-08-29，宏基准为两轮区间）
+## Codec与分配
 
-- CPU：12th Gen Intel Core i5-12500H（笔记本）；内存 32GB；Windows 10 19045；.NET 10.0.11
-- BenchmarkDotNet SimpleJob：微基准 warmup 3 / iteration 15，宏基准 warmup 2 / iteration 10；真实 TCP 回环
-- **噪声披露**：测量在长时间高负载的开发机上完成，宏基准（回环端到端）绝对值两轮漂移可达 ±30%，下表以区间标注、仅供量级参考；**关键差值（会话发送成本、接收视图、超时开销）经第三轮复核稳定**。微基准与差值结论可信度高。请以自己环境的复现为准。
+- `Bytes`：编码`writer.Write(byte[])`仍复制数据；解码`ToArray()`分配并复制拥有独立数据的消息。
+- `StringSpan`：编码UTF-8 span直写；解码生成UTF-16字符串。本实验ASCII负载的字符数据约占线上负载2倍，非所有文本的通用比例。
+- `StringAlloc`：同样物化字符串，编码额外生成UTF-8中间数组并复制到writer。差别包含真实工作，不能统称框架税。
+- `CodecBenchmarks`独立测XML：构建/序列化XDocument与字节消息不同，不从网络结果减去XML微基准来推导框架成本。
+- `LargeMessageStringBenchmarks`、`LargeMessageByteArrayBenchmarks`保留旧的无回显codec探索（批量10000、覆盖不一致）；`SessionAwareSendBenchmarks`等会话实验为独立问题。不要与本次256条对照拼表归因，实际类名用`--list flat`查看。
 
-### 内置指标开销（微基准，无监听者的生产默认态）
+BDN `Mean`和`Allocated`已按`OperationsPerInvoke=256`折算：单向每条，往返每次完整RTT（含两端工作）。本次.NET 10上的MemoryDiagnoser使用[进程累计托管分配计数](https://github.com/dotnet/BenchmarkDotNet/blob/v0.15.8/src/BenchmarkDotNet/Engines/GcStats.cs)，包括异步线程、双方连接与测试驱动；不是单线程分配、存活堆、原生Socket内存或网络复制次数。池化减少托管分配不代表没有复制，也不能由一列Allocated推出框架零分配。
 
-| 调用 | 耗时 | 分配 |
-|---|---:|---:|
-| 单次计数/直方图记录 | 0.5–1.0 ns | 0 |
-| 接收路径每消息合计（字节块 + 帧） | ≈1.6 ns | 0 |
-| 发送路径每消息合计（入队采样 + 字节块 + 帧） | ≈2.6 ns | 0 |
+## 结果与限制
 
-结论：不订阅 Meter 时指标开销为**亚纳秒到个位纳秒级、零分配**——按 10 万条/秒的流量折算，发送路径合计 ≈0.026 µs/秒，完全可忽略。
+本轮机器、源码SHA、完整BDN日志（含逐迭代值、GC、异常、噪声提示）、JSON/CSV/Markdown汇总与执行命令见 [issue-70原始结果](results/issue-70/README.md)。Dry仅证明能跑，不用于结论。正式采样保留离群点；单次launch不能证明跨时段稳定差值，误差区间重叠或漂移不能包装成精确百分比。开发笔记本单机回环不代表真实网络、其他CPU、OS或运行时。
 
-### 帧定界（微基准，2026-08-28 数据仍有效）
+撤回旧文档将“服务端回显吞吐”与“仅计字节裸TCP”相减得到的快13–63%、大报文3–4倍、字节消息仅多20–30%及“框架自身零分配”等结论。历史测量不一定数值错误，但工作不匹配且没有随仓库保存可审计原始记录，不能作为本次结论证据。旧的微基准百分比与会话成本摘要也不再作为当前承诺；可用各自类重新测量。
 
-| 方法 | 负载 | 耗时 | 分配 |
-|---|---|---:|---:|
-| LengthPrefix_Plain | 64B | 28.1 ns | 64 B |
-| LengthPrefix_Streaming | 64B | **21.4 ns（-24%）** | **32 B（-50%）** |
-| StxEtx_Plain | 64B | 28.6 ns | 32 B |
-| StxEtx_Streaming | 64B | **19.1 ns（-33%）** | 32 B |
-| LengthPrefix_Plain | 1KB | 45.5 ns | 64 B |
-| LengthPrefix_Streaming | 1KB | 56.3 ns（+24%）¹ | **32 B（-50%）** |
-| StxEtx_Plain | 1KB | 60.9 ns | 32 B |
-| StxEtx_Streaming | 1KB | 68.3 ns（+12%）¹ | 32 B |
-| LengthPrefix_Plain | 64KB | 3.44 µs | 64 B |
-| LengthPrefix_Streaming | 64KB | 3.47 µs（持平） | **32 B（-50%）** |
-| StxEtx_Plain | 64KB | 4.51 µs | 32 B |
-| StxEtx_Streaming | 64KB | 4.64 µs（+3%） | 32 B |
-| LengthPrefix 切帧 100×1KB | — | **0.82 µs**（≈8.3 ns/帧） | 0 |
-| StxEtx 切帧 100×1KB | — | **≈5.0 µs**（≈50 ns/帧，向量化后提速约 22 倍） | 0 |
+单位勘误：历史发送指标2.6ns/消息 × 100000消息/s = **260µs/s = 0.26ms/s**，约占一个CPU核每秒时间的0.026%，不是0.026µs/s。此处仅纠正算术，不声称本轮重测了指标开销。
 
-¹ 恰好压在 `EncodeBufferInitialSize`（默认 1024）的缓冲增长边界上：流式路径触发一次扩容租借，
-抵消了省下的那次拷贝。负载远大于初始缓冲后两条路径的拷贝量趋同（几何扩容摊销）。
-
-### 端到端单向吞吐（真实 TCP 回环，1 万条/轮，两轮区间）
-
-| Framer | 64B | 1KB | 64KB |
-|---|---:|---:|---:|
-| LengthPrefix | 4.1–4.7 µs/条 ≈ 21–24 万条/秒 | 4.1–7.7 µs/条 ≈ 13–24 万条/秒 | 134–188 µs/条 ≈ 0.53–0.75 万条/秒 |
-| StxEtx | 2.2–6.9 µs/条 ≈ 15–46 万条/秒 | 3.8–8.7 µs/条 ≈ 12–26 万条/秒 | 127–157 µs/条 ≈ 0.64–0.79 万条/秒 |
-| 每消息堆分配（LengthPrefix） | 0.8 KB | 6.7 KB | 394–409 KB |
-
-### 裸 TCP 地板（同口径回环：预生成帧字节逐条 NetworkStream.Write，两轮区间）
-
-| 负载 | 地板 | StreamFrame（LengthPrefix） | 框架税（绝对 / 百分比并列） |
-|---|---:|---:|---|
-| 64B | 10.1–13.0 µs/条 | 4.1–4.7 µs/条 | **-6~-8 µs/条（快 48–63%）**² |
-| 1KB | 9.4–16.0 µs/条 | 7.4–7.7 µs/条 | **-2~-8 µs/条（快 13–52%）**² |
-| 64KB | 45–50 µs/条 | 134–188 µs/条³ | **+89~138 µs/条（慢 198~276%）**³ |
-
-² 小消息下框架反而**快于**裸 NetworkStream 逐条 Write 的写法：StreamFrame 的有界队列把
-"基准线程的逐条入队"与"worker 的 socket 写出"解耦成流水线，而裸写法把每次内核写串行在
-发送线程上。框架的真实代价体现在 64KB 大消息：每条约 +0.1 ms 与 ~400 KB 分配（编码缓冲
-几何扩容 + 池租借未命中）。³ 该行使用"分配式 GetBytes 的字符串 codec + 服务端回显"，归因表明其中大头是 codec 与消息类型成本（见"大报文归因"）：byte[] 负载 + 透传 codec 时框架距地板仅 59–73 µs（≈20–45%）。
-
-### 大报文归因（64KB，计数消费无回显，2026-08-29，含自适应发送缓冲）
-
-| 变体 | 每消息耗时 | 每消息分配 | 归因 |
-|---|---:|---:|---|
-| byte[] 消息 + 透传 codec | 59–73 µs | 64 KB | **框架纯成本基线**：分配仅为解码侧 ToArray（codec 固有），框架自身零分配；耗时较裸 TCP 地板（45–50 µs）高 ≈20–30% |
-| string 消息 + span 直写 codec | 70–104 µs（误差大，见噪声披露） | 129 KB | +64 KB = **消息类型固有税**（UTF-8 → UTF-16 string 物化， unavoidable for TMessage=string） |
-| string 消息 + 分配中间数组的 GetBytes（旧写法） | 73–92 µs | 193 KB | 再 +65 KB = **codec 写法税**（GetBytes 中间数组，可用 span 重载消除） |
-
-结论：64KB 场景的"框架税"大部分是 codec 写法与消息类型的成本——byte[] 负载 + 透传/低拷贝
-codec 时框架距裸 TCP 仅 ≈20–30%。使用建议见 README"大报文指南"。
-
-### 会话感知与新特性开销（三轮，1KB LengthPrefix，同上口径）
-
-| 对比 | 基线 | 变体 | 结论 |
-|---|---:|---:|---|
-| 发送方式 | SendAsync 13.2–17.2 µs/条 | SendInSessionAsync 24.7–31.6 µs/条 | **成本 ≈ +10~18 µs/条（中位 +11）**，分配 +≈470 B/条（信封 + 完成源 + 注册表；两轮区间内 SendInSession 误差棒较大，三轮方向与量级一致） |
-| 接收视图 | GetMessages 13.7–15.8 µs/条 | GetSessionMessages 12.7–15.8 µs/条 | **无可测差异**（同一通道，信封解包平凡）；分配同为 ≈3.4 KB/条 |
-| 未完成帧超时 | 关闭 13.5–20.9 µs/条 | 开启未触发 13.3–18.5 µs/条 | **无可测差异**（默认关闭为真零开销；开启后仅在半帧等待时才有计时令牌开销） |
-
-### 往返延迟（乒乓串行，两轮区间）
-
-| Framer | RTT |
-|---|---:|
-| LengthPrefix | 71.8–73.1 µs |
-| StxEtx | 65.6–73.8 µs |
-
-### Codec（XmlDocumentCodec，历史数据）
-
-| 操作 | 报文 | 耗时 | 分配 |
-|---|---|---:|---:|
-| Decode | ~400B | 3.0 µs | 16.7 KB |
-| Decode | ~4KB | 15.6 µs | 29.0 KB |
-| Encode | ~400B | 1.9 µs | 7.8 KB |
-| Encode | ~4KB | 10.9 µs | 10.4 KB |
-
-## 读数要点
-
-- **框架税是分尺寸的**：小消息（≤1KB）下有界队列的流水线让 StreamFrame 反而快于"裸 NetworkStream 逐条 Write"的对照写法；大消息（64KB）真实代价显现（≈3–4×、每条 ~400 KB 分配）——高吞吐大报文是后续优化方向（编码缓冲按负载预扩容 / 池化命中率）。
-- **会话感知发送的诚实成本**：`SendInSessionAsync` 约为普通发送的 2 倍耗时、+≈470 B/条分配（信封、完成源、注册表、状态字 CAS）。对协议计时器语义（T3/T6 从整帧写出起算）而言通常值得，但高频小消息场景若不需要会话语义，用 `SendAsync`。
-- **内置指标可以常开**：无监听时 0.5–1.0 ns/次、零分配，接收/发送路径每消息合计 ≈1.6/2.6 ns。
-- **新特性默认关闭即零开销**：未完成帧超时关闭时无可测差异；接收视图切换也无成本。
-- **流式编码的实测收益主要是"每帧堆分配减半"**（一个缓冲对象 vs 两个），小负载耗时也快 24–33%；大负载下省掉的那次 memcpy 被缓冲增长摊销。"零拷贝"指帧路径不再整体搬运负载，不是字面意义的零成本。
-- **切帧吞吐**：`LengthPrefixFramer` 读长度头直接跳转（≈8.3 ns/帧）；`StxEtxFramer` 在 net8+ 用 `SearchValues` 向量化定位边界（≈50 ns/帧；netstandard2.0 目标回退逐字节实现）。
-- **回环数据的边界**：以上宏基准全部来自同机回环，仅代表同机进程通信的量级；真实网络的延迟/带宽会改变各分量的占比。复现命令见文首。
+“流式零拷贝”仅指省去从独立负载缓冲整体复制到帧缓冲的那一次复制；Codec写入、池扩容、Socket/内核传输和接收消息物化仍可能复制/分配。`FramingBenchmarks`只测帧路径，不能外推端到端零拷贝或统一百分比收益。

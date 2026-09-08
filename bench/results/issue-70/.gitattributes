@@ -1,0 +1,2 @@
+# Preserve generated evidence byte-for-byte (including BDN whitespace/newlines).
+* -text
