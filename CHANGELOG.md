@@ -6,6 +6,7 @@
 ## [Unreleased]
 
 ### 修复
+- **基准工作量对齐（[#70](https://github.com/CSJ608/StreamFrame/issues/70)）**：单向不再回显；直接 TCP 与框架共享负载、定界、Codec、物化校验及完成点，覆盖双 Framer、64B/1KB/64KB 和字节/两种字符串编码，往返逐条等待回显。增加全矩阵连续批次验证；原始结果与环境随仓库保存，撤回不同工作量相减所得的框架税结论，修正指标单位和筛选命令，不修改框架实现。
 - **NativeAOT 运行验收（[#71](https://github.com/CSJ608/StreamFrame/issues/71)）**：CI 发布后执行 linux-x64 原生产物；有界等待连接与三条消息，校验会话绑定/普通发送及内容，观察消费任务并释放资源。动态选择端口并仅在连接阶段有限重选；连接失败、少收、消费异常和内容错误以非零退出，通过受控故障反证检查有效。保留警告为错误和非必需 AOT 检查。
 - **Soak 队列续发与收尾（[#67](https://github.com/CSJ608/StreamFrame/issues/67)）**：发送 worker 在每次出队前检查会话取消，避免上一帧写完后拆除的旧 worker 取走并丢弃待续发普通条目；新增确定性门控回归。长流测试精确排空后关闭读 socket 并观察任务，修复 net48 仅取消令牌时读任务不收敛。
 - **TCP KeepAlive 单位（[#62](https://github.com/CSJ608/StreamFrame/issues/62)）**：现代 .NET 将正毫秒值安全向上取整为秒，默认 30000/5000ms 正确设置为 30/5s；保留 netstandard2.0 IOControl 毫秒语义及默认关闭。增加真实 Socket 配置读回与边界回归，双语文档明确粒度差异。
