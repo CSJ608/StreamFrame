@@ -1074,10 +1074,18 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
     /// <inheritdoc />
     public Task WaitForConnectedAsync(CancellationToken ct = default)
     {
-        if (State == ConnectionState.Connected)
+        if (!IsDisposed && State == ConnectionState.Connected)
             return Task.CompletedTask;
 
         var tcs = GetOrCreateWhenConnected();
+        // 必须在注册后复查：Shutdown 可能已清空旧等待器，随后本次才发布新等待器。
+        // 若终态发生在复查之后，Shutdown 会取得已发布的等待器并负责取消。
+        if (IsDisposed)
+        {
+            tcs.TrySetCanceled();
+            return tcs.Task;
+        }
+
         return State == ConnectionState.Connected
             ? Task.CompletedTask // 获取等待器的间隙恰好连上了
             : tcs.Task.WaitAsync(ct);
