@@ -63,10 +63,12 @@ public sealed class StreamConnectionOptions
     /// </summary>
     public bool TcpKeepAlive { get; set; }
 
-    /// <summary>TCP KeepAlive 首次探测前的静默时长（毫秒），仅 <see cref="TcpKeepAlive"/> 开启时生效。</summary>
+    /// <summary>TCP KeepAlive 首次探测前的静默时长（正毫秒，默认 30000），仅 <see cref="TcpKeepAlive"/> 开启时生效。
+    /// 现代 .NET 向上取整为秒（1ms → 1s，1500ms → 2s）；netstandard2.0 的 IOControl 保留毫秒粒度。</summary>
     public int KeepAliveTimeMs { get; set; } = 30_000;
 
-    /// <summary>TCP KeepAlive 探测间隔（毫秒），仅 <see cref="TcpKeepAlive"/> 开启时生效。</summary>
+    /// <summary>TCP KeepAlive 探测间隔（正毫秒，默认 5000），仅 <see cref="TcpKeepAlive"/> 开启时生效。
+    /// 现代 .NET 向上取整为秒（1ms → 1s，1500ms → 2s）；netstandard2.0 的 IOControl 保留毫秒粒度。</summary>
     public int KeepAliveIntervalMs { get; set; } = 5_000;
 
     /// <summary>

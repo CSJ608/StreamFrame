@@ -225,6 +225,8 @@ var conn = new StreamConnection<XDocument>(..., logger: loggerFactory.CreateLogg
 
 ### 活性探测与心跳范式
 
+KeepAlive 默认关闭。开启后，`KeepAliveTimeMs` / `KeepAliveIntervalMs` 必须为正毫秒值，默认 30000 / 5000。现代 .NET 的 Socket 选项使用整秒，向上取整（1ms → 1s，1500ms → 2s，默认 → 30s / 5s）；`netstandard2.0` 的 `SIO_KEEPALIVE_VALS` 分支保留毫秒粒度。
+
 生产环境建议开启 `TcpKeepAlive = true`；应用层心跳配合 `ReceiveIdleTimeoutMs`（取心跳周期的 3 倍，容忍偶尔丢 1-2 次）是更强的组合——框架不内置心跳（消息形态由协议决定），范式如下，完整可运行示例见 demo 场景 4：
 
 ```csharp
