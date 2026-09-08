@@ -40,11 +40,12 @@ public class ConnectionUsabilityTests
         await using var server = CreateConnection(port, isActive: false);
 
         client.Start(CancellationToken.None);
+        var pending = client.WaitForConnectedAsync();
         // 服务端稍后才启动：等待者必须跨过若干次连接失败重试
         await Task.Delay(400);
         server.Start(CancellationToken.None);
 
-        await client.WaitForConnectedAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        await pending.WaitAsync(TimeSpan.FromSeconds(5));
         await server.WaitForConnectedAsync().WaitAsync(TimeSpan.FromSeconds(5));
         Assert.Equal(ConnectionState.Connected, client.State);
     }
@@ -91,6 +92,74 @@ public class ConnectionUsabilityTests
 
         await client.DisposeAsync();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => waitTask);
+    }
+
+    [Fact]
+    public async Task WaitForConnectedAsync_AfterDispose_IsCanceled()
+    {
+        await using var client = CreateConnection(12345, isActive: true);
+        await client.DisposeAsync();
+
+        var wait = client.WaitForConnectedAsync();
+        Assert.True(wait.IsCanceled);
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => wait);
+    }
+
+    [Fact]
+    public async Task WaitForConnectedAsync_FirstRegistrationRacesDispose_NoOrphanedWaiter()
+    {
+        for (var iteration = 0; iteration < 1000; iteration++)
+        {
+            await using var client = CreateConnection(12345, isActive: true);
+            using var start = new Barrier(2);
+            Task? wait = null;
+            var register = Task.Run(() =>
+            {
+                Assert.True(start.SignalAndWait(TimeSpan.FromSeconds(5)));
+                wait = client.WaitForConnectedAsync();
+            });
+            var shutdown = Task.Run(async () =>
+            {
+                Assert.True(start.SignalAndWait(TimeSpan.FromSeconds(5)));
+                await client.DisposeAsync();
+            });
+            await Task.WhenAll(register, shutdown).WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.NotNull(wait);
+            // net48 的 WaitAsync 兼容包装通过异步延续传播取消，必须等待传播完成。
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(
+                () => wait.WaitAsync(TimeSpan.FromSeconds(5)));
+            Assert.True(wait.IsCanceled);
+        }
+    }
+
+    [Fact]
+    public async Task WaitForConnectedAsync_CallerCancellation_DoesNotCancelSharedWaiter()
+    {
+        await using var client = CreateConnection(12345, isActive: true);
+        using var caller = new CancellationTokenSource();
+        var shared = client.WaitForConnectedAsync();
+        var canceled = client.WaitForConnectedAsync(caller.Token);
+        caller.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => canceled);
+        Assert.False(shared.IsCompleted);
+        await client.DisposeAsync();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => shared.WaitAsync(TimeSpan.FromSeconds(5)));
+        Assert.True(shared.IsCanceled);
+    }
+
+    [Fact]
+    public async Task WaitForConnectedAsync_LifetimeCancellation_CancelsExistingAndFutureWaiters()
+    {
+        await using var client = CreateConnection(GetFreePort(), isActive: true);
+        using var lifetime = new CancellationTokenSource();
+        client.Start(lifetime.Token);
+        var wait = client.WaitForConnectedAsync();
+        lifetime.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => wait.WaitAsync(TimeSpan.FromSeconds(5)));
+        Assert.True(wait.IsCanceled);
+        Assert.True(client.WaitForConnectedAsync().IsCanceled);
     }
 
     [Fact]

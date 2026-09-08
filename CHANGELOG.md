@@ -6,6 +6,7 @@
 ## [Unreleased]
 
 ### 修复
+- **终态连接等待（[#65](https://github.com/CSJ608/StreamFrame/issues/65)）**：取得连接等待器后复查停机状态，关闭首次注册与 Shutdown 的竞态；Dispose 或生命周期取消后的新等待也以任务取消结束，无需调用方令牌。补充终态调用、1000 次首次注册竞速及调用方取消隔离回归。
 - **坏头后完整帧交付（[#64](https://github.com/CSJ608/StreamFrame/issues/64)）**：定界器返回 false 但已消费无效前缀时继续解析现有缓冲，无进展才等待输入；保留非法长度头四字节丢弃策略，避免完整帧挂起及误触发半帧超时。补充推进契约及连续坏头、粘包、半帧、EOF、自定义定界器和错误元数据回归。
 - **监听绑定失败恢复（[#63](https://github.com/CSJ608/StreamFrame/issues/63)）**：监听 Socket 完成配置、Bind/Listen 后才发布，失败释放并保持字段为空，端口释放后可自动重试接入；发布与停机释放互斥，保留接受循环代次及单客户端监听关闭语义。新增同步信号门控的端口占用恢复、双向消息及取消/Dispose 竞态回归。
 - **Soak 目标矩阵（[#66](https://github.com/CSJ608/StreamFrame/issues/66)）**：显式选择 Ubuntu net8.0/net10.0、Windows net8.0/net10.0/net48，避免 Ubuntu 启动 .NET Framework 测试；job 名、详细日志与始终尝试上传的 TRX 产物按 OS/TFM 区分，测试断言失败继续使 job 失败。普通 CI 必需检查名不变。
