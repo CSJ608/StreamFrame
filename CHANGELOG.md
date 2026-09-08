@@ -5,8 +5,8 @@
 
 ## [Unreleased]
 
-### 变更
-- 暂无
+### 修复
+- **Soak 目标矩阵（[#66](https://github.com/CSJ608/StreamFrame/issues/66)）**：显式选择 Ubuntu net8.0/net10.0、Windows net8.0/net10.0/net48，避免 Ubuntu 启动 .NET Framework 测试；job 名、详细日志与始终尝试上传的 TRX 产物按 OS/TFM 区分，测试断言失败继续使 job 失败。普通 CI 必需检查名不变。
 
 ## [2.6.0] - 2026-08-29
 
