@@ -3,7 +3,7 @@
 本项目版本变更记录，格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
-## [Unreleased]
+## [2.7.0] - 2026-10-15
 
 ### 修复
 - **被取代接受循环的状态杂音与迟到接入语义澄清（[#68](https://github.com/CSJ608/StreamFrame/issues/68) PR-3，#47 世代语义边界定稿）**：用户重连与自动重连竞速产生的被取代"僵尸"接受循环——① 循环头代次复查前置：此前从重试退避中醒来的被取代循环会先发布 Connecting 再检查代次退出，状态序列混入替换者之外的杂音；② 明确并测试锁定迟到 accept 的收编语义：监听器是连接级共享资源，客户端向服务器端口的接入本身合法——被取代循环迟到完成的 accept **照常发布 Connected 并建立会话**（纪元机制与会话隔离收敛，取代者循环经代次检查静默退出）。曾评估"迟到连接当场释放"方案：会重置真实客户端、违背接入契约，已否决（实现一度引入后回归测试即复现客户端被吞）。新增确定性回归：accept 等待期间 Reconnect 取代循环，迟到客户端照常收编、状态序列恰为 Connecting→Retry→Connecting→Connected。
@@ -202,7 +202,8 @@
 - 发布自动化：`release.yml`（tag 自动建 GitHub Release）、`publish-nuget.yml`（OIDC Trusted Publishing 推送 nuget.org）。
 - 单元测试 25 个 + 三场景端到端 demo。
 
-[Unreleased]: https://github.com/CSJ608/StreamFrame/compare/v2.6.0...HEAD
+[Unreleased]: https://github.com/CSJ608/StreamFrame/compare/v2.7.0...HEAD
+[2.7.0]: https://github.com/CSJ608/StreamFrame/compare/v2.6.0...v2.7.0
 [2.6.0]: https://github.com/CSJ608/StreamFrame/compare/v2.5.0...v2.6.0
 [2.5.0]: https://github.com/CSJ608/StreamFrame/compare/v2.4.0...v2.5.0
 [2.4.0]: https://github.com/CSJ608/StreamFrame/compare/v2.3.1...v2.4.0
