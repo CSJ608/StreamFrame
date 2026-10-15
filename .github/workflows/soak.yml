@@ -43,7 +43,7 @@ jobs:
             tfm: net48
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
@@ -69,7 +69,7 @@ jobs:
 
       - name: Upload soak results (${{ matrix.tfm }})
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: soak-${{ matrix.os }}-${{ matrix.tfm }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: TestResults/${{ matrix.os }}/${{ matrix.tfm }}/
