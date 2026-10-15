@@ -11,28 +11,41 @@
 ```
 StreamFrame/
 ├─ StreamFrame.slnx
-├─ src/StreamFrame/                  # 核心库（无业务依赖）；所有公共类型都在 StreamFrame 命名空间
-│  ├─ ConnectionState.cs             # Connecting / Connected / Retry / Disconnected
-│  ├─ IStreamConnection.cs           # IStreamConnection<TMessage>
+├─ src/StreamFrame/                    # 核心库（无业务依赖）；所有公共类型都在 StreamFrame 命名空间
+│  ├─ ConnectionState.cs               # Connecting / Connected / Retry / Disconnected
+│  ├─ IStreamConnection.cs             # IStreamConnection<TMessage>
+│  ├─ ISessionAwareStreamConnection.cs # 会话感知收发（可选能力接口）
 │  ├─ StreamConnectionOptions.cs
+│  ├─ DecodeErrorPolicy.cs             # 帧内容解码失败策略（Disconnect / SkipFrame）
+│  ├─ FrameErrorKind.cs / FrameErrorEventArgs.cs  # 帧层诊断事件
+│  ├─ SessionExpiredException.cs       # 会话绑定发送失效异常
+│  ├─ SessionMessage.cs                # 带会话编号的接收元素
 │  ├─ Framing/
-│  │  ├─ IFramer.cs                  # 帧定界接口（EncodeFrame/TryDecodeFrame/MaxPayloadBytes）
-│  │  ├─ LengthPrefixFramer.cs       # 4 字节大端长度头
-│  │  ├─ StxEtxFramer.cs             # STX 0x02 … ETX 0x03（plain，不做转义）
-│  │  ├─ IStreamingFramer.cs         # 可选：流式单缓冲编码（Begin/EndFrame）
-│  │  ├─ IFrameDiscardReporting.cs   # 可选：重同步丢弃字节上报
-│  │  └─ IWrittenBufferWriter.cs     # 流式编码用的可回写缓冲抽象
+│  │  ├─ IFramer.cs                    # 帧定界接口（EncodeFrame/TryDecodeFrame/MaxPayloadBytes）
+│  │  ├─ LengthPrefixFramer.cs         # 4 字节大端长度头
+│  │  ├─ StxEtxFramer.cs               # STX 0x02 … ETX 0x03（plain，不做转义）
+│  │  ├─ IStreamingFramer.cs           # 可选：流式单缓冲编码（Begin/EndFrame）
+│  │  ├─ IFrameDiscardReporting.cs     # 可选：重同步丢弃字节上报
+│  │  └─ IWrittenBufferWriter.cs       # 流式编码用的可回写缓冲抽象
 │  ├─ Codec/
-│  │  ├─ ICodec.cs                   # ICodec<TMessage>（驱动实现）
-│  │  ├─ BufferWriterStream.cs       # IBufferWriter→Stream，供 XmlWriter 直写
-│  │  └─ PooledBufferWriter.cs       # 内部：ArrayPool 租用的 IWrittenBufferWriter
-│  └─ Connection/
-│     ├─ StreamConnection.cs         # 连接实现（双模式 + 状态机 + 重连 + 生命周期）
-│     ├─ FrameDecoder.cs             # 解码循环（切帧 + codec 解码）
-│     └─ SessionFaultException.cs    # 会话级故障（内部）
-├─ src/StreamFrame.Protocols.Xml/    # 官方示例驱动：XML 报文
-├─ test/StreamFrame.Tests/           # xUnit 单测
-└─ samples/StreamFrame.Demo/         # 控制台端到端 demo
+│  │  ├─ ICodec.cs                     # ICodec<TMessage>（驱动实现）
+│  │  ├─ BufferWriterStream.cs         # IBufferWriter→Stream，供 XmlWriter 直写
+│  │  └─ PooledBufferWriter.cs         # 内部：ArrayPool 租用的 IWrittenBufferWriter
+│  ├─ Connection/
+│  │  ├─ StreamConnection.cs           # 连接实现（双模式 + 状态机 + 重连 + 生命周期 + Session 对象）
+│  │  ├─ FrameDecoder.cs               # 解码循环（切帧 + codec 解码）
+│  │  ├─ RetryDelayScheduler.cs        # 内部：重连退避调度（倍增封顶 + 抖动）
+│  │  └─ SessionFaultException.cs      # 会话级故障（内部）
+│  ├─ Diagnostics/
+│  │  └─ ConnectionMetrics.cs          # 内部：内置指标（System.Diagnostics.Metrics）
+│  └─ Compatibility/
+│     └─ NetStandard20Shims.cs         # netstandard2.0 兼容层（Task.WaitAsync / Socket Memory 重载）
+├─ src/StreamFrame.Protocols.Xml/      # 官方示例驱动：XML 报文
+├─ test/StreamFrame.Tests/             # xUnit 单测
+├─ samples/StreamFrame.Demo/           # 控制台端到端 demo（五场景）
+├─ samples/StreamFrame.Ownership/      # 缓冲所有权示例（源文件纳入测试工程三目标编译）
+├─ samples/StreamFrame.AotSmoke/       # NativeAOT 发布/运行冒烟（CI 非必需检查）
+└─ bench/StreamFrame.Benchmarks/       # BenchmarkDotNet 基准
 ```
 
 命名空间约定：公共类型统一收敛在根命名空间 `StreamFrame`（2.0 起不再有 `StreamFrame.Abstractions`），用户只需一个 `using StreamFrame;`；目录仅按角色组织文件。
@@ -72,7 +85,7 @@ public interface ICodec<TMessage>
 }
 ```
 
-驱动＝实现 codec + 定义业务消息类。官方示例：`StreamFrame.Protocols.Xml.XmlDocumentCodec`（XmlSerializer 解码 / BufferWriterStream+XmlWriter 编码）。用户按此骨架替换即可支持自定义二进制协议。
+驱动＝实现 codec + 定义业务消息类。官方示例：`StreamFrame.Protocols.Xml.XmlDocumentCodec`（XmlReader→XDocument 解码 / BufferWriterStream+XmlWriter 编码）。用户按此骨架替换即可支持自定义二进制协议。
 
 ### 3. 连接核心（客户端/服务端双模式）
 
@@ -209,6 +222,6 @@ socket --ReceiveAsync--> pipe.Writer --[Pipe]--> FrameDecoder.RunAsync
 - XML codec：往返、DTD 拒绝（XXE 防御）
 - 连接端到端（真实 TCP 回环）：断线重连后消息送达、解码失败断线/跳帧、调试钩子抛异常会话存活、接收空闲超时、发送失败重连、未完成帧超限断线、单客户端拒绝
 - 易用性与生命周期：等待连接就绪（跨重试/挂起/Dispose 取消）、Start 重入防护、选项构造校验、慢消费者有界接收队列、Start 令牌取消停机（Disconnected 终态/通道关闭）、对端地址语义、双栈监听 IPv4 接入
-- 端到端：`samples/StreamFrame.Demo` 演示 XML+LengthPrefix、文本+STX/ETX、断线重连三场景
+- 端到端：`samples/StreamFrame.Demo` 演示五场景：XML+LengthPrefix、文本+STX/ETX、断线自动重连、心跳保活+接收空闲超时、会话感知收发
 
 运行：`dotnet build StreamFrame.slnx`、`dotnet test`、`dotnet run --project samples/StreamFrame.Demo`
