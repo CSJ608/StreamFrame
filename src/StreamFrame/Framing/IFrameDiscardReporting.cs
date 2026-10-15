@@ -11,7 +11,7 @@ namespace StreamFrame;
 /// 正常切帧时 <c>discarded</c> 为空。
 ///
 /// 连接层检测到本接口后，会把这些字节通过 FrameError 事件（Kind=DiscardedByResync）
-/// 交给上层调试；不实现本接口的第三方 codec 不受影响，只是没有丢弃上报。
+/// 交给上层调试；不实现本接口的第三方定界器不受影响，只是没有丢弃上报。
 /// </summary>
 public interface IFrameDiscardReporting
 {

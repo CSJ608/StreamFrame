@@ -6,7 +6,7 @@ namespace StreamFrame;
 /// 连接级内置指标（<see cref="Meter"/> 名 "StreamFrame"，零外部依赖）：
 /// 帧收发计数、字节收发计数、重连次数、会话时长、发送队列水位。生产部署用
 /// MeterListener / OpenTelemetry 订阅 "StreamFrame" 即可观测，不接入则开销为每次记录
-/// 数纳秒级；netstandard2.0 目标为 no-op 兜底（无 Metrics API，记录全部空操作）。
+/// 数纳秒级；netstandard2.0 目标经 System.Diagnostics.DiagnosticSource 包获得同款 API（netfx 运行时可用）。
 ///
 /// 标签：单一 "endpoint"（构造时的 ip:port）——每条连接的地址固定，标签基数受控。
 /// </summary>
