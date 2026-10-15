@@ -142,6 +142,45 @@ socket --ReceiveAsync--> pipe.Writer --[Pipe]--> FrameDecoder.RunAsync
 
 **原始字节与诊断（1.2.0）**：`RawBytesReceived/Sent` 全量输出（含被定界器丢弃的噪声字节），发送侧按实际写出分片回调；两者与 `ConnectionChanged`、`FrameError` 的用户回调异常均被隔离，不反噬会话。`IFrameDiscardReporting`（可选接口，内置两个 codec 实现）让定界器精确上报重同步丢弃的字节，经 `FrameError(DiscardedByResync)` 交上层调试。
 
+### 状态机与所有权规范（#68 行为基线）
+
+> 本节是 `StreamConnection` 状态转换、资源所有权、锁范围与允许重入点的权威清单，
+> 与 `StateOwnershipBaselineTests` 共同构成后续会话所有权重构的行为底线。
+
+**状态转换全表**（`CommunicationStateChanging` 是唯一发布入口；`State` 只在发布段写入）：
+
+| 目标状态 | 触发源 | 发布点 |
+|---|---|---|
+| `Connecting` | `Start`/重连的 `StartAsync` 循环头（每轮尝试前） | 连接循环 |
+| `Connected` | 传输建立成功（connect/accept 返回后、过停机守门） | 连接循环（唯一发布点） |
+| `Retry` | 用户 `Reconnect()`；会话任务故障经 `ScheduleReconnect`（携带 epoch，过期即丢） | 用户线程 / 线程池 |
+| `Disconnected` | `Shutdown`（Dispose 或生命周期令牌取消）唯一来源 | 停机路径 |
+
+发布段规则（`_publishGate` 锁内，原子）：① 停机后到达的非终态发布**整体丢弃**——终态必须是最后对外可见的状态（并发 Reconnect/连接成功与 Dispose 竞速时不被翻转）；② 过期纪元的故障发布在任何对外可见效果之前丢弃；③ 会话编号分配/归零与纪元递增先于 `State` 写入（线性化点：`ConnectionChanged` 回调与 `WaitForConnectedAsync` 完成时刻读取 `CurrentSessionId` 必得一致值）。通知段（锁外）：用户回调（异常隔离）、等待器完成、会话创建/拆除派发——回调可能重入，不得持有发布锁。
+
+**会话创建的纪元现行性门控**：`StartSession` 只在"发布帧的纪元仍是最新、编号非零"时创建会话。Connected 回调内同步 `Reconnect()` 或发布窗口内的现行纪元故障会让位于取代者（其循环重建连接），迟到帧不再"兜底重建"——那曾以过期编号复用、拆除新会话刚建立的 socket（撕裂会话）。被取代帧的 socket 在新连接覆盖 `_socket` 时当场释放。
+
+**资源所有权**：
+
+| 资源 | 创建者 | 释放者 | 备注 |
+|---|---|---|---|
+| `_socket`（会话 socket） | 连接循环（connect/accept） | 会话拆除（`StopSessionCore`）；新连接覆盖时；`Shutdown` 末尾兜底 | 赋值与关闭互斥于 `_sessionGate`；停机守门失败的连接当场释放 |
+| `_server`（监听 socket） | `InitServer`（Bind/Listen 全部成功才发布） | 单客户端接受后关闭；`Shutdown` 释放；bind 失败自清理 | 归当代接受循环所有（代次门控，#47） |
+| 会话五元组（`_sessionCts`/`_pipe`/接收、解码、发送三任务） | `StartSession` | `StopSessionCore`（cancel → 唤醒 → 置空字段 → 有界等待 ≤2s → 关 socket → 释放 cts） | 终态后不再创建（`StartSession` 停机守门） |
+| `_messageRelay`（消息通道） | 构造 | 仅 `Shutdown`（连接级、跨会话存活） | 会话重建不完成它（1.2.0 假活修复） |
+| `_sendQueue` / 挂起的会话绑定条目 | 业务侧入队 | `Shutdown` 完成通道；拆除时 `FaultPendingSessionSends` | 条目三态 CAS：Queued/Claimed/Cancelled/Expired |
+
+**锁与同步原语清单**：`_publishGate`（状态发布段，锁内无 await/回调）；`_sessionGate`（会话创建/拆除、`_socket` 赋值互斥；拆除等待最长 2s——已知同步等待，见"已知限制"）；`_listenerGate`（监听器发布与停机释放互斥）；`_acceptLock`（接受尝试串行化 + 代次门控落点）；`_sendLock`（socket 写串行化）；CAS 字段：`_retryInProgress`（重拆防重入）、`_acceptLoopId`（接受循环代次）、`_disposeStage`/`_started`、发送条目状态字。
+
+**允许的重入点**（用户回调可调用任意公共 API，异常一律隔离）：
+
+- `Connected` 回调内 `Reconnect()`：合法（病态但支持）。回调内 Retry 先行（纪元递增 + 派发新循环），原发布帧的会话创建被纪元门控放弃；新连接由新循环完成，编号恒非零且不复用。
+- `Connected` 回调内 `DisposeAsync()`：合法。停机同步完成（会话尚未创建则无拆除等待）；原发布帧随后的会话创建被停机守门放弃；挂起等待器以取消收尾。
+- 停机后的任何调用：`Reconnect()`/`SendInSessionAsync` 等抛 `ObjectDisposedException` 或以会话失效收尾；迟到的内部状态发布被发布段丢弃。
+- 迟到的旧会话任务/故障：入口过期纪元检查丢弃，不误杀新会话（1.2.0/2.3.1 既有保证，重入路径由纪元门控补齐）。
+
+**已知限制（后续 PR 方向）**：① `StopSessionCore` 持 `_sessionGate` 同步等待会话任务最长 2 秒——线程池饥饿时放大停机/重连延迟（高并发压力下可观测），#68 后续以"先中止 I/O、异步等待任务"改造；② `_socket`/会话五元组是"当前值"字段语义而非会话对象所有——并发双循环的直连迁移路径靠覆盖释放与拆除收敛，集中所有权（内部 Session 对象）是重构目标。
+
 ### netstandard2.0 兼容层（2.1.0）
 
 多目标 `netstandard2.0;net8.0;net10.0`：
