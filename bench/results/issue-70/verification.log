@@ -1,0 +1,217 @@
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=False LengthPrefix 64 Bytes DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=False LengthPrefix 64 Bytes StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=False LengthPrefix 64 StringSpan DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=False LengthPrefix 64 StringSpan StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=False LengthPrefix 64 StringAlloc DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=False LengthPrefix 64 StringAlloc StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=False LengthPrefix 1024 Bytes DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=False LengthPrefix 1024 Bytes StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=False LengthPrefix 1024 StringSpan DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=False LengthPrefix 1024 StringSpan StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=False LengthPrefix 1024 StringAlloc DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=False LengthPrefix 1024 StringAlloc StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=False LengthPrefix 65536 Bytes DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=False LengthPrefix 65536 Bytes StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=False LengthPrefix 65536 StringSpan DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=False LengthPrefix 65536 StringSpan StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=False LengthPrefix 65536 StringAlloc DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=False LengthPrefix 65536 StringAlloc StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=False StxEtx 64 Bytes DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=False StxEtx 64 Bytes StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=False StxEtx 64 StringSpan DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=False StxEtx 64 StringSpan StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=False StxEtx 64 StringAlloc DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=False StxEtx 64 StringAlloc StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=False StxEtx 1024 Bytes DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=False StxEtx 1024 Bytes StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=False StxEtx 1024 StringSpan DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=False StxEtx 1024 StringSpan StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=False StxEtx 1024 StringAlloc DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=False StxEtx 1024 StringAlloc StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=False StxEtx 65536 Bytes DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=False StxEtx 65536 Bytes StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=False StxEtx 65536 StringSpan DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=False StxEtx 65536 StringSpan StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=False StxEtx 65536 StringAlloc DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=False StxEtx 65536 StringAlloc StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=True LengthPrefix 64 Bytes DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=True LengthPrefix 64 Bytes StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=True LengthPrefix 64 StringSpan DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=True LengthPrefix 64 StringSpan StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=True LengthPrefix 64 StringAlloc DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=True LengthPrefix 64 StringAlloc StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=True LengthPrefix 1024 Bytes DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=True LengthPrefix 1024 Bytes StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=True LengthPrefix 1024 StringSpan DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=True LengthPrefix 1024 StringSpan StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=True LengthPrefix 1024 StringAlloc DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=True LengthPrefix 1024 StringAlloc StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=True LengthPrefix 65536 Bytes DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=True LengthPrefix 65536 Bytes StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=True LengthPrefix 65536 StringSpan DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=True LengthPrefix 65536 StringSpan StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=True LengthPrefix 65536 StringAlloc DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=True LengthPrefix 65536 StringAlloc StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=True StxEtx 64 Bytes DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=True StxEtx 64 Bytes StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=True StxEtx 64 StringSpan DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=True StxEtx 64 StringSpan StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=True StxEtx 64 StringAlloc DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=True StxEtx 64 StringAlloc StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=True StxEtx 1024 Bytes DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=True StxEtx 1024 Bytes StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=True StxEtx 1024 StringSpan DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=True StxEtx 1024 StringSpan StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=True StxEtx 1024 StringAlloc DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=True StxEtx 1024 StringAlloc StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=True StxEtx 65536 Bytes DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=True StxEtx 65536 Bytes StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=True StxEtx 65536 StringSpan DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=True StxEtx 65536 StringSpan StreamFrame: 2 x 256 validated messages
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+PASS echo=True StxEtx 65536 StringAlloc DirectTcp: 2 x 256 validated messages
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+PASS echo=True StxEtx 65536 StringAlloc StreamFrame: 2 x 256 validated messages
+Network verification passed: 72/72 cases (not a timing measurement).

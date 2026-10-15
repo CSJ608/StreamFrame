@@ -1,0 +1,13 @@
+Measurement source commit: e6960285642e32e505f179506c426311fef9dd15
+Base main: 297450f
+Started: 2026-09-08, Asia/Shanghai
+CPU: Intel Core i5-12500H, 12 physical / 16 logical cores
+OS: Windows 10 19045 x64
+SDK: 10.0.400
+Runtime: .NET 10.0.11 x64 RyuJIT (full BDN details in logs)
+Formal configuration: 1 launch, 3 warmup, 10 actual iterations, target iteration time 250ms, DontRemove outliers; BDN adaptive pilot/invocation count.
+Matrix: 72; 256 operations per invocation. Both endpoints in same benchmark process.
+Scheduling: one BDN runner at a time; no simultaneous builds/tests. Development laptop, not dedicated lab; other user/OS activity not controlled. No claim of thermal/frequency isolation or cross-launch stability.
+Verification: 72 cases x 2 consecutive batches, all contents checked; one-way Dry 36 cases passed (timings not evidence).
+Socket observations: both receive/send 65536; NoDelay=false; KeepAlive=false.
+Failure: first manual verification failed during direct TCP initialization (nonblocking socket before NetworkStream construction), cleanup masked exception; corrected initialization ordering and partial cleanup; one justified retry passed. Original failure retained.

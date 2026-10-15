@@ -1,0 +1,23 @@
+  正在确定要还原的项目…
+  已还原 C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\samples\StreamFrame.AotSmoke\StreamFrame.AotSmoke.csproj (用时 243 毫秒)。
+  已还原 C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\samples\StreamFrame.Demo\StreamFrame.Demo.csproj (用时 237 毫秒)。
+  已还原 C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\test\StreamFrame.Tests\StreamFrame.Tests.csproj (用时 258 毫秒)。
+  3 个项目(共 6 个)是最新的，无法还原。
+  StreamFrame -> C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\src\StreamFrame\bin\Release\net10.0\StreamFrame.dll
+  StreamFrame -> C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\src\StreamFrame\bin\Release\netstandard2.0\StreamFrame.dll
+  StreamFrame -> C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\src\StreamFrame\bin\Release\net8.0\StreamFrame.dll
+  StreamFrame.Protocols.Xml -> C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\src\StreamFrame.Protocols.Xml\bin\Release\net10.0\StreamFrame.Protocols.Xml.dll
+  StreamFrame.AotSmoke -> C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\samples\StreamFrame.AotSmoke\bin\Release\net8.0\StreamFrame.AotSmoke.dll
+  StreamFrame.Protocols.Xml -> C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\src\StreamFrame.Protocols.Xml\bin\Release\net8.0\StreamFrame.Protocols.Xml.dll
+  StreamFrame.Protocols.Xml -> C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\src\StreamFrame.Protocols.Xml\bin\Release\netstandard2.0\StreamFrame.Protocols.Xml.dll
+  StreamFrame.Benchmarks -> C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks.dll
+  StreamFrame.Demo -> C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\samples\StreamFrame.Demo\bin\Release\net8.0\StreamFrame.Demo.dll
+  StreamFrame.Tests -> C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\test\StreamFrame.Tests\bin\Release\net10.0\StreamFrame.Tests.dll
+  StreamFrame.Tests -> C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\test\StreamFrame.Tests\bin\Release\net8.0\StreamFrame.Tests.dll
+  StreamFrame.Tests -> C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\test\StreamFrame.Tests\bin\Release\net48\StreamFrame.Tests.dll
+
+已成功生成。
+    0 个警告
+    0 个错误
+
+已用时间 00:00:03.59

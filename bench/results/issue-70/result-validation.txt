@@ -1,0 +1,2 @@
+oneway : 36/36 cases, each N=10, positive mean; full managed allocation results present.
+rtt : 36/36 cases, each N=10, positive mean; full managed allocation results present.

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>StreamFrame.Benchmarks.OneWayThroughputBenchmarks-20260908-180505</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet v0.15.8, Windows 10 (10.0.19045.6466/22H2/2022Update)
+12th Gen Intel Core i5-12500H 3.10GHz, 1 CPU, 16 logical and 12 physical cores
+.NET SDK 10.0.400
+  [Host] : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+  Dry    : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+</code></pre>
+<pre><code>Job=Dry  IterationCount=1  LaunchCount=1  
+RunStrategy=ColdStart  UnrollFactor=1  WarmupCount=1  
+</code></pre>
+
+<table>
+<thead><tr><th>Method</th><th>Framer</th><th>PayloadBytes</th><th>CodecMode</th><th>Transport</th><th>Mean</th><th>Error</th><th>Gen0</th><th>Gen1</th><th>Gen2</th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>Transfer</td><td>LengthPrefix</td><td>64</td><td>Bytes</td><td>DirectTcp</td><td>32.10 &mu;s</td><td>NA</td><td>-</td><td>-</td><td>-</td><td>203 B</td>
+</tr><tr><td>Transfer</td><td>LengthPrefix</td><td>64</td><td>Bytes</td><td>StreamFrame</td><td>62.98 &mu;s</td><td>NA</td><td>-</td><td>-</td><td>-</td><td>461 B</td>
+</tr><tr><td>Transfer</td><td>LengthPrefix</td><td>64</td><td>StringAlloc</td><td>DirectTcp</td><td>41.83 &mu;s</td><td>NA</td><td>-</td><td>-</td><td>-</td><td>321 B</td>
+</tr><tr><td>Transfer</td><td>LengthPrefix</td><td>64</td><td>StringAlloc</td><td>StreamFrame</td><td>67.86 &mu;s</td><td>NA</td><td>-</td><td>-</td><td>-</td><td>672 B</td>
+</tr><tr><td>Transfer</td><td>LengthPrefix</td><td>64</td><td>StringSpan</td><td>DirectTcp</td><td>45.10 &mu;s</td><td>NA</td><td>-</td><td>-</td><td>-</td><td>301 B</td>
+</tr><tr><td>Transfer</td><td>LengthPrefix</td><td>64</td><td>StringSpan</td><td>StreamFrame</td><td>75.14 &mu;s</td><td>NA</td><td>-</td><td>-</td><td>-</td><td>732 B</td>
+</tr><tr><td>Transfer</td><td>LengthPrefix</td><td>1024</td><td>Bytes</td><td>DirectTcp</td><td>45.70 &mu;s</td><td>NA</td><td>-</td><td>-</td><td>-</td><td>1121 B</td>
+</tr><tr><td>Transfer</td><td>LengthPrefix</td><td>1024</td><td>Bytes</td><td>StreamFrame</td><td>78.19 &mu;s</td><td>NA</td><td>-</td><td>-</td><td>-</td><td>10202 B</td>
+</tr><tr><td>Transfer</td><td>LengthPrefix</td><td>1024</td><td>StringAlloc</td><td>DirectTcp</td><td>72.14 &mu;s</td><td>NA</td><td>-</td><td>-</td><td>-</td><td>3209 B</td>
+</tr><tr><td>Transfer</td><td>LengthPrefix</td><td>1024</td><td>StringAlloc</td><td>StreamFrame</td><td>71.71 &mu;s</td><td>NA</td><td>-</td><td>-</td><td>-</td><td>4377 B</td>
+</tr><tr><td>Transfer</td><td>LengthPrefix</td><td>1024</td><td>StringSpan</td><td>DirectTcp</td><td>36.26 &mu;s</td><td>NA</td><td>-</td><td>-</td><td>-</td><td>2150 B</td>
+</tr><tr><td>Transfer</td><td>LengthPrefix</td><td>1024</td><td>StringSpan</td><td>StreamFrame</td><td>79.81 &mu;s</td><td>NA</td><td>-</td><td>-</td><td>-</td><td>3731 B</td>
+</tr><tr><td>Transfer</td><td>LengthPrefix</td><td>65536</td><td>Bytes</td><td>DirectTcp</td><td>79.17 &mu;s</td><td>NA</td><td>3.9063</td><td>-</td><td>-</td><td>66109 B</td>
+</tr><tr><td>Transfer</td><td>LengthPrefix</td><td>65536</td><td>Bytes</td><td>StreamFrame</td><td>167.50 &mu;s</td><td>NA</td><td>3.9063</td><td>-</td><td>-</td><td>66908 B</td>
+</tr><tr><td>Transfer</td><td>LengthPrefix</td><td>65536</td><td>StringAlloc</td><td>DirectTcp</td><td>143.19 &mu;s</td><td>NA</td><td>39.0625</td><td>39.0625</td><td>39.0625</td><td>197257 B</td>
+</tr><tr><td>Transfer</td><td>LengthPrefix</td><td>65536</td><td>StringAlloc</td><td>StreamFrame</td><td>197.46 &mu;s</td><td>NA</td><td>39.0625</td><td>35.1563</td><td>35.1563</td><td>198370 B</td>
+</tr><tr><td>Transfer</td><td>LengthPrefix</td><td>65536</td><td>StringSpan</td><td>DirectTcp</td><td>80.53 &mu;s</td><td>NA</td><td>39.0625</td><td>39.0625</td><td>39.0625</td><td>131704 B</td>
+</tr><tr><td>Transfer</td><td>LengthPrefix</td><td>65536</td><td>StringSpan</td><td>StreamFrame</td><td>195.78 &mu;s</td><td>NA</td><td>35.1563</td><td>35.1563</td><td>35.1563</td><td>133090 B</td>
+</tr><tr><td>Transfer</td><td>StxEtx</td><td>64</td><td>Bytes</td><td>DirectTcp</td><td>34.08 &mu;s</td><td>NA</td><td>-</td><td>-</td><td>-</td><td>186 B</td>
+</tr><tr><td>Transfer</td><td>StxEtx</td><td>64</td><td>Bytes</td><td>StreamFrame</td><td>63.65 &mu;s</td><td>NA</td><td>-</td><td>-</td><td>-</td><td>480 B</td>
+</tr><tr><td>Transfer</td><td>StxEtx</td><td>64</td><td>StringAlloc</td><td>DirectTcp</td><td>33.08 &mu;s</td><td>NA</td><td>-</td><td>-</td><td>-</td><td>295 B</td>
+</tr><tr><td>Transfer</td><td>StxEtx</td><td>64</td><td>StringAlloc</td><td>StreamFrame</td><td>61.22 &mu;s</td><td>NA</td><td>-</td><td>-</td><td>-</td><td>709 B</td>
+</tr><tr><td>Transfer</td><td>StxEtx</td><td>64</td><td>StringSpan</td><td>DirectTcp</td><td>45.36 &mu;s</td><td>NA</td><td>-</td><td>-</td><td>-</td><td>223 B</td>
+</tr><tr><td>Transfer</td><td>StxEtx</td><td>64</td><td>StringSpan</td><td>StreamFrame</td><td>66.69 &mu;s</td><td>NA</td><td>-</td><td>-</td><td>-</td><td>571 B</td>
+</tr><tr><td>Transfer</td><td>StxEtx</td><td>1024</td><td>Bytes</td><td>DirectTcp</td><td>33.15 &mu;s</td><td>NA</td><td>-</td><td>-</td><td>-</td><td>1115 B</td>
+</tr><tr><td>Transfer</td><td>StxEtx</td><td>1024</td><td>Bytes</td><td>StreamFrame</td><td>64.85 &mu;s</td><td>NA</td><td>-</td><td>-</td><td>-</td><td>8072 B</td>
+</tr><tr><td>Transfer</td><td>StxEtx</td><td>1024</td><td>StringAlloc</td><td>DirectTcp</td><td>38.96 &mu;s</td><td>NA</td><td>-</td><td>-</td><td>-</td><td>3250 B</td>
+</tr><tr><td>Transfer</td><td>StxEtx</td><td>1024</td><td>StringAlloc</td><td>StreamFrame</td><td>73.25 &mu;s</td><td>NA</td><td>-</td><td>-</td><td>-</td><td>7213 B</td>
+</tr><tr><td>Transfer</td><td>StxEtx</td><td>1024</td><td>StringSpan</td><td>DirectTcp</td><td>34.50 &mu;s</td><td>NA</td><td>-</td><td>-</td><td>-</td><td>2141 B</td>
+</tr><tr><td>Transfer</td><td>StxEtx</td><td>1024</td><td>StringSpan</td><td>StreamFrame</td><td>68.71 &mu;s</td><td>NA</td><td>-</td><td>-</td><td>-</td><td>3628 B</td>
+</tr><tr><td>Transfer</td><td>StxEtx</td><td>65536</td><td>Bytes</td><td>DirectTcp</td><td>80.55 &mu;s</td><td>NA</td><td>3.9063</td><td>-</td><td>-</td><td>66171 B</td>
+</tr><tr><td>Transfer</td><td>StxEtx</td><td>65536</td><td>Bytes</td><td>StreamFrame</td><td>161.89 &mu;s</td><td>NA</td><td>3.9063</td><td>-</td><td>-</td><td>66122 B</td>
+</tr><tr><td>Transfer</td><td>StxEtx</td><td>65536</td><td>StringAlloc</td><td>DirectTcp</td><td>86.18 &mu;s</td><td>NA</td><td>39.0625</td><td>39.0625</td><td>39.0625</td><td>197253 B</td>
+</tr><tr><td>Transfer</td><td>StxEtx</td><td>65536</td><td>StringAlloc</td><td>StreamFrame</td><td>173.80 &mu;s</td><td>NA</td><td>35.1563</td><td>31.2500</td><td>31.2500</td><td>198169 B</td>
+</tr><tr><td>Transfer</td><td>StxEtx</td><td>65536</td><td>StringSpan</td><td>DirectTcp</td><td>96.54 &mu;s</td><td>NA</td><td>39.0625</td><td>39.0625</td><td>39.0625</td><td>131705 B</td>
+</tr><tr><td>Transfer</td><td>StxEtx</td><td>65536</td><td>StringSpan</td><td>StreamFrame</td><td>188.67 &mu;s</td><td>NA</td><td>35.1563</td><td>35.1563</td><td>35.1563</td><td>134686 B</td>
+</tr></tbody></table>
+</body>
+</html>

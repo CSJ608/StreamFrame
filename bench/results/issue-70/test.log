@@ -1,0 +1,30 @@
+C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\test\StreamFrame.Tests\bin\Release\net8.0\StreamFrame.Tests.dll (.NETCoreApp,Version=v8.0)的测试运行
+C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\test\StreamFrame.Tests\bin\Release\net10.0\StreamFrame.Tests.dll (.NETCoreApp,Version=v10.0)的测试运行
+C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\test\StreamFrame.Tests\bin\Release\net48\StreamFrame.Tests.dll (.NETFramework,Version=v4.8)的测试运行
+总共 1 个测试文件与指定模式相匹配。
+总共 1 个测试文件与指定模式相匹配。
+总共 1 个测试文件与指定模式相匹配。
+[xUnit.net 00:00:00.31]     StreamFrame.Tests.SoakTests.Soak_Chaos_RandomFaults_NoHangAndIntegrity [SKIP]
+[xUnit.net 00:00:00.35]     StreamFrame.Tests.SoakTests.Soak_ReconnectRacing_LongRun [SKIP]
+[xUnit.net 00:00:00.35]     StreamFrame.Tests.SoakTests.Soak_LongRun_MessageIntegrity [SKIP]
+  已跳过 StreamFrame.Tests.SoakTests.Soak_Chaos_RandomFaults_NoHangAndIntegrity [1 ms]
+  已跳过 StreamFrame.Tests.SoakTests.Soak_ReconnectRacing_LongRun [1 ms]
+  已跳过 StreamFrame.Tests.SoakTests.Soak_LongRun_MessageIntegrity [1 ms]
+[xUnit.net 00:00:00.39]     StreamFrame.Tests.SoakTests.Soak_Chaos_RandomFaults_NoHangAndIntegrity [SKIP]
+[xUnit.net 00:00:00.42]     StreamFrame.Tests.SoakTests.Soak_ReconnectRacing_LongRun [SKIP]
+[xUnit.net 00:00:00.42]     StreamFrame.Tests.SoakTests.Soak_LongRun_MessageIntegrity [SKIP]
+  已跳过 StreamFrame.Tests.SoakTests.Soak_Chaos_RandomFaults_NoHangAndIntegrity [1 ms]
+  已跳过 StreamFrame.Tests.SoakTests.Soak_ReconnectRacing_LongRun [1 ms]
+  已跳过 StreamFrame.Tests.SoakTests.Soak_LongRun_MessageIntegrity [1 ms]
+[xUnit.net 00:00:01.10]     StreamFrame.Tests.SoakTests.Soak_Chaos_RandomFaults_NoHangAndIntegrity [SKIP]
+[xUnit.net 00:00:01.19]     StreamFrame.Tests.SoakTests.Soak_ReconnectRacing_LongRun [SKIP]
+[xUnit.net 00:00:01.20]     StreamFrame.Tests.SoakTests.Soak_LongRun_MessageIntegrity [SKIP]
+  已跳过 StreamFrame.Tests.SoakTests.Soak_Chaos_RandomFaults_NoHangAndIntegrity [1 ms]
+  已跳过 StreamFrame.Tests.SoakTests.Soak_ReconnectRacing_LongRun [1 ms]
+  已跳过 StreamFrame.Tests.SoakTests.Soak_LongRun_MessageIntegrity [1 ms]
+
+已通过! - 失败:     0，通过:   132，已跳过:     3，总计:   135，持续时间: 17 s - StreamFrame.Tests.dll (net8.0)
+
+已通过! - 失败:     0，通过:   132，已跳过:     3，总计:   135，持续时间: 17 s - StreamFrame.Tests.dll (net10.0)
+
+已通过! - 失败:     0，通过:   124，已跳过:     3，总计:   127，持续时间: 18 s - StreamFrame.Tests.dll (net48)

@@ -1,0 +1,1823 @@
+// Validating benchmarks:
+// ***** BenchmarkRunner: Start   *****
+// ***** Found 36 benchmark(s) in total *****
+// ***** Building 1 exe(s) in Parallel: Start   *****
+// start dotnet  restore --nodeReuse:false /p:UseSharedCompilation=false /p:Deterministic=true /p:Optimize=true /p:ArtifactsPath="C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1/" /p:OutDir="C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0/" /p:OutputPath="C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0/" /p:PublishDir="C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\publish/" in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1
+// command took 2.2 sec and exited with 0
+// start dotnet  build -c Release --no-restore --nodeReuse:false /p:UseSharedCompilation=false /p:Deterministic=true /p:Optimize=true /p:ArtifactsPath="C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1/" /p:OutDir="C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0/" /p:OutputPath="C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0/" /p:PublishDir="C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\publish/" --output "C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0/" in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1
+// command took 10.86 sec and exited with 0
+// ***** Done, took 00:00:13 (13.15 sec)   *****
+// Found 36 benchmarks:
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=Bytes, Transport=DirectTcp]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=Bytes, Transport=StreamFrame]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=StringAlloc, Transport=DirectTcp]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=StringAlloc, Transport=StreamFrame]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=StringSpan, Transport=DirectTcp]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=StringSpan, Transport=StreamFrame]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=Bytes, Transport=DirectTcp]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=Bytes, Transport=StreamFrame]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=StringAlloc, Transport=DirectTcp]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=StringAlloc, Transport=StreamFrame]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=StringSpan, Transport=DirectTcp]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=StringSpan, Transport=StreamFrame]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=Bytes, Transport=DirectTcp]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=Bytes, Transport=StreamFrame]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=StringAlloc, Transport=DirectTcp]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=StringAlloc, Transport=StreamFrame]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=StringSpan, Transport=DirectTcp]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=StringSpan, Transport=StreamFrame]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=64, CodecMode=Bytes, Transport=DirectTcp]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=64, CodecMode=Bytes, Transport=StreamFrame]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=64, CodecMode=StringAlloc, Transport=DirectTcp]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=64, CodecMode=StringAlloc, Transport=StreamFrame]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=64, CodecMode=StringSpan, Transport=DirectTcp]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=64, CodecMode=StringSpan, Transport=StreamFrame]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=1024, CodecMode=Bytes, Transport=DirectTcp]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=1024, CodecMode=Bytes, Transport=StreamFrame]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=1024, CodecMode=StringAlloc, Transport=DirectTcp]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=1024, CodecMode=StringAlloc, Transport=StreamFrame]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=1024, CodecMode=StringSpan, Transport=DirectTcp]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=1024, CodecMode=StringSpan, Transport=StreamFrame]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=65536, CodecMode=Bytes, Transport=DirectTcp]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=65536, CodecMode=Bytes, Transport=StreamFrame]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=65536, CodecMode=StringAlloc, Transport=DirectTcp]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=65536, CodecMode=StringAlloc, Transport=StreamFrame]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=65536, CodecMode=StringSpan, Transport=DirectTcp]
+//   OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=65536, CodecMode=StringSpan, Transport=StreamFrame]
+
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=Bytes, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1452 1456 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 64, CodecMode: \"Bytes\", Transport: \"DirectTcp\")" --job Dry --benchmarkId 0 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+// BeforeActualRun
+WorkloadActual   1: 256 op, 8217000.00 ns, 32.0977 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 8217000.00 ns, 32.0977 us/op
+// GC:  0 0 0 51864 256
+// Threading:  159 0 256
+
+// AfterAll
+// Benchmark Process 37308 has exited with code 0.
+
+Mean = 32.098 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 32.098 us, Q1 = 32.098 us, Median = 32.098 us, Q3 = 32.098 us, Max = 32.098 us
+IQR = 0.000 us, LowerFence = 32.098 us, UpperFence = 32.098 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 35 (97.2%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=Bytes, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1408 636 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 64, CodecMode: \"Bytes\", Transport: \"StreamFrame\")" --job Dry --benchmarkId 1 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+// BeforeActualRun
+WorkloadActual   1: 256 op, 16123500.00 ns, 62.9824 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 16123500.00 ns, 62.9824 us/op
+// GC:  0 0 0 118008 256
+// Threading:  324 0 256
+
+// AfterAll
+// Benchmark Process 58752 has exited with code 0.
+
+Mean = 62.982 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 62.982 us, Q1 = 62.982 us, Median = 62.982 us, Q3 = 62.982 us, Max = 62.982 us
+IQR = 0.000 us, LowerFence = 62.982 us, UpperFence = 62.982 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 34 (94.4%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=StringAlloc, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1460 1036 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 64, CodecMode: \"StringAlloc\", Transport: \"DirectTcp\")" --job Dry --benchmarkId 2 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+// BeforeActualRun
+WorkloadActual   1: 256 op, 10707700.00 ns, 41.8270 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 10707700.00 ns, 41.8270 us/op
+// GC:  0 0 0 82136 256
+// Threading:  91 0 256
+
+// AfterAll
+// Benchmark Process 36772 has exited with code 0.
+
+Mean = 41.827 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 41.827 us, Q1 = 41.827 us, Median = 41.827 us, Q3 = 41.827 us, Max = 41.827 us
+IQR = 0.000 us, LowerFence = 41.827 us, UpperFence = 41.827 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 33 (91.7%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=StringAlloc, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1496 1028 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 64, CodecMode: \"StringAlloc\", Transport: \"StreamFrame\")" --job Dry --benchmarkId 3 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+// BeforeActualRun
+WorkloadActual   1: 256 op, 17372700.00 ns, 67.8621 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 17372700.00 ns, 67.8621 us/op
+// GC:  0 0 0 171912 256
+// Threading:  385 0 256
+
+// AfterAll
+// Benchmark Process 48596 has exited with code 0.
+
+Mean = 67.862 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 67.862 us, Q1 = 67.862 us, Median = 67.862 us, Q3 = 67.862 us, Max = 67.862 us
+IQR = 0.000 us, LowerFence = 67.862 us, UpperFence = 67.862 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 32 (88.9%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=StringSpan, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1532 1528 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 64, CodecMode: \"StringSpan\", Transport: \"DirectTcp\")" --job Dry --benchmarkId 4 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+// BeforeActualRun
+WorkloadActual   1: 256 op, 11544400.00 ns, 45.0953 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 11544400.00 ns, 45.0953 us/op
+// GC:  0 0 0 77016 256
+// Threading:  229 0 256
+
+// AfterAll
+// Benchmark Process 33624 has exited with code 0.
+
+Mean = 45.095 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 45.095 us, Q1 = 45.095 us, Median = 45.095 us, Q3 = 45.095 us, Max = 45.095 us
+IQR = 0.000 us, LowerFence = 45.095 us, UpperFence = 45.095 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 31 (86.1%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=StringSpan, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1392 1400 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 64, CodecMode: \"StringSpan\", Transport: \"StreamFrame\")" --job Dry --benchmarkId 5 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+// BeforeActualRun
+WorkloadActual   1: 256 op, 19235800.00 ns, 75.1398 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 19235800.00 ns, 75.1398 us/op
+// GC:  0 0 0 187344 256
+// Threading:  608 0 256
+
+// AfterAll
+// Benchmark Process 62368 has exited with code 0.
+
+Mean = 75.140 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 75.140 us, Q1 = 75.140 us, Median = 75.140 us, Q3 = 75.140 us, Max = 75.140 us
+IQR = 0.000 us, LowerFence = 75.140 us, UpperFence = 75.140 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 30 (83.3%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=Bytes, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1504 1544 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 1024, CodecMode: \"Bytes\", Transport: \"DirectTcp\")" --job Dry --benchmarkId 6 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+// BeforeActualRun
+WorkloadActual   1: 256 op, 11699900.00 ns, 45.7027 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 11699900.00 ns, 45.7027 us/op
+// GC:  0 0 0 286912 256
+// Threading:  75 0 256
+
+// AfterAll
+// Benchmark Process 62512 has exited with code 0.
+
+Mean = 45.703 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 45.703 us, Q1 = 45.703 us, Median = 45.703 us, Q3 = 45.703 us, Max = 45.703 us
+IQR = 0.000 us, LowerFence = 45.703 us, UpperFence = 45.703 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 29 (80.6%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=Bytes, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1164 1424 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 1024, CodecMode: \"Bytes\", Transport: \"StreamFrame\")" --job Dry --benchmarkId 7 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+// BeforeActualRun
+WorkloadActual   1: 256 op, 20017300.00 ns, 78.1926 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 20017300.00 ns, 78.1926 us/op
+// GC:  0 0 0 2611720 256
+// Threading:  396 2 256
+
+// AfterAll
+// Benchmark Process 1060 has exited with code 0.
+
+Mean = 78.193 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 78.193 us, Q1 = 78.193 us, Median = 78.193 us, Q3 = 78.193 us, Max = 78.193 us
+IQR = 0.000 us, LowerFence = 78.193 us, UpperFence = 78.193 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 28 (77.8%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=StringAlloc, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1460 1544 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 1024, CodecMode: \"StringAlloc\", Transport: \"DirectTcp\")" --job Dry --benchmarkId 8 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+// BeforeActualRun
+WorkloadActual   1: 256 op, 18468900.00 ns, 72.1441 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 18468900.00 ns, 72.1441 us/op
+// GC:  0 0 0 821592 256
+// Threading:  109 0 256
+
+// AfterAll
+// Benchmark Process 32188 has exited with code 0.
+
+Mean = 72.144 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 72.144 us, Q1 = 72.144 us, Median = 72.144 us, Q3 = 72.144 us, Max = 72.144 us
+IQR = 0.000 us, LowerFence = 72.144 us, UpperFence = 72.144 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 27 (75.0%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=StringAlloc, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1036 1164 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 1024, CodecMode: \"StringAlloc\", Transport: \"StreamFrame\")" --job Dry --benchmarkId 9 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+// BeforeActualRun
+WorkloadActual   1: 256 op, 18358100.00 ns, 71.7113 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 18358100.00 ns, 71.7113 us/op
+// GC:  0 0 0 1120480 256
+// Threading:  432 2 256
+
+// AfterAll
+// Benchmark Process 41660 has exited with code 0.
+
+Mean = 71.711 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 71.711 us, Q1 = 71.711 us, Median = 71.711 us, Q3 = 71.711 us, Max = 71.711 us
+IQR = 0.000 us, LowerFence = 71.711 us, UpperFence = 71.711 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 26 (72.2%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=StringSpan, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1560 1580 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 1024, CodecMode: \"StringSpan\", Transport: \"DirectTcp\")" --job Dry --benchmarkId 10 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+// BeforeActualRun
+WorkloadActual   1: 256 op, 9283000.00 ns, 36.2617 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 9283000.00 ns, 36.2617 us/op
+// GC:  0 0 0 550352 256
+// Threading:  69 0 256
+
+// AfterAll
+// Benchmark Process 20676 has exited with code 0.
+
+Mean = 36.262 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 36.262 us, Q1 = 36.262 us, Median = 36.262 us, Q3 = 36.262 us, Max = 36.262 us
+IQR = 0.000 us, LowerFence = 36.262 us, UpperFence = 36.262 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 25 (69.4%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=StringSpan, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1496 1420 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 1024, CodecMode: \"StringSpan\", Transport: \"StreamFrame\")" --job Dry --benchmarkId 11 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+// BeforeActualRun
+WorkloadActual   1: 256 op, 20431500.00 ns, 79.8105 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 20431500.00 ns, 79.8105 us/op
+// GC:  0 0 0 955208 256
+// Threading:  271 1 256
+
+// AfterAll
+// Benchmark Process 54556 has exited with code 0.
+
+Mean = 79.811 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 79.811 us, Q1 = 79.811 us, Median = 79.811 us, Q3 = 79.811 us, Max = 79.811 us
+IQR = 0.000 us, LowerFence = 79.811 us, UpperFence = 79.811 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 24 (66.7%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=Bytes, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1412 1416 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 65536, CodecMode: \"Bytes\", Transport: \"DirectTcp\")" --job Dry --benchmarkId 12 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+// BeforeActualRun
+WorkloadActual   1: 256 op, 20267900.00 ns, 79.1715 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 20267900.00 ns, 79.1715 us/op
+// GC:  1 0 0 16923960 256
+// Threading:  2 0 256
+
+// AfterAll
+// Benchmark Process 36972 has exited with code 0.
+
+Mean = 79.171 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 79.171 us, Q1 = 79.171 us, Median = 79.171 us, Q3 = 79.171 us, Max = 79.171 us
+IQR = 0.000 us, LowerFence = 79.171 us, UpperFence = 79.171 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 23 (63.9%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=Bytes, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1332 1352 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 65536, CodecMode: \"Bytes\", Transport: \"StreamFrame\")" --job Dry --benchmarkId 13 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+// BeforeActualRun
+WorkloadActual   1: 256 op, 42879300.00 ns, 167.4973 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 42879300.00 ns, 167.4973 us/op
+// GC:  1 0 0 17128336 256
+// Threading:  768 0 256
+
+// AfterAll
+// Benchmark Process 56608 has exited with code 0.
+
+Mean = 167.497 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 167.497 us, Q1 = 167.497 us, Median = 167.497 us, Q3 = 167.497 us, Max = 167.497 us
+IQR = 0.000 us, LowerFence = 167.497 us, UpperFence = 167.497 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 22 (61.1%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=StringAlloc, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1092 976 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 65536, CodecMode: \"StringAlloc\", Transport: \"DirectTcp\")" --job Dry --benchmarkId 14 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+// BeforeActualRun
+WorkloadActual   1: 256 op, 36656500.00 ns, 143.1895 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 36656500.00 ns, 143.1895 us/op
+// GC:  10 10 10 50497736 256
+// Threading:  31 0 256
+
+// AfterAll
+// Benchmark Process 41672 has exited with code 0.
+
+Mean = 143.189 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 143.189 us, Q1 = 143.189 us, Median = 143.189 us, Q3 = 143.189 us, Max = 143.189 us
+IQR = 0.000 us, LowerFence = 143.189 us, UpperFence = 143.189 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 21 (58.3%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=StringAlloc, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1420 1512 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 65536, CodecMode: \"StringAlloc\", Transport: \"StreamFrame\")" --job Dry --benchmarkId 15 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+// BeforeActualRun
+WorkloadActual   1: 256 op, 50549900.00 ns, 197.4605 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 50549900.00 ns, 197.4605 us/op
+// GC:  10 9 9 50782792 256
+// Threading:  765 0 256
+
+// AfterAll
+// Benchmark Process 53288 has exited with code 0.
+
+Mean = 197.461 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 197.461 us, Q1 = 197.461 us, Median = 197.461 us, Q3 = 197.461 us, Max = 197.461 us
+IQR = 0.000 us, LowerFence = 197.461 us, UpperFence = 197.461 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 20 (55.6%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=StringSpan, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1136 1332 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 65536, CodecMode: \"StringSpan\", Transport: \"DirectTcp\")" --job Dry --benchmarkId 16 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+// BeforeActualRun
+WorkloadActual   1: 256 op, 20615400.00 ns, 80.5289 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 20615400.00 ns, 80.5289 us/op
+// GC:  10 10 10 33716320 256
+// Threading:  5 0 256
+
+// AfterAll
+// Benchmark Process 64164 has exited with code 0.
+
+Mean = 80.529 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 80.529 us, Q1 = 80.529 us, Median = 80.529 us, Q3 = 80.529 us, Max = 80.529 us
+IQR = 0.000 us, LowerFence = 80.529 us, UpperFence = 80.529 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 19 (52.8%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=StringSpan, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1136 1160 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"LengthPrefix\", PayloadBytes: 65536, CodecMode: \"StringSpan\", Transport: \"StreamFrame\")" --job Dry --benchmarkId 17 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+// BeforeActualRun
+WorkloadActual   1: 256 op, 50120800.00 ns, 195.7844 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 50120800.00 ns, 195.7844 us/op
+// GC:  9 9 9 34071040 256
+// Threading:  767 0 256
+
+// AfterAll
+// Benchmark Process 19940 has exited with code 0.
+
+Mean = 195.784 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 195.784 us, Q1 = 195.784 us, Median = 195.784 us, Q3 = 195.784 us, Max = 195.784 us
+IQR = 0.000 us, LowerFence = 195.784 us, UpperFence = 195.784 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 18 (50.0%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=64, CodecMode=Bytes, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1164 1424 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 64, CodecMode: \"Bytes\", Transport: \"DirectTcp\")" --job Dry --benchmarkId 18 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+// BeforeActualRun
+WorkloadActual   1: 256 op, 8723200.00 ns, 34.0750 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 8723200.00 ns, 34.0750 us/op
+// GC:  0 0 0 47640 256
+// Threading:  126 0 256
+
+// AfterAll
+// Benchmark Process 16376 has exited with code 0.
+
+Mean = 34.075 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 34.075 us, Q1 = 34.075 us, Median = 34.075 us, Q3 = 34.075 us, Max = 34.075 us
+IQR = 0.000 us, LowerFence = 34.075 us, UpperFence = 34.075 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 17 (47.2%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=64, CodecMode=Bytes, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1112 1036 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 64, CodecMode: \"Bytes\", Transport: \"StreamFrame\")" --job Dry --benchmarkId 19 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+// BeforeActualRun
+WorkloadActual   1: 256 op, 16294800.00 ns, 63.6516 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 16294800.00 ns, 63.6516 us/op
+// GC:  0 0 0 122760 256
+// Threading:  334 0 256
+
+// AfterAll
+// Benchmark Process 67728 has exited with code 0.
+
+Mean = 63.652 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 63.652 us, Q1 = 63.652 us, Median = 63.652 us, Q3 = 63.652 us, Max = 63.652 us
+IQR = 0.000 us, LowerFence = 63.652 us, UpperFence = 63.652 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 16 (44.4%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=64, CodecMode=StringAlloc, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1512 1164 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 64, CodecMode: \"StringAlloc\", Transport: \"DirectTcp\")" --job Dry --benchmarkId 20 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+// BeforeActualRun
+WorkloadActual   1: 256 op, 8469600.00 ns, 33.0844 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 8469600.00 ns, 33.0844 us/op
+// GC:  0 0 0 75480 256
+// Threading:  39 0 256
+
+// AfterAll
+// Benchmark Process 48796 has exited with code 0.
+
+Mean = 33.084 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 33.084 us, Q1 = 33.084 us, Median = 33.084 us, Q3 = 33.084 us, Max = 33.084 us
+IQR = 0.000 us, LowerFence = 33.084 us, UpperFence = 33.084 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 15 (41.7%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=64, CodecMode=StringAlloc, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1416 1020 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 64, CodecMode: \"StringAlloc\", Transport: \"StreamFrame\")" --job Dry --benchmarkId 21 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+// BeforeActualRun
+WorkloadActual   1: 256 op, 15672200.00 ns, 61.2195 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 15672200.00 ns, 61.2195 us/op
+// GC:  0 0 0 181456 256
+// Threading:  450 0 256
+
+// AfterAll
+// Benchmark Process 19392 has exited with code 0.
+
+Mean = 61.220 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 61.220 us, Q1 = 61.220 us, Median = 61.220 us, Q3 = 61.220 us, Max = 61.220 us
+IQR = 0.000 us, LowerFence = 61.220 us, UpperFence = 61.220 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 14 (38.9%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=64, CodecMode=StringSpan, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1124 1504 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 64, CodecMode: \"StringSpan\", Transport: \"DirectTcp\")" --job Dry --benchmarkId 22 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+// BeforeActualRun
+WorkloadActual   1: 256 op, 11611200.00 ns, 45.3563 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 11611200.00 ns, 45.3563 us/op
+// GC:  0 0 0 57112 256
+// Threading:  72 0 256
+
+// AfterAll
+// Benchmark Process 57292 has exited with code 0.
+
+Mean = 45.356 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 45.356 us, Q1 = 45.356 us, Median = 45.356 us, Q3 = 45.356 us, Max = 45.356 us
+IQR = 0.000 us, LowerFence = 45.356 us, UpperFence = 45.356 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 13 (36.1%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=64, CodecMode=StringSpan, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1160 1584 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 64, CodecMode: \"StringSpan\", Transport: \"StreamFrame\")" --job Dry --benchmarkId 23 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+// BeforeActualRun
+WorkloadActual   1: 256 op, 17071600.00 ns, 66.6859 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 17071600.00 ns, 66.6859 us/op
+// GC:  0 0 0 146152 256
+// Threading:  372 0 256
+
+// AfterAll
+// Benchmark Process 4012 has exited with code 0.
+
+Mean = 66.686 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 66.686 us, Q1 = 66.686 us, Median = 66.686 us, Q3 = 66.686 us, Max = 66.686 us
+IQR = 0.000 us, LowerFence = 66.686 us, UpperFence = 66.686 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 12 (33.3%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=1024, CodecMode=Bytes, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1160 1584 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 1024, CodecMode: \"Bytes\", Transport: \"DirectTcp\")" --job Dry --benchmarkId 24 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+// BeforeActualRun
+WorkloadActual   1: 256 op, 8486500.00 ns, 33.1504 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 8486500.00 ns, 33.1504 us/op
+// GC:  0 0 0 285376 256
+// Threading:  61 0 256
+
+// AfterAll
+// Benchmark Process 56928 has exited with code 0.
+
+Mean = 33.150 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 33.150 us, Q1 = 33.150 us, Median = 33.150 us, Q3 = 33.150 us, Max = 33.150 us
+IQR = 0.000 us, LowerFence = 33.150 us, UpperFence = 33.150 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 11 (30.6%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=1024, CodecMode=Bytes, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1416 1100 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 1024, CodecMode: \"Bytes\", Transport: \"StreamFrame\")" --job Dry --benchmarkId 25 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+// BeforeActualRun
+WorkloadActual   1: 256 op, 16602200.00 ns, 64.8523 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 16602200.00 ns, 64.8523 us/op
+// GC:  0 0 0 2066416 256
+// Threading:  309 1 256
+
+// AfterAll
+// Benchmark Process 50292 has exited with code 0.
+
+Mean = 64.852 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 64.852 us, Q1 = 64.852 us, Median = 64.852 us, Q3 = 64.852 us, Max = 64.852 us
+IQR = 0.000 us, LowerFence = 64.852 us, UpperFence = 64.852 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 10 (27.8%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=1024, CodecMode=StringAlloc, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1456 1620 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 1024, CodecMode: \"StringAlloc\", Transport: \"DirectTcp\")" --job Dry --benchmarkId 26 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+// BeforeActualRun
+WorkloadActual   1: 256 op, 9972800.00 ns, 38.9563 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 9972800.00 ns, 38.9563 us/op
+// GC:  0 0 0 832048 256
+// Threading:  91 0 256
+
+// AfterAll
+// Benchmark Process 19608 has exited with code 0.
+
+Mean = 38.956 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 38.956 us, Q1 = 38.956 us, Median = 38.956 us, Q3 = 38.956 us, Max = 38.956 us
+IQR = 0.000 us, LowerFence = 38.956 us, UpperFence = 38.956 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 9 (25.0%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=1024, CodecMode=StringAlloc, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1368 1628 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 1024, CodecMode: \"StringAlloc\", Transport: \"StreamFrame\")" --job Dry --benchmarkId 27 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+// BeforeActualRun
+WorkloadActual   1: 256 op, 18752700.00 ns, 73.2527 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 18752700.00 ns, 73.2527 us/op
+// GC:  0 0 0 1846624 256
+// Threading:  269 2 256
+
+// AfterAll
+// Benchmark Process 39132 has exited with code 0.
+
+Mean = 73.253 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 73.253 us, Q1 = 73.253 us, Median = 73.253 us, Q3 = 73.253 us, Max = 73.253 us
+IQR = 0.000 us, LowerFence = 73.253 us, UpperFence = 73.253 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 8 (22.2%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=1024, CodecMode=StringSpan, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1596 1496 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 1024, CodecMode: \"StringSpan\", Transport: \"DirectTcp\")" --job Dry --benchmarkId 28 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+// BeforeActualRun
+WorkloadActual   1: 256 op, 8832000.00 ns, 34.5000 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 8832000.00 ns, 34.5000 us/op
+// GC:  0 0 0 548192 256
+// Threading:  69 0 256
+
+// AfterAll
+// Benchmark Process 45980 has exited with code 0.
+
+Mean = 34.500 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 34.500 us, Q1 = 34.500 us, Median = 34.500 us, Q3 = 34.500 us, Max = 34.500 us
+IQR = 0.000 us, LowerFence = 34.500 us, UpperFence = 34.500 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 7 (19.4%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=1024, CodecMode=StringSpan, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 980 1016 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 1024, CodecMode: \"StringSpan\", Transport: \"StreamFrame\")" --job Dry --benchmarkId 29 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+// BeforeActualRun
+WorkloadActual   1: 256 op, 17590300.00 ns, 68.7121 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 17590300.00 ns, 68.7121 us/op
+// GC:  0 0 0 928864 256
+// Threading:  407 1 256
+
+// AfterAll
+// Benchmark Process 8124 has exited with code 0.
+
+Mean = 68.712 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 68.712 us, Q1 = 68.712 us, Median = 68.712 us, Q3 = 68.712 us, Max = 68.712 us
+IQR = 0.000 us, LowerFence = 68.712 us, UpperFence = 68.712 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 6 (16.7%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=65536, CodecMode=Bytes, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1004 1084 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 65536, CodecMode: \"Bytes\", Transport: \"DirectTcp\")" --job Dry --benchmarkId 30 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+// BeforeActualRun
+WorkloadActual   1: 256 op, 20619900.00 ns, 80.5465 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 20619900.00 ns, 80.5465 us/op
+// GC:  1 0 0 16939848 256
+// Threading:  127 0 256
+
+// AfterAll
+// Benchmark Process 65960 has exited with code 0.
+
+Mean = 80.546 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 80.546 us, Q1 = 80.546 us, Median = 80.546 us, Q3 = 80.546 us, Max = 80.546 us
+IQR = 0.000 us, LowerFence = 80.546 us, UpperFence = 80.546 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 5 (13.9%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=65536, CodecMode=Bytes, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1004 1084 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 65536, CodecMode: \"Bytes\", Transport: \"StreamFrame\")" --job Dry --benchmarkId 31 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+// BeforeActualRun
+WorkloadActual   1: 256 op, 41444300.00 ns, 161.8918 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 41444300.00 ns, 161.8918 us/op
+// GC:  1 0 0 16927352 256
+// Threading:  768 0 256
+
+// AfterAll
+// Benchmark Process 58172 has exited with code 0.
+
+Mean = 161.892 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 161.892 us, Q1 = 161.892 us, Median = 161.892 us, Q3 = 161.892 us, Max = 161.892 us
+IQR = 0.000 us, LowerFence = 161.892 us, UpperFence = 161.892 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 4 (11.1%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=65536, CodecMode=StringAlloc, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1456 1460 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 65536, CodecMode: \"StringAlloc\", Transport: \"DirectTcp\")" --job Dry --benchmarkId 32 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+// BeforeActualRun
+WorkloadActual   1: 256 op, 22062400.00 ns, 86.1813 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 22062400.00 ns, 86.1813 us/op
+// GC:  10 10 10 50496704 256
+// Threading:  23 0 256
+
+// AfterAll
+// Benchmark Process 3028 has exited with code 0.
+
+Mean = 86.181 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 86.181 us, Q1 = 86.181 us, Median = 86.181 us, Q3 = 86.181 us, Max = 86.181 us
+IQR = 0.000 us, LowerFence = 86.181 us, UpperFence = 86.181 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 3 (8.3%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=65536, CodecMode=StringAlloc, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1660 1656 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 65536, CodecMode: \"StringAlloc\", Transport: \"StreamFrame\")" --job Dry --benchmarkId 33 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+// BeforeActualRun
+WorkloadActual   1: 256 op, 44492900.00 ns, 173.8004 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 44492900.00 ns, 173.8004 us/op
+// GC:  9 8 8 50731328 256
+// Threading:  773 0 256
+
+// AfterAll
+// Benchmark Process 28724 has exited with code 0.
+
+Mean = 173.800 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 173.800 us, Q1 = 173.800 us, Median = 173.800 us, Q3 = 173.800 us, Max = 173.800 us
+IQR = 0.000 us, LowerFence = 173.800 us, UpperFence = 173.800 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 2 (5.6%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=65536, CodecMode=StringSpan, Transport=DirectTcp]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 1456 1592 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 65536, CodecMode: \"StringSpan\", Transport: \"DirectTcp\")" --job Dry --benchmarkId 34 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+Direct TCP socket: receive=65536, send=65536, NoDelay=False, KeepAlive=false
+// BeforeActualRun
+WorkloadActual   1: 256 op, 24715500.00 ns, 96.5449 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 24715500.00 ns, 96.5449 us/op
+// GC:  10 10 10 33716448 256
+// Threading:  6 0 256
+
+// AfterAll
+// Benchmark Process 13340 has exited with code 0.
+
+Mean = 96.545 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 96.545 us, Q1 = 96.545 us, Median = 96.545 us, Q3 = 96.545 us, Max = 96.545 us
+IQR = 0.000 us, LowerFence = 96.545 us, UpperFence = 96.545 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 1 (2.8%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// **************************
+// Benchmark: OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=65536, CodecMode=StringSpan, Transport=StreamFrame]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet StreamFrame.Benchmarks-Dry-1.dll --anonymousPipes 632 1652 --benchmarkName "StreamFrame.Benchmarks.OneWayThroughputBenchmarks.Transfer(Framer: \"StxEtx\", PayloadBytes: 65536, CodecMode: \"StringSpan\", Transport: \"StreamFrame\")" --job Dry --benchmarkId 35 in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\bin\Release\net10.0\StreamFrame.Benchmarks-Dry-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+StreamFrame socket: receive=65536, send=65536, NoDelay=False, KeepAlive=0
+// BeforeActualRun
+WorkloadActual   1: 256 op, 48300400.00 ns, 188.6734 us/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 48300400.00 ns, 188.6734 us/op
+// GC:  9 9 9 34479560 256
+// Threading:  778 0 256
+
+// AfterAll
+// Benchmark Process 52252 has exited with code 0.
+
+Mean = 188.673 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 188.673 us, Q1 = 188.673 us, Median = 188.673 us, Q3 = 188.673 us, Max = 188.673 us
+IQR = 0.000 us, LowerFence = 188.673 us, UpperFence = 188.673 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 0 (0.0%) benchmark(s) to run. Estimated finish 2026-09-08 18:05 (0h 0m from now) **
+Successfully reverted power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: 高性能)
+// ***** BenchmarkRunner: Finish  *****
+
+// * Export *
+  bench\results\issue-70\dry\results\StreamFrame.Benchmarks.OneWayThroughputBenchmarks-report.csv
+  bench\results\issue-70\dry\results\StreamFrame.Benchmarks.OneWayThroughputBenchmarks-report-github.md
+  bench\results\issue-70\dry\results\StreamFrame.Benchmarks.OneWayThroughputBenchmarks-report.html
+
+// * Detailed results *
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=Bytes, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 32.098 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 32.098 us, Q1 = 32.098 us, Median = 32.098 us, Q3 = 32.098 us, Max = 32.098 us
+IQR = 0.000 us, LowerFence = 32.098 us, UpperFence = 32.098 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[32.097 us ; 32.098 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=Bytes, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 62.982 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 62.982 us, Q1 = 62.982 us, Median = 62.982 us, Q3 = 62.982 us, Max = 62.982 us
+IQR = 0.000 us, LowerFence = 62.982 us, UpperFence = 62.982 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[62.982 us ; 62.983 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=StringAlloc, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 41.827 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 41.827 us, Q1 = 41.827 us, Median = 41.827 us, Q3 = 41.827 us, Max = 41.827 us
+IQR = 0.000 us, LowerFence = 41.827 us, UpperFence = 41.827 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[41.826 us ; 41.827 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=StringAlloc, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 67.862 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 67.862 us, Q1 = 67.862 us, Median = 67.862 us, Q3 = 67.862 us, Max = 67.862 us
+IQR = 0.000 us, LowerFence = 67.862 us, UpperFence = 67.862 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[67.862 us ; 67.863 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=StringSpan, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 45.095 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 45.095 us, Q1 = 45.095 us, Median = 45.095 us, Q3 = 45.095 us, Max = 45.095 us
+IQR = 0.000 us, LowerFence = 45.095 us, UpperFence = 45.095 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[45.095 us ; 45.096 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=64, CodecMode=StringSpan, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 75.140 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 75.140 us, Q1 = 75.140 us, Median = 75.140 us, Q3 = 75.140 us, Max = 75.140 us
+IQR = 0.000 us, LowerFence = 75.140 us, UpperFence = 75.140 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[75.139 us ; 75.140 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=Bytes, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 45.703 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 45.703 us, Q1 = 45.703 us, Median = 45.703 us, Q3 = 45.703 us, Max = 45.703 us
+IQR = 0.000 us, LowerFence = 45.703 us, UpperFence = 45.703 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[45.702 us ; 45.703 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=Bytes, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 78.193 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 78.193 us, Q1 = 78.193 us, Median = 78.193 us, Q3 = 78.193 us, Max = 78.193 us
+IQR = 0.000 us, LowerFence = 78.193 us, UpperFence = 78.193 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[78.192 us ; 78.193 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=StringAlloc, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 72.144 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 72.144 us, Q1 = 72.144 us, Median = 72.144 us, Q3 = 72.144 us, Max = 72.144 us
+IQR = 0.000 us, LowerFence = 72.144 us, UpperFence = 72.144 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[72.144 us ; 72.145 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=StringAlloc, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 71.711 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 71.711 us, Q1 = 71.711 us, Median = 71.711 us, Q3 = 71.711 us, Max = 71.711 us
+IQR = 0.000 us, LowerFence = 71.711 us, UpperFence = 71.711 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[71.711 us ; 71.712 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=StringSpan, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 36.262 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 36.262 us, Q1 = 36.262 us, Median = 36.262 us, Q3 = 36.262 us, Max = 36.262 us
+IQR = 0.000 us, LowerFence = 36.262 us, UpperFence = 36.262 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[36.261 us ; 36.262 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=1024, CodecMode=StringSpan, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 79.811 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 79.811 us, Q1 = 79.811 us, Median = 79.811 us, Q3 = 79.811 us, Max = 79.811 us
+IQR = 0.000 us, LowerFence = 79.811 us, UpperFence = 79.811 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[79.810 us ; 79.811 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=Bytes, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 79.171 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 79.171 us, Q1 = 79.171 us, Median = 79.171 us, Q3 = 79.171 us, Max = 79.171 us
+IQR = 0.000 us, LowerFence = 79.171 us, UpperFence = 79.171 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[79.171 us ; 79.172 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=Bytes, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 167.497 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 167.497 us, Q1 = 167.497 us, Median = 167.497 us, Q3 = 167.497 us, Max = 167.497 us
+IQR = 0.000 us, LowerFence = 167.497 us, UpperFence = 167.497 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[167.497 us ; 167.498 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=StringAlloc, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 143.189 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 143.189 us, Q1 = 143.189 us, Median = 143.189 us, Q3 = 143.189 us, Max = 143.189 us
+IQR = 0.000 us, LowerFence = 143.189 us, UpperFence = 143.189 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[143.189 us ; 143.190 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=StringAlloc, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 197.461 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 197.461 us, Q1 = 197.461 us, Median = 197.461 us, Q3 = 197.461 us, Max = 197.461 us
+IQR = 0.000 us, LowerFence = 197.461 us, UpperFence = 197.461 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[197.460 us ; 197.461 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=StringSpan, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 80.529 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 80.529 us, Q1 = 80.529 us, Median = 80.529 us, Q3 = 80.529 us, Max = 80.529 us
+IQR = 0.000 us, LowerFence = 80.529 us, UpperFence = 80.529 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[80.528 us ; 80.529 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=LengthPrefix, PayloadBytes=65536, CodecMode=StringSpan, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 195.784 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 195.784 us, Q1 = 195.784 us, Median = 195.784 us, Q3 = 195.784 us, Max = 195.784 us
+IQR = 0.000 us, LowerFence = 195.784 us, UpperFence = 195.784 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[195.784 us ; 195.785 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=64, CodecMode=Bytes, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 34.075 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 34.075 us, Q1 = 34.075 us, Median = 34.075 us, Q3 = 34.075 us, Max = 34.075 us
+IQR = 0.000 us, LowerFence = 34.075 us, UpperFence = 34.075 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[34.075 us ; 34.075 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=64, CodecMode=Bytes, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 63.652 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 63.652 us, Q1 = 63.652 us, Median = 63.652 us, Q3 = 63.652 us, Max = 63.652 us
+IQR = 0.000 us, LowerFence = 63.652 us, UpperFence = 63.652 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[63.651 us ; 63.652 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=64, CodecMode=StringAlloc, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 33.084 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 33.084 us, Q1 = 33.084 us, Median = 33.084 us, Q3 = 33.084 us, Max = 33.084 us
+IQR = 0.000 us, LowerFence = 33.084 us, UpperFence = 33.084 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[33.084 us ; 33.085 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=64, CodecMode=StringAlloc, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 61.220 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 61.220 us, Q1 = 61.220 us, Median = 61.220 us, Q3 = 61.220 us, Max = 61.220 us
+IQR = 0.000 us, LowerFence = 61.220 us, UpperFence = 61.220 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[61.219 us ; 61.220 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=64, CodecMode=StringSpan, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 45.356 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 45.356 us, Q1 = 45.356 us, Median = 45.356 us, Q3 = 45.356 us, Max = 45.356 us
+IQR = 0.000 us, LowerFence = 45.356 us, UpperFence = 45.356 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[45.356 us ; 45.357 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=64, CodecMode=StringSpan, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 66.686 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 66.686 us, Q1 = 66.686 us, Median = 66.686 us, Q3 = 66.686 us, Max = 66.686 us
+IQR = 0.000 us, LowerFence = 66.686 us, UpperFence = 66.686 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[66.685 us ; 66.686 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=1024, CodecMode=Bytes, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 33.150 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 33.150 us, Q1 = 33.150 us, Median = 33.150 us, Q3 = 33.150 us, Max = 33.150 us
+IQR = 0.000 us, LowerFence = 33.150 us, UpperFence = 33.150 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[33.150 us ; 33.151 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=1024, CodecMode=Bytes, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 64.852 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 64.852 us, Q1 = 64.852 us, Median = 64.852 us, Q3 = 64.852 us, Max = 64.852 us
+IQR = 0.000 us, LowerFence = 64.852 us, UpperFence = 64.852 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[64.852 us ; 64.853 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=1024, CodecMode=StringAlloc, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 38.956 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 38.956 us, Q1 = 38.956 us, Median = 38.956 us, Q3 = 38.956 us, Max = 38.956 us
+IQR = 0.000 us, LowerFence = 38.956 us, UpperFence = 38.956 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[38.956 us ; 38.957 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=1024, CodecMode=StringAlloc, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 73.253 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 73.253 us, Q1 = 73.253 us, Median = 73.253 us, Q3 = 73.253 us, Max = 73.253 us
+IQR = 0.000 us, LowerFence = 73.253 us, UpperFence = 73.253 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[73.252 us ; 73.253 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=1024, CodecMode=StringSpan, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 34.500 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 34.500 us, Q1 = 34.500 us, Median = 34.500 us, Q3 = 34.500 us, Max = 34.500 us
+IQR = 0.000 us, LowerFence = 34.500 us, UpperFence = 34.500 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[34.499 us ; 34.501 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=1024, CodecMode=StringSpan, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 68.712 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 68.712 us, Q1 = 68.712 us, Median = 68.712 us, Q3 = 68.712 us, Max = 68.712 us
+IQR = 0.000 us, LowerFence = 68.712 us, UpperFence = 68.712 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[68.712 us ; 68.713 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=65536, CodecMode=Bytes, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 80.546 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 80.546 us, Q1 = 80.546 us, Median = 80.546 us, Q3 = 80.546 us, Max = 80.546 us
+IQR = 0.000 us, LowerFence = 80.546 us, UpperFence = 80.546 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[80.546 us ; 80.547 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=65536, CodecMode=Bytes, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 161.892 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 161.892 us, Q1 = 161.892 us, Median = 161.892 us, Q3 = 161.892 us, Max = 161.892 us
+IQR = 0.000 us, LowerFence = 161.892 us, UpperFence = 161.892 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[161.891 us ; 161.892 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=65536, CodecMode=StringAlloc, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 86.181 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 86.181 us, Q1 = 86.181 us, Median = 86.181 us, Q3 = 86.181 us, Max = 86.181 us
+IQR = 0.000 us, LowerFence = 86.181 us, UpperFence = 86.181 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[86.181 us ; 86.182 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=65536, CodecMode=StringAlloc, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 173.800 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 173.800 us, Q1 = 173.800 us, Median = 173.800 us, Q3 = 173.800 us, Max = 173.800 us
+IQR = 0.000 us, LowerFence = 173.800 us, UpperFence = 173.800 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[173.800 us ; 173.801 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=65536, CodecMode=StringSpan, Transport=DirectTcp]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 96.545 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 96.545 us, Q1 = 96.545 us, Median = 96.545 us, Q3 = 96.545 us, Max = 96.545 us
+IQR = 0.000 us, LowerFence = 96.545 us, UpperFence = 96.545 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[96.544 us ; 96.545 us) | @
+---------------------------------------------------
+
+OneWayThroughputBenchmarks.Transfer: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1) [Framer=StxEtx, PayloadBytes=65536, CodecMode=StringSpan, Transport=StreamFrame]
+Runtime = .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3; GC = Concurrent Workstation
+Mean = 188.673 us, StdErr = 0.000 us (0.00%), N = 1, StdDev = 0.000 us
+Min = 188.673 us, Q1 = 188.673 us, Median = 188.673 us, Q3 = 188.673 us, Max = 188.673 us
+IQR = 0.000 us, LowerFence = 188.673 us, UpperFence = 188.673 us
+ConfidenceInterval = [NaN us; NaN us] (CI 99.9%), Margin = NaN us (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[188.673 us ; 188.674 us) | @
+---------------------------------------------------
+
+// * Summary *
+
+BenchmarkDotNet v0.15.8, Windows 10 (10.0.19045.6466/22H2/2022Update)
+12th Gen Intel Core i5-12500H 3.10GHz, 1 CPU, 16 logical and 12 physical cores
+.NET SDK 10.0.400
+  [Host] : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+  Dry    : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+
+Job=Dry  IterationCount=1  LaunchCount=1  
+RunStrategy=ColdStart  UnrollFactor=1  WarmupCount=1  
+
+| Method   | Framer       | PayloadBytes | CodecMode   | Transport   | Mean      | Error | Gen0    | Gen1    | Gen2    | Allocated |
+|--------- |------------- |------------- |------------ |------------ |----------:|------:|--------:|--------:|--------:|----------:|
+| Transfer | LengthPrefix | 64           | Bytes       | DirectTcp   |  32.10 us |    NA |       - |       - |       - |     203 B |
+| Transfer | LengthPrefix | 64           | Bytes       | StreamFrame |  62.98 us |    NA |       - |       - |       - |     461 B |
+| Transfer | LengthPrefix | 64           | StringAlloc | DirectTcp   |  41.83 us |    NA |       - |       - |       - |     321 B |
+| Transfer | LengthPrefix | 64           | StringAlloc | StreamFrame |  67.86 us |    NA |       - |       - |       - |     672 B |
+| Transfer | LengthPrefix | 64           | StringSpan  | DirectTcp   |  45.10 us |    NA |       - |       - |       - |     301 B |
+| Transfer | LengthPrefix | 64           | StringSpan  | StreamFrame |  75.14 us |    NA |       - |       - |       - |     732 B |
+| Transfer | LengthPrefix | 1024         | Bytes       | DirectTcp   |  45.70 us |    NA |       - |       - |       - |    1121 B |
+| Transfer | LengthPrefix | 1024         | Bytes       | StreamFrame |  78.19 us |    NA |       - |       - |       - |   10202 B |
+| Transfer | LengthPrefix | 1024         | StringAlloc | DirectTcp   |  72.14 us |    NA |       - |       - |       - |    3209 B |
+| Transfer | LengthPrefix | 1024         | StringAlloc | StreamFrame |  71.71 us |    NA |       - |       - |       - |    4377 B |
+| Transfer | LengthPrefix | 1024         | StringSpan  | DirectTcp   |  36.26 us |    NA |       - |       - |       - |    2150 B |
+| Transfer | LengthPrefix | 1024         | StringSpan  | StreamFrame |  79.81 us |    NA |       - |       - |       - |    3731 B |
+| Transfer | LengthPrefix | 65536        | Bytes       | DirectTcp   |  79.17 us |    NA |  3.9063 |       - |       - |   66109 B |
+| Transfer | LengthPrefix | 65536        | Bytes       | StreamFrame | 167.50 us |    NA |  3.9063 |       - |       - |   66908 B |
+| Transfer | LengthPrefix | 65536        | StringAlloc | DirectTcp   | 143.19 us |    NA | 39.0625 | 39.0625 | 39.0625 |  197257 B |
+| Transfer | LengthPrefix | 65536        | StringAlloc | StreamFrame | 197.46 us |    NA | 39.0625 | 35.1563 | 35.1563 |  198370 B |
+| Transfer | LengthPrefix | 65536        | StringSpan  | DirectTcp   |  80.53 us |    NA | 39.0625 | 39.0625 | 39.0625 |  131704 B |
+| Transfer | LengthPrefix | 65536        | StringSpan  | StreamFrame | 195.78 us |    NA | 35.1563 | 35.1563 | 35.1563 |  133090 B |
+| Transfer | StxEtx       | 64           | Bytes       | DirectTcp   |  34.08 us |    NA |       - |       - |       - |     186 B |
+| Transfer | StxEtx       | 64           | Bytes       | StreamFrame |  63.65 us |    NA |       - |       - |       - |     480 B |
+| Transfer | StxEtx       | 64           | StringAlloc | DirectTcp   |  33.08 us |    NA |       - |       - |       - |     295 B |
+| Transfer | StxEtx       | 64           | StringAlloc | StreamFrame |  61.22 us |    NA |       - |       - |       - |     709 B |
+| Transfer | StxEtx       | 64           | StringSpan  | DirectTcp   |  45.36 us |    NA |       - |       - |       - |     223 B |
+| Transfer | StxEtx       | 64           | StringSpan  | StreamFrame |  66.69 us |    NA |       - |       - |       - |     571 B |
+| Transfer | StxEtx       | 1024         | Bytes       | DirectTcp   |  33.15 us |    NA |       - |       - |       - |    1115 B |
+| Transfer | StxEtx       | 1024         | Bytes       | StreamFrame |  64.85 us |    NA |       - |       - |       - |    8072 B |
+| Transfer | StxEtx       | 1024         | StringAlloc | DirectTcp   |  38.96 us |    NA |       - |       - |       - |    3250 B |
+| Transfer | StxEtx       | 1024         | StringAlloc | StreamFrame |  73.25 us |    NA |       - |       - |       - |    7213 B |
+| Transfer | StxEtx       | 1024         | StringSpan  | DirectTcp   |  34.50 us |    NA |       - |       - |       - |    2141 B |
+| Transfer | StxEtx       | 1024         | StringSpan  | StreamFrame |  68.71 us |    NA |       - |       - |       - |    3628 B |
+| Transfer | StxEtx       | 65536        | Bytes       | DirectTcp   |  80.55 us |    NA |  3.9063 |       - |       - |   66171 B |
+| Transfer | StxEtx       | 65536        | Bytes       | StreamFrame | 161.89 us |    NA |  3.9063 |       - |       - |   66122 B |
+| Transfer | StxEtx       | 65536        | StringAlloc | DirectTcp   |  86.18 us |    NA | 39.0625 | 39.0625 | 39.0625 |  197253 B |
+| Transfer | StxEtx       | 65536        | StringAlloc | StreamFrame | 173.80 us |    NA | 35.1563 | 31.2500 | 31.2500 |  198169 B |
+| Transfer | StxEtx       | 65536        | StringSpan  | DirectTcp   |  96.54 us |    NA | 39.0625 | 39.0625 | 39.0625 |  131705 B |
+| Transfer | StxEtx       | 65536        | StringSpan  | StreamFrame | 188.67 us |    NA | 35.1563 | 35.1563 | 35.1563 |  134686 B |
+
+// * Warnings *
+MinIterationTime
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 8.217ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 16.124ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 10.708ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 17.373ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 11.544ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 19.236ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 11.7ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 20.017ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 18.469ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 18.358ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 9.283ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 20.432ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 20.268ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 42.879ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 36.657ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 50.55ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 20.615ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 50.121ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 8.723ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 16.295ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 8.47ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 15.672ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 11.611ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 17.072ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 8.487ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 16.602ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 9.973ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 18.753ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 8.832ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 17.59ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 20.62ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 41.444ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 22.062ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 44.493ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 24.716ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  OneWayThroughputBenchmarks.Transfer: Dry -> The minimum observed iteration time is 48.3ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+
+// * Legends *
+  Framer       : Value of the 'Framer' parameter
+  PayloadBytes : Value of the 'PayloadBytes' parameter
+  CodecMode    : Value of the 'CodecMode' parameter
+  Transport    : Value of the 'Transport' parameter
+  Mean         : Arithmetic mean of all measurements
+  Error        : Half of 99.9% confidence interval
+  Gen0         : GC Generation 0 collects per 1000 operations
+  Gen1         : GC Generation 1 collects per 1000 operations
+  Gen2         : GC Generation 2 collects per 1000 operations
+  Allocated    : Allocated memory per single operation (managed only, inclusive, 1KB = 1024B)
+  1 us         : 1 Microsecond (0.000001 sec)
+
+// * Diagnostic Output - MemoryDiagnoser *
+
+
+// ***** BenchmarkRunner: End *****
+Run time: 00:00:10 (10.1 sec), executed benchmarks: 36
+
+Global total time: 00:00:23 (23.81 sec), executed benchmarks: 36
+// * Artifacts cleanup *
+Artifacts cleanup is finished

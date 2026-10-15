@@ -1,0 +1,4 @@
+Unhandled exception. System.NullReferenceException: Object reference not set to an instance of an object.
+   at StreamFrame.Benchmarks.NetworkBenchmarkBase.Cleanup() in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\EndToEndBenchmarks.cs:line 112
+   at StreamFrame.Benchmarks.Program.Main(String[] args) in C:\Users\Marci\.codex\worktrees\03bd\StreamFrame\bench\StreamFrame.Benchmarks\Program.cs:line 31
+   at StreamFrame.Benchmarks.Program.<Main>(String[] args)

@@ -298,16 +298,15 @@ Choosing between the two receive timeouts: `ReceiveIdleTimeoutMs` demands **peri
 
 ## Performance
 
-Measured with BenchmarkDotNet (details and how to reproduce in [bench/README.md](bench/README.md)):
+The benchmarks cover same-machine TCP loopback one-way transfer and sequential round trips, with both Framers, 64B/1KB/64KB payloads, byte arrays and two string encoders. Both transports encode, frame, materialize and validate complete contents. One-way timing ends after reception completes; RTT waits for every echo. Commands, raw results and limitations are in the [benchmark guide](bench/README.en.md).
 
-- **Streaming encode**: halves per-frame heap allocation (single vs. double buffer); 25–35% faster for small payloads, on par for large ones;
-- **Frame decoding**: `LengthPrefixFramer` ≈8.3 ns/frame, `StxEtxFramer` ≈50 ns/frame (≈22× faster after SearchValues vectorization on net8+) — both handle tens of millions of frames per second;
-- **End-to-end** (real TCP loopback, 2026-08-29 two-round ranges, built-in metrics on): one-way throughput ≈130–135k msgs/s at 1KB and ≈210–240k at 64B (LengthPrefix); round-trip latency ≈66–74 µs; the XML codec costs 2–16 µs per message (400B–4KB) — serialization dominates, not framing. **Framework tax depends on message size**: for small messages the bounded-queue pipeline is even faster than the naive serialized-NetworkStream-write baseline (13–52%); at 64KB the cost is ≈3–4× (encoding-buffer allocations dominate — recorded as an optimization direction);
-- **Cost of the new features, measured**: built-in metrics cost 0.5–1.0 ns per record with zero allocation when nobody subscribes (fine to leave on); `SendInSessionAsync` is roughly 2× the time of `SendAsync` with +≈470 B/msg allocated (the price of session semantics — use `SendAsync` when you don't need them); the receive views and the disabled incomplete-frame timeout show no measurable difference. Absolute values vary by machine; full data and noise disclosure in [bench/README.md](bench/README.md).
+The direct TCP control still omits queues, Pipe and general stream assembly, so its difference cannot isolate framework overhead. Earlier claims of “faster than raw TCP”, “3–4× large-message cost” and “only 20–30% byte-payload overhead” used mismatched workloads and have been withdrawn. A single-machine, single-launch measurement does not establish a general performance advantage.
+
+Streaming encode removes one whole-payload copy from the payload buffer into the frame buffer. Codecs, sockets, buffer growth and message materialization still copy or allocate; this is not end-to-end zero-copy. XML, framing, metrics and session features have independent benchmarks and should be measured for the intended application.
 
 ### Large-message guide (≥64KB)
 
-For 64KB-class messages the dominant costs are the codec style and the message type, not the framework (attribution data in [bench/README.md](bench/README.md)). Three recommendations:
+For 64KB-class messages, examine codec intermediate arrays, message materialization and transport costs separately (measurement contract in [bench/README.en.md](bench/README.en.md)). Three recommendations:
 
 1. **Use the span-based write overload in your codec** — `Encoding.GetBytes(ReadOnlySpan<char>, IBufferWriter<byte>)` produces no intermediate array (the naive style adds a full-size allocation + copy per message):
 
@@ -318,7 +317,7 @@ For 64KB-class messages the dominant costs are the codec style and the message t
    // Not recommended: writer.Write(Encoding.UTF8.GetBytes(message));  // full-size byte[] per message
    ```
 
-2. **Pick byte[] / ReadOnlyMemory<byte> as the message type**: string messages inherently allocate ≈2× the payload size per message for UTF-16 materialization; with byte payloads and an [owning codec](#buffer-ownership-and-concurrency) the framework sits within ≈20–30% of raw TCP;
+2. **Pick byte[] / ReadOnlyMemory<byte> as the message type**: the ASCII string payload in this benchmark produces about 2× its payload size in UTF-16 character data; byte messages also need an [owning codec](#buffer-ownership-and-concurrency), which does not imply zero-copy or zero allocation;
 3. Keep **streaming encode** on (default, `UseStreamingEncode`) — send buffers now start at the previous frame's size (adaptive, capped at 1MB).
 
 ## Supported frameworks
@@ -343,7 +342,7 @@ The `netstandard2.0` asset is validated by the **full net48 test suite** (real T
 dotnet build StreamFrame.slnx
 dotnet test
 dotnet run --project samples/StreamFrame.Demo          # 5-scenario end-to-end demo
-dotnet run -c Release --project bench/StreamFrame.Benchmarks   # benchmarks (~5-10 min)
+dotnet run -c Release --project bench/StreamFrame.Benchmarks   # benchmarks (select filters using bench/README.en.md)
 dotnet test -f net8.0 --collect:"XPlat Code Coverage"  # coverage (CI also collects & summarizes)
 ```
 

@@ -20,7 +20,7 @@
 | 帧边界（长度前缀 / STX-ETX / 自定义） | 各写各的 | 内置两种 + 可插拔 |
 | 粘包/半包 | 手写缓冲拼接 | Pipelines 自动处理 |
 | 重连 / 状态机 | 手写 | 内置自动重连 |
-| 发送性能 | 多次拷贝 | 可选流式零拷贝 |
+| 发送性能 | 多次拷贝 | 可选单缓冲流式编码 |
 
 ## 安装
 
@@ -292,16 +292,15 @@ _ = Task.Run(async () =>
 
 ## 性能
 
-BenchmarkDotNet 实测（详见 [bench/README.md](bench/README.md)，可本地复现）：
+基准覆盖同机 TCP 回环上的单向传输与逐条往返，包含两种 Framer、64B/1KB/64KB，以及字节数组和两种字符串编码。两侧执行相同的编码、定界、物化及完整内容校验；单向在接收完成后计时结束，往返等待每条回显。复现命令、原始结果及限制见 [基准说明](bench/README.md)。
 
-- **流式编码**：每帧堆分配减半（单缓冲 vs 双缓冲），小负载耗时快 25–35%，大负载持平；
-- **切帧吞吐**：`LengthPrefixFramer` ≈8.3 ns/帧，`StxEtxFramer` ≈50 ns/帧（net8+ SearchValues 向量化后较逐字节版提速约 22 倍）——两者均可达每秒千万帧级；
-- **端到端**（真实 TCP 回环，2026-08-29 两轮区间，含内置指标）：单向吞吐 1KB ≈13–13.5 万条/秒、64B ≈21–24 万条/秒（LengthPrefix）；往返延迟 ≈66–74 µs；XML codec 每条报文 2–16 µs（400B–4KB）——序列化开销远大于定界层。**框架税分尺寸**：小消息下队列流水线反而快于裸 NetworkStream 逐条 Write 的对照（13–52%），64KB 大消息约 3–4×（编码缓冲分配主导，优化方向已记录）；
-- **新特性成本实测**：内置指标无监听时 0.5–1.0 ns/次、零分配（可常开）；`SendInSessionAsync` 约为 `SendAsync` 的 2 倍耗时、+≈470 B/条分配（会话语义的代价，不需要时用 `SendAsync`）；接收视图与未完成帧超时（关闭态）均无可测差异。绝对值随机器浮动，完整数据与噪声披露见 [bench/README.md](bench/README.md)。
+直接 TCP 对照仍省略队列、Pipe 与通用流重组，因此差值不能精确代表“框架自身开销”。旧的“快于裸 TCP”“大报文 3–4 倍”“字节负载仅多 20–30%”来自不匹配的工作量，已撤回。单机单次采样不代表普遍性能优势。
+
+流式编码省去负载缓冲到帧缓冲的一次整体复制；Codec、Socket、缓冲扩容与消息物化仍会复制或分配，不是端到端零拷贝。XML、帧路径、指标和会话功能有独立基准，应按实际业务分别测量。
 
 ### 大报文指南（≥64KB）
 
-64KB 级消息下，开销大头在 codec 写法与消息类型而非框架（归因数据见 [bench/README.md](bench/README.md)）。三条建议：
+64KB 级消息应分别检查 Codec 中间数组、消息物化与传输成本（测量口径见 [bench/README.md](bench/README.md)）。三条建议：
 
 1. **codec 用 span 直写重载**——`Encoding.GetBytes(ReadOnlySpan<char>, IBufferWriter<byte>)` 不产生中间数组（旧写法每条多一次全尺寸分配 + 拷贝）：
 
@@ -312,7 +311,7 @@ BenchmarkDotNet 实测（详见 [bench/README.md](bench/README.md)，可本地�
    // 不推荐：writer.Write(Encoding.UTF8.GetBytes(message));  // 每条一次全尺寸 byte[]
    ```
 
-2. **消息类型选 byte[] / ReadOnlyMemory<byte>**：string 消息每条固有 ≈2× 报文大小的 UTF-16 物化分配；字节负载 + [拥有数据的 codec](#缓冲所有权与并发约束) 时框架距裸 TCP 仅 ≈20–30%；
+2. **消息类型选 byte[] / ReadOnlyMemory<byte>**：本基准的 ASCII string 负载会生成约 2× 负载大小的 UTF-16 字符数据；字节消息也需要[拥有独立数据的 codec](#缓冲所有权与并发约束)，不能将其等同零拷贝或零分配；
 3. 保持默认的**流式编码**开启（`UseStreamingEncode`），发送缓冲会按上一帧大小自适应起租（封顶 1MB）。
 
 ## 支持框架
@@ -337,7 +336,7 @@ BenchmarkDotNet 实测（详见 [bench/README.md](bench/README.md)，可本地�
 dotnet build StreamFrame.slnx
 dotnet test
 dotnet run --project samples/StreamFrame.Demo          # 五场景端到端 demo
-dotnet run -c Release --project bench/StreamFrame.Benchmarks   # 性能基准（约 5-10 分钟）
+dotnet run -c Release --project bench/StreamFrame.Benchmarks   # 性能基准（先按 bench/README.md 筛选）
 dotnet test -f net8.0 --collect:"XPlat Code Coverage"  # 覆盖率（CI 亦自动收集并写入运行摘要）
 ```
 

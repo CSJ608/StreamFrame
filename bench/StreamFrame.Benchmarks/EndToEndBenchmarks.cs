@@ -1,150 +1,179 @@
+using System.Buffers;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using BenchmarkDotNet.Attributes;
 
 namespace StreamFrame.Benchmarks;
 
-/// <summary>
-/// 端到端管道基准（真实 TCP 回环）：完整连接（收发队列 + Pipe + 定界 + codec + socket）。
-/// 原单类按关注点拆分：单向吞吐（Framer × 负载尺寸）与往返延迟（Framer）分开参数化，
-/// 避免延迟基准在尺寸参数下空转重复。
-/// </summary>
-public abstract class EndToEndBenchmarkBase
+/// <summary>Matched application work; transport scheduling and buffering still differ.</summary>
+[MemoryDiagnoser]
+public abstract class NetworkBenchmarkBase
 {
-    protected const int ThroughputMessages = 10_000;
-    protected const int PingPongRounds = 2_000;
+    public const int Messages = 256;
+    [Params("LengthPrefix", "StxEtx")]
+    public string Framer { get; set; } = "LengthPrefix";
+    [Params(64, 1024, 65536)]
+    public int PayloadBytes { get; set; } = 64;
+    [Params("Bytes", "StringSpan", "StringAlloc")]
+    public string CodecMode { get; set; } = "Bytes";
+    [Params("DirectTcp", "StreamFrame")]
+    public string Transport { get; set; } = "DirectTcp";
+    protected abstract bool Echo { get; }
+    private BenchmarkEndpoint _server = null!;
+    private BenchmarkEndpoint _client = null!;
+    private object _payload = null!;
+    private CancellationTokenSource _lifetime = null!;
+    private Task _serverWork = Task.CompletedTask;
 
-    protected StreamConnection<string> Server { get; private set; } = null!;
-    protected StreamConnection<string> Client { get; private set; } = null!;
-    protected CancellationTokenSource Cts { get; private set; } = null!;
-
-    protected long ServerReceived;
-    protected long ClientReceived;
-    protected volatile TaskCompletionSource ServerDrained = NewTcs();
-    protected volatile TaskCompletionSource ClientDrained = NewTcs();
-
-    protected static TaskCompletionSource NewTcs()
-        => new(TaskCreationOptions.RunContinuationsAsynchronously);
-
-    protected void SetupCore(IFramer framer)
+    [GlobalSetup]
+    public async Task Setup()
     {
-        var port = GetFreePort();
-        var options = new StreamConnectionOptions { ConnectRetryDelayMs = 200 };
-        StreamConnection<string> Create(bool isActive)
-            => new(framer, Utf8TextCodec.Instance, IPAddress.Loopback, port, isActive, options);
-
-        Server = Create(isActive: false);
-        Client = Create(isActive: true);
-        Cts = new CancellationTokenSource();
-
-        // 服务端：回显（乒乓用）；同时计数（吞吐用）
-        _ = Task.Run(async () =>
-        {
-            await foreach (var message in Server.GetMessages(Cts.Token))
-            {
-                if (Interlocked.Increment(ref ServerReceived) == ThroughputMessages)
-                    ServerDrained.TrySetResult();
-                await Server.SendAsync(message, Cts.Token);
-            }
-        });
-        // 客户端：只计数收到的回显
-        _ = Task.Run(async () =>
-        {
-            await foreach (var _ in Client.GetMessages(Cts.Token))
-            {
-                if (Interlocked.Increment(ref ClientReceived) == PingPongRounds)
-                    ClientDrained.TrySetResult();
-            }
-        });
-
-        Server.Start(default);
-        Client.Start(default);
-        Task.WhenAll(Server.WaitForConnectedAsync(), Client.WaitForConnectedAsync()).GetAwaiter().GetResult();
-    }
-
-    [GlobalCleanup]
-    public void Cleanup()
-    {
-        Cts.Cancel();
-        Server.DisposeAsync().AsTask().GetAwaiter().GetResult();
-        Client.DisposeAsync().AsTask().GetAwaiter().GetResult();
-        Cts.Dispose();
-    }
-
-    protected static IFramer CreateFramer(string name)
-        => name == "LengthPrefix" ? new LengthPrefixFramer() : new StxEtxFramer();
-
-    protected static int PayloadLength(string size)
-        => size switch
-        {
-            "64B" => 64,
-            "64KB" => 64 * 1024,
-            _ => 1024,
-        };
-
-    private static int GetFreePort()
-    {
+        _lifetime = new CancellationTokenSource();
+        var text = new string('x', PayloadBytes);
+        _payload = CodecMode == "Bytes" ? Encoding.UTF8.GetBytes(text) : text;
+        IStreamingFramer framer = Framer == "LengthPrefix" ? new LengthPrefixFramer() : new StxEtxFramer();
+        var codec = new BenchmarkCodec(CodecMode);
         var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
         var port = ((IPEndPoint)listener.LocalEndpoint).Port;
-        listener.Stop();
-        return port;
-    }
-}
-
-/// <summary>单向吞吐：客户端连发 1 万条消息，计到服务端全部收到。Mean 已按 OperationsPerInvoke 折算为每消息。</summary>
-[MemoryDiagnoser]
-[SimpleJob(warmupCount: 2, iterationCount: 10)]
-public class OneWayThroughputBenchmarks : EndToEndBenchmarkBase
-{
-    [Params("LengthPrefix", "StxEtx")]
-    public string Framer { get; set; } = "LengthPrefix";
-
-    [Params("64B", "1KB", "64KB")]
-    public string PayloadSize { get; set; } = "1KB";
-
-    [GlobalSetup]
-    public void Setup()
-        => SetupCore(CreateFramer(Framer));
-
-    [Benchmark(OperationsPerInvoke = ThroughputMessages)]
-    public async Task OneWayThroughput()
-    {
-        Interlocked.Exchange(ref ServerReceived, 0);
-        ServerDrained = NewTcs();
-
-        var payload = new string('x', PayloadLength(PayloadSize));
-        for (var i = 0; i < ThroughputMessages; i++)
-            await Client.SendAsync(payload);
-
-        await ServerDrained.Task.WaitAsync(TimeSpan.FromSeconds(30));
-    }
-}
-
-/// <summary>往返延迟：客户端逐条发送并等回显（串行化每一条的完整 RTT）。Mean 已折算为每次往返。</summary>
-[MemoryDiagnoser]
-[SimpleJob(warmupCount: 2, iterationCount: 10)]
-public class RoundTripLatencyBenchmarks : EndToEndBenchmarkBase
-{
-    [Params("LengthPrefix", "StxEtx")]
-    public string Framer { get; set; } = "LengthPrefix";
-
-    [GlobalSetup]
-    public void Setup()
-        => SetupCore(CreateFramer(Framer));
-
-    [Benchmark(OperationsPerInvoke = PingPongRounds)]
-    public async Task RoundTripLatency()
-    {
-        Interlocked.Exchange(ref ClientReceived, 0);
-        ClientDrained = NewTcs();
-
-        for (var i = 0; i < PingPongRounds; i++)
+        if (Transport == "DirectTcp")
         {
-            await Client.SendAsync("ping");
-            // 串行等待这一条的回显：单条完整往返
-            while (Volatile.Read(ref ClientReceived) <= i)
-                await Task.Yield();
+            using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            var sender = new TcpClient();
+            await sender.ConnectAsync(IPAddress.Loopback, port, deadline.Token);
+            var receiver = await listener.AcceptTcpClientAsync(deadline.Token);
+            listener.Stop();
+            _client = new DirectTcpEndpoint(sender, framer, codec, PayloadBytes);
+            _server = new DirectTcpEndpoint(receiver, framer, codec, PayloadBytes);
         }
+        else
+        {
+            // StreamConnection owns its listener; release the reserved ephemeral port.
+            listener.Stop();
+            var options = new StreamConnectionOptions { SocketReceiveBufferSize = 65536, TcpKeepAlive = false };
+            var server = new StreamConnection<object>(framer, codec, IPAddress.Loopback, port, false, options);
+            var client = new StreamConnection<object>(framer, codec, IPAddress.Loopback, port, true, options);
+            _server = new FrameworkEndpoint(server, _lifetime.Token);
+            _client = new FrameworkEndpoint(client, _lifetime.Token);
+            server.Start(_lifetime.Token);
+            client.Start(_lifetime.Token);
+            await Task.WhenAll(server.WaitForConnectedAsync(), client.WaitForConnectedAsync()).WaitAsync(TimeSpan.FromSeconds(15));
+            // Read-only instrumentation outside measurement; no production API/configuration changes.
+            foreach (var connection in new[] { server, client })
+            {
+                var socket = (Socket)typeof(StreamConnection<object>).GetField("_socket", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(connection)!;
+                Console.WriteLine($"StreamFrame socket: receive={socket.ReceiveBufferSize}, send={socket.SendBufferSize}, NoDelay={socket.NoDelay}, KeepAlive={socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive)}");
+                if (socket.ReceiveBufferSize != 65536 || socket.NoDelay)
+                    throw new InvalidOperationException("Socket settings differ from the direct TCP control.");
+            }
+        }
+    }
+
+    [Benchmark(OperationsPerInvoke = Messages)]
+    public async Task Transfer()
+    {
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
+        deadline.CancelAfter(TimeSpan.FromSeconds(30));
+        var ct = deadline.Token;
+        _serverWork = Consume(ct);
+        try
+        {
+            for (var i = 0; i < Messages; i++)
+            {
+                await _client.Send(_payload, ct);
+                if (Echo) Validate(await _client.Receive(ct));
+            }
+            await _serverWork.WaitAsync(ct);
+        }
+        catch
+        {
+            deadline.Cancel();
+            _lifetime.Cancel();
+            try { await _serverWork; } catch { }
+            throw;
+        }
+    }
+
+    private async Task Consume(CancellationToken ct)
+    {
+        for (var i = 0; i < Messages; i++)
+        {
+            var message = await _server.Receive(ct);
+            Validate(message);
+            if (Echo) await _server.Send(message, ct);
+        }
+    }
+
+    private void Validate(object message)
+    {
+        var valid = _payload is byte[] expected
+            ? message is byte[] actual && actual.AsSpan().SequenceEqual(expected)
+            : message is string value && string.Equals(value, (string)_payload, StringComparison.Ordinal);
+        if (!valid) throw new InvalidDataException("Received payload differs from the complete expected payload.");
+    }
+
+    [GlobalCleanup]
+    public async Task Cleanup()
+    {
+        _lifetime.Cancel();
+        if (_client is not null) await _client.DisposeAsync();
+        if (_server is not null) await _server.DisposeAsync();
+        try { await _serverWork; } catch (OperationCanceledException) { }
+        _lifetime.Dispose();
+    }
+}
+
+/// <summary>No echo; completes after decoding and validating all 256 received messages.</summary>
+public class OneWayThroughputBenchmarks : NetworkBenchmarkBase
+{
+    protected override bool Echo => false;
+}
+
+/// <summary>256 sequential round trips; each waits for a decoded, validated echo.</summary>
+public class RoundTripLatencyBenchmarks : NetworkBenchmarkBase
+{
+    protected override bool Echo => true;
+}
+
+internal sealed class BenchmarkCodec(string mode) : ICodec<object>
+{
+    public object Decode(in ReadOnlySequence<byte> frame, CancellationToken ct = default)
+        => mode == "Bytes" ? frame.ToArray() : Encoding.UTF8.GetString(frame);
+
+    public void Encode(object message, IBufferWriter<byte> writer, CancellationToken ct = default)
+    {
+        if (mode == "Bytes") writer.Write((byte[])message);
+        else if (mode == "StringSpan") Encoding.UTF8.GetBytes(((string)message).AsSpan(), writer);
+        else writer.Write(Encoding.UTF8.GetBytes((string)message));
+    }
+}
+
+internal abstract class BenchmarkEndpoint : IAsyncDisposable
+{
+    public abstract ValueTask Send(object message, CancellationToken ct);
+    public abstract ValueTask<object> Receive(CancellationToken ct);
+    public abstract ValueTask DisposeAsync();
+}
+
+internal sealed class FrameworkEndpoint(StreamConnection<object> connection, CancellationToken lifetime) : BenchmarkEndpoint
+{
+    private readonly IAsyncEnumerator<object> _messages = connection.GetMessages(lifetime).GetAsyncEnumerator(lifetime);
+    private Task<bool>? _pendingReceive;
+    public override async ValueTask Send(object message, CancellationToken ct) => await connection.SendAsync(message, ct);
+    public override async ValueTask<object> Receive(CancellationToken ct)
+    {
+        _pendingReceive = _messages.MoveNextAsync().AsTask();
+        if (!await _pendingReceive.WaitAsync(ct)) throw new EndOfStreamException();
+        return _messages.Current;
+    }
+    public override async ValueTask DisposeAsync()
+    {
+        await connection.DisposeAsync();
+        if (_pendingReceive is not null)
+        {
+            try { await _pendingReceive; } catch (OperationCanceledException) { }
+        }
+        await _messages.DisposeAsync();
     }
 }

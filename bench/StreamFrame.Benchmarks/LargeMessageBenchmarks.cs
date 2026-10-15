@@ -12,8 +12,8 @@ namespace StreamFrame.Benchmarks;
 /// codec/消息类型下的表现——
 /// ① String_Alloc：字符串 + 分配中间数组的 GetBytes（现状写法，demo/旧基准同款）；
 /// ② String_Span：字符串 + span 直写（Encoding.GetBytes(ReadOnlySpan&lt;char&gt;, IBufferWriter)，零中间数组）；
-/// ③ ByteArray：byte[] 消息 + 透传 codec（编码零拷贝、解码一次 ToArray）。
-/// 用于把"框架税"精确拆到 框架 / codec 写法 / 消息类型 三个口袋。
+/// ③ ByteArray：byte[] 消息 + 透传 codec（编码复制到 writer、解码一次 ToArray）。
+/// 仅用于观察 codec/消息类型变化；不能与不同收发工作的历史裸 TCP 数据相减。
 /// </summary>
 [MemoryDiagnoser]
 [SimpleJob(warmupCount: 2, iterationCount: 10)]
@@ -44,7 +44,7 @@ public class LargeMessageStringBenchmarks : SessionAwareBenchmarkBase
     }
 }
 
-/// <summary>byte[] 消息 + 透传 codec 的对照：编码零拷贝（同一数组实例发一万次），解码一次 ToArray。</summary>
+/// <summary>byte[] 消息 + 透传 codec 的对照：编码复制到 writer（同一数组实例发一万次），解码一次 ToArray。</summary>
 [MemoryDiagnoser]
 [SimpleJob(warmupCount: 2, iterationCount: 10)]
 public class LargeMessageByteArrayBenchmarks
@@ -135,7 +135,7 @@ internal sealed class SpanUtf8TextCodec : ICodec<string>
         => Encoding.UTF8.GetBytes(message.AsSpan(), writer);
 }
 
-/// <summary>byte[] 透传 codec：编码原样写入（零拷贝），解码一次 ToArray。</summary>
+/// <summary>byte[] 透传 codec：编码复制到 writer，解码一次 ToArray。</summary>
 internal sealed class ByteArrayPassThroughCodec : ICodec<byte[]>
 {
     public static readonly ByteArrayPassThroughCodec Instance = new();
@@ -146,3 +146,4 @@ internal sealed class ByteArrayPassThroughCodec : ICodec<byte[]>
     public void Encode(byte[] message, IBufferWriter<byte> writer, CancellationToken ct = default)
         => writer.Write(message);
 }
+
