@@ -89,11 +89,11 @@ public class ReconnectWedgeTests
 
         for (var round = 0; round < rounds; round++)
         {
-            // 对端接入形成会话
+            // 对端接入形成会话（预算与下方一致：探测永久不可用，并行负载下偶发慢收敛不应误报）
             using (var client = new TcpClient())
             {
                 await ConnectWithRetryAsync(client, port);
-                await WaitConnectedAsync(server, timeoutMs: 10_000);
+                await WaitConnectedAsync(server, timeoutMs: 30_000);
             }
 
             // 等自动重连完成、再次形成会话
