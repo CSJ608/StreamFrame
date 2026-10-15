@@ -19,6 +19,7 @@
 - **Soak 目标矩阵（[#66](https://github.com/CSJ608/StreamFrame/issues/66)）**：显式选择 Ubuntu net8.0/net10.0、Windows net8.0/net10.0/net48，避免 Ubuntu 启动 .NET Framework 测试；job 名、详细日志与始终尝试上传的 TRX 产物按 OS/TFM 区分，测试断言失败继续使 job 失败。普通 CI 必需检查名不变。
 
 ### 变更
+- **发版前文档与注释核对清理**：① 修正 `StreamFrame.Protocols.Xml` 包描述与 DESIGN 中的序列化器旧说法——实现为 XmlReader→XDocument 解码、XmlWriter 编码，从未使用 XmlSerializer；② 删除 `ConnectionMetrics` 关于 netstandard2.0 指标 no-op 兜底的陈旧注释（实际经 `System.Diagnostics.DiagnosticSource` 包提供同款 API，与 csproj/README 一致）；③ XML 注释统一全中文——移除 #69 批次遗留的 11 处英文复述行（IStreamConnection/StreamConnectionOptions/IFramer/IStreamingFramer/ICodec），并去掉 `StxEtxFramer` 文档中的内部项目名引用；④ `IFrameDiscardReporting` 措辞修正（该接口由定界器实现，"第三方 codec"→"第三方定界器"）；⑤ DESIGN 项目结构树补齐现有文件（Diagnostics/Compatibility/RetryDelayScheduler/会话感知类型/bench 与两个 samples），demo 场景数三→五；⑥ CHANGELOG 2.1.0 段去重（新增/变更四处重复条目；经 tag 区间核实 LOGO 随本版本生效为正确说法，错挂的 social preview 句删除——该资产实为 2.2.1 引入）并移除空「暂无」段；⑦ README.en 的 JSON 最简驱动示例从「安装」移至「Codec」小节，与中文版结构对齐。不改变任何代码行为。
 - 依赖升级（Dependabot，[PR #60](https://github.com/CSJ608/StreamFrame/pull/60)、[PR #91](https://github.com/CSJ608/StreamFrame/pull/91)、[PR #98](https://github.com/CSJ608/StreamFrame/pull/98)，重复的 [#92](https://github.com/CSJ608/StreamFrame/pull/92) 已关闭）：① CI Actions——soak 工作流 `actions/checkout` v4→v7、`actions/upload-artifact` v4→v7（全部工作流对齐 Node 24 世代，Node 20 弃用告警清零）；② 进包依赖（patch）——`System.IO.Pipelines` / `System.Threading.Channels` / `Microsoft.Bcl.AsyncInterfaces` / `Microsoft.Extensions.Logging.Abstractions` / `System.Diagnostics.DiagnosticSource` 10.0.11→10.0.12；③ 工具链（不进包）——`Meziantou.Analyzer` 3.0.189→3.0.294、`coverlet.collector` 10.0.1→10.1.0、`Microsoft.NET.Test.Sdk` 18.9.0→18.10.1。
 - **会话对象化与拆除分段（[#68](https://github.com/CSJ608/StreamFrame/issues/68) PR-2）**：会话五元组（socket/Pipe/取消源/接收、解码、发送三任务/编号纪元/建立时刻）收敛为不可变的内部 `Session` 对象——会话任务只操作所属会话的资源（接收循环与发送 worker 绑定本会话 socket，不再读"当前值"字段），直连迁移与拆除竞速中新旧会话互不干扰；拆除只关本会话的 socket（`_socket` 字段降级为诊断/交接镜像）。会话拆除分段：锁内仅快速中止（取消令牌 + **先关 socket 解锁阻塞 I/O**——netfx 上取消令牌无法中止已提交的接收），有界等待（≤2s）移到锁外——高并发重连/停机不再在会话锁上排队，netfx 拆除收敛加快；停机/重连的总阻塞时长与公共 API 的同步/异步行为不变。全套测试（139+139+131）多轮全绿；同机同口径基准抽检（OneWayThroughput vs issue-70 基线）：框架路径与 DirectTcp 对照同向漂移（环境噪声），未观测框架特有劣化，每操作分配无系统性增长。
 - **状态机与所有权规范（[#68](https://github.com/CSJ608/StreamFrame/issues/68) PR-1）**：DESIGN 增补权威清单——状态转换全表与发布段/通知段规则、资源所有权表（会话 socket/监听器/会话五元组/消息通道）、锁与同步原语清单、允许重入点（回调内 Reconnect/Dispose、停机后调用、迟到旧会话任务）及已知限制（拆除同步等待持锁、`_socket` 字段语义——指向后续内部 Session 对象重构）；与新增的 `StateOwnershipBaselineTests` 共同构成 #68 会话所有权重构的行为基线。
@@ -108,9 +109,6 @@
 - **XML 文档随 NuGet 包发布**（`GenerateDocumentationFile`）：此前全量中文 XML 注释从未进包，用户在 IDE 中没有 IntelliSense；现以 `<inheritdoc />` 补齐全部接口实现成员的文档引用，并由 `TreatWarningsAsErrors` 强制今后不出现未文档化的公共 API。
 - 基准测试扩容：`CodecBenchmarks`（XmlDocumentCodec 典型报文编解码开销）与 `EndToEndBenchmarks`（真实 TCP 回环的单向吞吐（双 framer）与往返延迟）；基准项目纳入解决方案（IDE 可见，随解决方案构建；`dotnet test` 依 IsTestProject 机制自动跳过）。
 
-### 修复
-- 暂无
-
 ## [2.1.0] - 2026-08-27
 
 ### 新增
@@ -123,13 +121,6 @@
 ### 变更
 - CI Actions 升级到 Node 24 运行时：`actions/checkout@v7`、`actions/setup-dotnet@v6`、`softprops/action-gh-release@v3`（消除 Node 20 弃用告警）。
 - `GetMessages`/发送 worker 改用 `WaitToReadAsync+TryRead` 等价循环（ns2.0 的 Channels 包无 `ReadAllAsync`；各目标行为一致）。
-- 帧定界基准测试 `bench/StreamFrame.Benchmarks`（BenchmarkDotNet）：LengthPrefix/StxEtx 的流式 vs 纯函数编码对比与切帧吞吐，为"流式零拷贝"说法提供可复现数据。
-- 项目 LOGO（`docs/logo/`，SVG 母版 + PNG），README 双语版接入展示、两个 NuGet 包启用包图标（随下个版本发布生效）。
-- README 新增 CI 构建状态徽章；main 分支保护（必须走 PR 且 CI 通过、禁 force push/删除、强制线性历史）。
-- 英文版 README（`README.en.md`，与中文版互链），便于国际用户检索与阅读。
-
-### 修复
-- 暂无
 
 ## [2.0.0] - 2026-08-27
 

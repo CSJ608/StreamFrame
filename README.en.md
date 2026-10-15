@@ -34,28 +34,6 @@ XML message driver (optional):
 dotnet add package StreamFrame.Protocols.Xml
 ```
 
-Minimal JSON driver (System.Text.Json, span-written, AOT-safe):
-
-```csharp
-sealed class SystemTextJsonCodec : ICodec<JsonElement>
-{
-    public static readonly SystemTextJsonCodec Instance = new();
-
-    public JsonElement Decode(in ReadOnlySequence<byte> frame, CancellationToken ct = default)
-    {
-        using var document = JsonDocument.Parse(frame.ToArray());
-        return document.RootElement.Clone(); // Own data beyond document disposal.
-    }
-
-    public void Encode(JsonElement message, IBufferWriter<byte> writer, CancellationToken ct = default)
-    {
-        var raw = message.GetRawText(); // serialized form (non-ASCII already escaped)
-        var span = writer.GetSpan(Encoding.UTF8.GetMaxByteCount(raw.Length));
-        writer.Advance(Encoding.UTF8.GetBytes(raw, span));
-    }
-}
-```
-
 ## Quick start
 
 This is a **single-connection device integration library**. A passive listener serves one client at a time; `AcceptFirstClientOnly = false` keeps the listener open without adding multi-client handling. The snippets below represent separate processes/roles, with a host-provided `ct`. See the production configuration below and dispose connections with `await using`.
@@ -111,7 +89,27 @@ public interface ICodec<TMessage>
 }
 ```
 
-**Onboarding a new device = writing one driver**: implement `ICodec<TMessage>`, define your message type, pick a framer — everything else is reused. See `StreamFrame.Protocols.Xml` for the official example.
+**Onboarding a new device = writing one driver**: implement `ICodec<TMessage>`, define your message type, pick a framer — everything else is reused. See `StreamFrame.Protocols.Xml` for the official example. A minimal JSON-message driver (System.Text.Json, span-written, AOT-safe):
+
+```csharp
+sealed class SystemTextJsonCodec : ICodec<JsonElement>
+{
+    public static readonly SystemTextJsonCodec Instance = new();
+
+    public JsonElement Decode(in ReadOnlySequence<byte> frame, CancellationToken ct = default)
+    {
+        using var document = JsonDocument.Parse(frame.ToArray());
+        return document.RootElement.Clone(); // Own data beyond document disposal.
+    }
+
+    public void Encode(JsonElement message, IBufferWriter<byte> writer, CancellationToken ct = default)
+    {
+        var raw = message.GetRawText(); // serialized form (non-ASCII already escaped)
+        var span = writer.GetSpan(Encoding.UTF8.GetMaxByteCount(raw.Length));
+        writer.Advance(Encoding.UTF8.GetBytes(raw, span));
+    }
+}
+```
 
 ### Connection (`IStreamConnection<T>`) — the transport
 
