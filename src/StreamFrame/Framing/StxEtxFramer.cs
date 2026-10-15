@@ -8,7 +8,7 @@ namespace StreamFrame;
 /// 注意：plain 模式要求负载不得包含 0x02/0x03，否则会被误判为帧边界。
 /// 适合 XML / 纯文本等已知安全的负载；二进制负载请改用 <see cref="LengthPrefixFramer"/>。
 ///
-/// 边界处理（与 SamSung 一致）：
+/// 边界处理：
 /// <list type="bullet">
 /// <item>在待定帧的 ETX 收到之前若再次遇到 STX，则丢弃当前部分帧并从新 STX 处重新开始。</item>
 /// <item>无前导 STX 的孤立 ETX 被视为噪声字节跳过。</item>
