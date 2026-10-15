@@ -6,6 +6,9 @@
 ## [Unreleased]
 
 ### 修复
+- **被取代接受循环的状态杂音与迟到接入语义澄清（[#68](https://github.com/CSJ608/StreamFrame/issues/68) PR-3，#47 世代语义边界定稿）**：用户重连与自动重连竞速产生的被取代"僵尸"接受循环——① 循环头代次复查前置：此前从重试退避中醒来的被取代循环会先发布 Connecting 再检查代次退出，状态序列混入替换者之外的杂音；② 明确并测试锁定迟到 accept 的收编语义：监听器是连接级共享资源，客户端向服务器端口的接入本身合法——被取代循环迟到完成的 accept **照常发布 Connected 并建立会话**（纪元机制与会话隔离收敛，取代者循环经代次检查静默退出）。曾评估"迟到连接当场释放"方案：会重置真实客户端、违背接入契约，已否决（实现一度引入后回归测试即复现客户端被吞）。新增确定性回归：accept 等待期间 Reconnect 取代循环，迟到客户端照常收编、状态序列恰为 Connecting→Retry→Connecting→Connected。
+- **终态竞速守门与发布段原子化（[#68](https://github.com/CSJ608/StreamFrame/issues/68)）**：并发 Dispose 与 Reconnect/连接成功竞速时，已通过停机检查但尚未写入 State 的发布被抢占，停机写入 Disconnected 后迟到的 Retry/Connected 会把终态翻转（State 停在 Retry/Connected）；Retry 派发还会对停机回收的 `_lifetimeCts` 空引用。状态发布收敛为发布段（`_publishGate` 锁内原子：停机/过期纪元判定 + 编号纪元簿记 + State 写入）与通知段（锁外用户回调/等待器/派发，回调可安全重入）；停机后到达的非终态发布整体丢弃；传输建立与停机竞速时新 socket 在守门处当场释放（此前泄漏到终结器）。新增迟到发布确定性门控、连接成功与停机竞速、并发关闭/重连终态不变量回归。
+- **回调重入会话撕裂（[#68](https://github.com/CSJ608/StreamFrame/issues/68)）**：Connected 回调内同步 `Reconnect()` 时，迟到发布帧的 `StartSession` 以过期编号/纪元"兜底重建"僵尸会话，其拆除会关掉新会话刚建立的 socket（编号复用 + 会话失活，实测可复现）。改为纪元现行性门控：过期帧放弃创建，连接由取代者循环完成；`_socket` 被新连接覆盖时旧值当场释放（直连迁移路径不再泄漏）。新增回调重入（Reconnect/DisposeAsync）收敛性、合法状态转移序列与编号线性化回归。
 - **基准工作量对齐（[#70](https://github.com/CSJ608/StreamFrame/issues/70)）**：单向不再回显；直接 TCP 与框架共享负载、定界、Codec、物化校验及完成点，覆盖双 Framer、64B/1KB/64KB 和字节/两种字符串编码，往返逐条等待回显。增加全矩阵连续批次验证；原始结果与环境随仓库保存，撤回不同工作量相减所得的框架税结论，修正指标单位和筛选命令，不修改框架实现。
 - **NativeAOT 运行验收（[#71](https://github.com/CSJ608/StreamFrame/issues/71)）**：CI 发布后执行 linux-x64 原生产物；有界等待连接与三条消息，校验会话绑定/普通发送及内容，观察消费任务并释放资源。动态选择端口并仅在连接阶段有限重选；连接失败、少收、消费异常和内容错误以非零退出，通过受控故障反证检查有效。保留警告为错误和非必需 AOT 检查。
 - **Soak 队列续发与收尾（[#67](https://github.com/CSJ608/StreamFrame/issues/67)）**：发送 worker 在每次出队前检查会话取消，避免上一帧写完后拆除的旧 worker 取走并丢弃待续发普通条目；新增确定性门控回归。长流测试精确排空后关闭读 socket 并观察任务，修复 net48 仅取消令牌时读任务不收敛。
@@ -16,6 +19,9 @@
 - **Soak 目标矩阵（[#66](https://github.com/CSJ608/StreamFrame/issues/66)）**：显式选择 Ubuntu net8.0/net10.0、Windows net8.0/net10.0/net48，避免 Ubuntu 启动 .NET Framework 测试；job 名、详细日志与始终尝试上传的 TRX 产物按 OS/TFM 区分，测试断言失败继续使 job 失败。普通 CI 必需检查名不变。
 
 ### 变更
+- **会话对象化与拆除分段（[#68](https://github.com/CSJ608/StreamFrame/issues/68) PR-2）**：会话五元组（socket/Pipe/取消源/接收、解码、发送三任务/编号纪元/建立时刻）收敛为不可变的内部 `Session` 对象——会话任务只操作所属会话的资源（接收循环与发送 worker 绑定本会话 socket，不再读"当前值"字段），直连迁移与拆除竞速中新旧会话互不干扰；拆除只关本会话的 socket（`_socket` 字段降级为诊断/交接镜像）。会话拆除分段：锁内仅快速中止（取消令牌 + **先关 socket 解锁阻塞 I/O**——netfx 上取消令牌无法中止已提交的接收），有界等待（≤2s）移到锁外——高并发重连/停机不再在会话锁上排队，netfx 拆除收敛加快；停机/重连的总阻塞时长与公共 API 的同步/异步行为不变。全套测试（139+139+131）多轮全绿；同机同口径基准抽检（OneWayThroughput vs issue-70 基线）：框架路径与 DirectTcp 对照同向漂移（环境噪声），未观测框架特有劣化，每操作分配无系统性增长。
+- **状态机与所有权规范（[#68](https://github.com/CSJ608/StreamFrame/issues/68) PR-1）**：DESIGN 增补权威清单——状态转换全表与发布段/通知段规则、资源所有权表（会话 socket/监听器/会话五元组/消息通道）、锁与同步原语清单、允许重入点（回调内 Reconnect/Dispose、停机后调用、迟到旧会话任务）及已知限制（拆除同步等待持锁、`_socket` 字段语义——指向后续内部 Session 对象重构）；与新增的 `StateOwnershipBaselineTests` 共同构成 #68 会话所有权重构的行为基线。
+- 依赖升级（Dependabot，[PR #59](https://github.com/CSJ608/StreamFrame/pull/59)）：soak 工作流 `actions/setup-dotnet` v4→v6（Node 24 运行时，与其余工作流对齐）。
 - **驱动所有权与并发文档（[#69](https://github.com/CSJ608/StreamFrame/issues/69)）**：补全 ICodec/IFramer/流式定界的缓冲借用及同连接收发、新旧会话、跨连接共享约束；双语 README 增加拥有独立数据的 byte[]/ReadOnlyMemory 示例、有界队列生产配置及单客户端边界，澄清终态等待、KeepAlive 粒度和入队非确认。示例纳入三目标编译并以主动覆写缓冲验证异步消费；不改变默认值或实现公共契约。
 - **Soak 可观测协议（[#67](https://github.com/CSJ608/StreamFrame/issues/67)）**：保持 SendAsync 仅入队契约，记录可重放 seed、动作、尝试 ID、会话及发送/读取阶段；业务测试使用 ACK、重试、去重并精确校验，重试前独立检查队列续发与会话边界。所有阶段有界等待，未启用长测报告 Skip；完整 600 秒五目标连续三次验收另行跟踪，见 docs/SOAK.md。
 
