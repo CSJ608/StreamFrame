@@ -217,6 +217,39 @@ public class StateOwnershipBaselineTests
         await client.DisposeAsync();
     }
 
+    [Fact]
+    public async Task ReconnectWhileAccepting_LateClientStillAdmittedBySupersededLoop()
+    {
+        var port = GetFreePort();
+        await using var server = Create(port, false);
+
+        var states = new ConcurrentQueue<ConnectionState>();
+        server.ConnectionChanged += (_, state) => states.Enqueue(state);
+
+        server.Start(CancellationToken.None);
+        await WaitForAsync(() => server.State == ConnectionState.Connecting, "接受循环进入监听等待");
+        // Start 同步推进到 accept 等待：循环 A 持有 _acceptLock、监听器已发布
+        Assert.IsType<Socket>(Field(server, "_server")!);
+
+        // 用户 Reconnect 在 accept 等待期间取代循环 A（Retry → StartCore 递增代次、派发循环 B；
+        // B 排队等锁）。Retry/Connecting 的发布在 Reconnect 返回前同步完成——被取代循环
+        // 不再发布 Connecting（代次复查前置），状态序列不混入杂音。
+        server.Reconnect();
+        Assert.Equal(
+            new[] { ConnectionState.Connecting, ConnectionState.Retry, ConnectionState.Connecting },
+            states.ToArray());
+
+        // 监听器是连接级共享资源：客户端向服务器端口的接入合法——迟到 accept 照常收编
+        // （发布 Connected、建立会话），由纪元机制收敛；取代者循环 B 取锁后经代次检查静默退出
+        using var client = new TcpClient();
+        await client.ConnectAsync(IPAddress.Loopback, port).WaitAsync(Budget);
+        await WaitForAsync(() => server.State == ConnectionState.Connected, "迟到客户端被收编并发布 Connected");
+        Assert.NotEqual(0, server.CurrentSessionId);
+        Assert.Equal(
+            new[] { ConnectionState.Connecting, ConnectionState.Retry, ConnectionState.Connecting, ConnectionState.Connected },
+            states.ToArray());
+    }
+
     [Theory]
     [InlineData(0)]
     [InlineData(1)]
