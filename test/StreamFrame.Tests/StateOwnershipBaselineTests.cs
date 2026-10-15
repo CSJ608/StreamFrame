@@ -68,12 +68,9 @@ public class StateOwnershipBaselineTests
         Assert.True(connection.IsDisposed);
         Assert.Equal(ConnectionState.Disconnected, connection.State);
         Assert.Equal(0, connection.CurrentSessionId);
-        Assert.Null(Field(connection, "_server"));      // 监听器已释放
-        Assert.Null(Field(connection, "_socket"));      // 连接 socket 已释放
-        Assert.Null(Field(connection, "_sessionCts"));  // 无孤儿会话
-        Assert.Null(Field(connection, "_receiveTask"));
-        Assert.Null(Field(connection, "_decodeTask"));
-        Assert.Null(Field(connection, "_sendWorkerTask"));
+        Assert.Null(Field(connection, "_server"));   // 监听器已释放
+        Assert.Null(Field(connection, "_socket"));   // 连接 socket 已释放
+        Assert.Null(Field(connection, "_session"));  // 无孤儿会话（会话对象集中持有全部会话资源）
 
         // 监听端口可立即重新占用（未泄漏仍在监听的 socket）
         var rebinding = new TcpListener(IPAddress.Loopback, port);
@@ -105,9 +102,8 @@ public class StateOwnershipBaselineTests
         PublishState(server, ConnectionState.Connected);
         Assert.Equal(ConnectionState.Disconnected, server.State);
         Assert.Equal(0, server.CurrentSessionId);
-        Assert.Null(Field(server, "_sessionCts"));
-        Assert.Null(Field(server, "_receiveTask"));
-        Assert.Null(Field(server, "_whenConnected")); // 等待器不被迟到的 Connected 唤醒
+        Assert.Null(Field(server, "_session"));         // 迟到的 Connected 不得创建会话
+        Assert.Null(Field(server, "_whenConnected"));   // 等待器不被迟到的 Connected 唤醒
 
         AssertTerminalInvariants(server, port);
     }
