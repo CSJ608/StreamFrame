@@ -33,7 +33,7 @@
   <PropertyGroup>
     <PackageId>StreamFrame.Protocols.Xml</PackageId>
     <Version>2.6.0</Version>
-    <Description>StreamFrame 的 XML 报文示例驱动：XmlDocumentCodec（XmlSerializer / XmlWriter 编解码）。</Description>
+    <Description>StreamFrame 的 XML 报文示例驱动：XmlDocumentCodec（XmlReader/XDocument 解码、XmlWriter 编码）。</Description>
     <Authors>Marci</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageIcon>icon.png</PackageIcon>
