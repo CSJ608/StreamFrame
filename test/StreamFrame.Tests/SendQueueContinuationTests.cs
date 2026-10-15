@@ -32,11 +32,23 @@ public class SendQueueContinuationTests
         await SoakRun.BoundedAsync(peer1.ConnectAsync(IPAddress.Loopback, port), "first regression peer connect");
         await UntilAsync(() => server.CurrentSessionId != 0);
         var oldSession = server.CurrentSessionId;
-        var workerField = typeof(StreamConnection<string>).GetField("_sendWorkerTask",
+        // 会话资源集中在内部 Session 对象上（#68）：经 _session 取发送 worker 任务。
+        // Connected 发布先于会话装配完成，轮询等待 worker 就位。
+        // 嵌套类型反射须从开放泛型定义构造后再闭合，否则属性带未绑定泛型参数无法取值。
+        var sessionField = typeof(StreamConnection<string>).GetField("_session",
             System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
-        // Connected is published before StartSession finishes; wait for the worker to be installed.
-        await UntilAsync(() => workerField.GetValue(server) is Task);
-        var oldWorker = (Task)workerField.GetValue(server)!;
+        var tasksProperty = typeof(StreamConnection<>)
+            .GetNestedType("Session", System.Reflection.BindingFlags.NonPublic)!
+            .MakeGenericType(typeof(string))
+            .GetProperty("Tasks",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance
+                | System.Reflection.BindingFlags.Public)!;
+        Task[]? TasksOf(StreamConnection<string> c)
+            => sessionField.GetValue(c) is { } s && tasksProperty.GetValue(s) is Task[] tasks
+                ? tasks
+                : null;
+        await UntilAsync(() => TasksOf(server) is { Length: 3 });
+        var oldWorker = TasksOf(server)![2];
         try
         {
             await server.SendAsync("already-written");
