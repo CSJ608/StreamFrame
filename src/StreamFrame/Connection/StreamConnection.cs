@@ -79,9 +79,11 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
 #if NET9_0_OR_GREATER
     private readonly Lock _listenerGate = new(); // 监听器发布与停机释放互斥，不跨 await 持有。
     private readonly Lock _sessionGate = new(); // System.Threading.Lock（net9+，比 monitor 锁更轻量）
+    private readonly Lock _publishGate = new(); // 状态发布段互斥（见 CommunicationStateChanging）
 #else
     private readonly object _listenerGate = new();
     private readonly object _sessionGate = new();
+    private readonly object _publishGate = new();
 #endif
     private Pipe? _pipe;
 
@@ -238,9 +240,28 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
                     if (!IsActive && Volatile.Read(ref _acceptLoopId) != loopId)
                         return; // 已被更新的接受循环取代：静默退出，不再竞争 accept
 
-                    _socket = IsActive ? await ConnectAsync(ct).ConfigureAwait(false) : await AcceptAsync(ct, loopId).ConfigureAwait(false);
-                    if (_socket is null)
+                    var socket = IsActive ? await ConnectAsync(ct).ConfigureAwait(false) : await AcceptAsync(ct, loopId).ConfigureAwait(false);
+                    if (socket is null)
                         return; // 排队等到锁时已被取代（AcceptAsync 内部的代次检查）
+
+                    // 停机与"连接已建立"的竞速守门（#68）：Shutdown 可能在传输建立完成后、
+                    // 发布前的窗口内完成——终态已广播、会话已拆除。此时发布 Connected 会翻转
+                    // 终态并重建会话；把 socket 留进 _socket 则无人负责关闭（Shutdown 已走过
+                    // 关闭点），泄漏到终结器。判定与赋值同锁于 Shutdown 末尾的关闭块：窗口闭合。
+                    lock (_sessionGate)
+                    {
+                        if (ct.IsCancellationRequested || IsDisposed)
+                        {
+                            socket.Dispose();
+                            return;
+                        }
+
+                        // 被取代的旧 socket（回调内 Reconnect 重入、并发双循环的直连迁移）：
+                        // 新连接接管字段时旧值已无人认领（其会话从未建立或已被拆除），
+                        // 当场释放不泄漏。正常路径此处恒为 null（会话拆除时已清理）。
+                        _socket?.Dispose();
+                        _socket = socket;
+                    }
 
                     _retryScheduler.Reset();
                     CommunicationStateChanging(ConnectionState.Connected);
@@ -491,32 +512,47 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
 
     private void CommunicationStateChanging(ConnectionState newState, int? observedEpoch = null)
     {
-        // 迟到的过期故障（会话已被替换，epoch 不匹配）：在任何对外可见的发布之前丢弃。
-        // 若放到 Retry 分支的 gate 内才检查（旧实现），State=Retry 的发布与 CurrentSessionId
-        // 归零已经污染了完全存活的会话——WaitForConnectedAsync 悬挂、活会话编号被误判失效。
-        // gate 内的权威复查仍然保留，防检查与发布之间 epoch 变化的窄竞态。
-        if (newState == ConnectionState.Retry && observedEpoch is { } staleEpoch
-            && Volatile.Read(ref _sessionEpoch) != staleEpoch)
-            return;
-
-        // 公共会话编号的线性化点：Connected 对外发布（事件回调/等待器完成）之前完成分配；
-        // 会话纪元（epoch）同样在发布之前递增——发布后到达的旧纪元幽灵故障在函数入口
-        // 即被判为过期丢弃，不会卷进"已发布、任务未创建"的新生会话（评审附带发现收口）。
-        if (newState == ConnectionState.Connected)
+        // 发布段（_publishGate 锁内）：迟到/过期判定 + 编号纪元簿记 + State 写入。
+        // 判定与写入必须原子：否则"已通过停机检查、尚未写入 State"的发布线程被抢占，
+        // 停机线程在此间隙写入 Disconnected 后，迟到的 Retry/Connected 会把终态翻转
+        // （并发 Reconnect 与 Dispose 竞速实测可命中）。锁内无 await、无用户回调。
+        lock (_publishGate)
         {
-            var id = checked(Interlocked.Increment(ref _sessionCounter));
-            Volatile.Write(ref _currentSessionId, id);
-            Interlocked.Increment(ref _sessionEpoch);
-        }
-        else if (newState is ConnectionState.Retry or ConnectionState.Disconnected)
-        {
-            Volatile.Write(ref _currentSessionId, 0);
-            if (newState == ConnectionState.Retry)
-                _metrics.Reconnect(); // 过期幽灵已在函数入口被丢弃，不会计入
+            // 停机后到达的迟到发布（竞速中的连接成功、用户 Reconnect、会话故障重连）整体
+            // 丢弃：其后任何非终态发布都会把对外 State 翻成 Connected/Retry、重分配/归零
+            // 会话编号——终态必须是最后对外可见的状态。Shutdown 自身的 Disconnected 发布
+            // 不受影响（停机标记先于本调用置位，且停机是 Disconnected 的唯一来源）。
+            if (IsDisposed && newState != ConnectionState.Disconnected)
+                return;
+
+            // 迟到的过期故障（会话已被替换，epoch 不匹配）：在任何对外可见的发布之前丢弃。
+            // 若放到 Retry 分支的 gate 内才检查（旧实现），State=Retry 的发布与 CurrentSessionId
+            // 归零已经污染了完全存活的会话——WaitForConnectedAsync 悬挂、活会话编号被误判失效。
+            // gate 内的权威复查仍然保留，防检查与发布之间 epoch 变化的窄竞态。
+            if (newState == ConnectionState.Retry && observedEpoch is { } staleEpoch
+                && Volatile.Read(ref _sessionEpoch) != staleEpoch)
+                return;
+
+            // 公共会话编号的线性化点：Connected 对外发布（事件回调/等待器完成）之前完成分配；
+            // 会话纪元（epoch）同样在发布之前递增——发布后到达的旧纪元幽灵故障在函数入口
+            // 即被判为过期丢弃，不会卷进"已发布、任务未创建"的新生会话（评审附带发现收口）。
+            if (newState == ConnectionState.Connected)
+            {
+                var id = checked(Interlocked.Increment(ref _sessionCounter));
+                Volatile.Write(ref _currentSessionId, id);
+                Interlocked.Increment(ref _sessionEpoch);
+            }
+            else if (newState is ConnectionState.Retry or ConnectionState.Disconnected)
+            {
+                Volatile.Write(ref _currentSessionId, 0);
+                if (newState == ConnectionState.Retry)
+                    _metrics.Reconnect(); // 过期幽灵已在锁内被丢弃，不会计入
+            }
+
+            State = newState;
         }
 
-        State = newState;
-
+        // 通知段（锁外）：用户回调可能重入（回调内 Reconnect/Dispose），不得持有发布锁。
         try
         {
             ConnectionChanged?.Invoke(this, newState);
@@ -550,6 +586,11 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
                 {
                     lock (_sessionGate)
                     {
+                        // 取锁等待期间停机可能已完成：不拆除、不派发新循环（_lifetimeCts
+                        // 已被 Shutdown 置空，继续执行会对 null 解引用）
+                        if (IsDisposed)
+                            return;
+
                         if (observedEpoch is { } epoch && Volatile.Read(ref _sessionEpoch) != epoch)
                             return; // 故障会话已被替换，避免误杀新会话
 
@@ -558,7 +599,18 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
                         StopSessionCore();
                     }
 
-                    StartCore(_lifetimeCts!.Token);
+                    // 取锁后停机仍可能已完成（_lifetimeCts 被 Shutdown 回收）：放弃派发，
+                    // 静默让位终态；令牌源在取消与回收之间的窗口取 Token 可能抛 ODE，一并容忍。
+                    var lifetime = _lifetimeCts;
+                    if (lifetime is null)
+                        return;
+                    try
+                    {
+                        StartCore(lifetime.Token);
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                    }
                 }
                 finally
                 {
@@ -573,17 +625,23 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
     {
         lock (_sessionGate)
         {
-            StopSessionCore();
+            // 停机守门（#68）：本方法唯一的迟到路径是"Connected 回调内同步 Dispose"——
+            // 发布已过守门、停机随后完成，外层才轮到创建会话。终态后不再创建会话任务
+            //（此时 _sendLock/_acceptLock 已释放，迟到的 worker 只会在已释放的锁上故障）。
+            if (IsDisposed)
+                return;
 
-            // 病态重入兜底：Connected 回调里同步触发 Reconnect() 会让编号/纪元在 StartSession
-            // 执行前被归零/递增——此时重新分配两者，保证会话任务拿到的编号恒非零、
-            // 纪元为最新（旧纪元的任务故障会被入口的过期检查丢弃）。
-            if (sessionId == 0)
-            {
-                sessionId = checked(Interlocked.Increment(ref _sessionCounter));
-                Volatile.Write(ref _currentSessionId, sessionId);
-                epoch = Interlocked.Increment(ref _sessionEpoch);
-            }
+            // 纪元现行性守门（#68）：本发布帧的纪元已被更新的重连取代——典型是
+            // Connected 回调内同步 Reconnect()（回调里 Retry 已递增纪元并派发新循环），
+            // 或发布窗口内现行纪元的故障重连。迟到帧不得以过期编号/纪元重建会话：
+            // 编号会被复用、StopSessionCore 会拆掉新会话刚建立的 socket（旧"兜底重建"
+            // 曾在该路径撕裂会话）。放弃创建，连接由取代者的循环完成；被取代帧的
+            // socket 在新循环覆盖 _socket 时释放。sessionId==0 同理：编号已被归零
+            // 说明拆除正在并发进行，等待取代者重建。
+            if (Volatile.Read(ref _sessionEpoch) != epoch || sessionId == 0)
+                return;
+
+            StopSessionCore();
 
             var cts = new CancellationTokenSource();
             var token = cts.Token;
@@ -1182,19 +1240,24 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
         // 消息通道归连接所有：停机是它唯一的完成点（正常完成，枚举端自然结束）
         _messageRelay.Writer.TryComplete();
 
-        if (_socket is { } socket)
+        // 与 StartAsync 的"停机守门 + 赋值"共用 _sessionGate：连接建立与停机互斥，
+        // 刚建立的 socket 不会漏进已完成的停机（#68）。
+        lock (_sessionGate)
         {
-            try
+            if (_socket is { } socket)
             {
-                if (socket.Connected)
-                    socket.Shutdown(SocketShutdown.Both);
+                try
+                {
+                    if (socket.Connected)
+                        socket.Shutdown(SocketShutdown.Both);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogDebug(ex, "Socket shutdown on disconnect failed.");
+                }
+                socket.Dispose();
+                _socket = null;
             }
-            catch (Exception ex)
-            {
-                _logger.LogDebug(ex, "Socket shutdown on disconnect failed.");
-            }
-            socket.Dispose();
-            _socket = null;
         }
 
         lock (_listenerGate)
