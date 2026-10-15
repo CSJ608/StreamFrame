@@ -237,12 +237,14 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
         {
             while (!connected && !ct.IsCancellationRequested && !IsDisposed)
             {
+                // 代次复查前置（#68 统一发布入口）：被取代的循环连 Connecting 也不发布，
+                // 状态序列不混入替换者之外的杂音
+                if (!IsActive && Volatile.Read(ref _acceptLoopId) != loopId)
+                    return; // 已被更新的接受循环取代：静默退出，不再竞争 accept
+
                 CommunicationStateChanging(ConnectionState.Connecting);
                 try
                 {
-                    if (!IsActive && Volatile.Read(ref _acceptLoopId) != loopId)
-                        return; // 已被更新的接受循环取代：静默退出，不再竞争 accept
-
                     var socket = IsActive ? await ConnectAsync(ct).ConfigureAwait(false) : await AcceptAsync(ct, loopId).ConfigureAwait(false);
                     if (socket is null)
                         return; // 排队等到锁时已被取代（AcceptAsync 内部的代次检查）
@@ -251,6 +253,8 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
                     // 发布前的窗口内完成——终态已广播、会话已拆除。此时发布 Connected 会翻转
                     // 终态并重建会话；把 socket 留进 _socket 则无人负责关闭（Shutdown 已走过
                     // 关闭点），泄漏到终结器。判定与赋值同锁于 Shutdown 末尾的关闭块：窗口闭合。
+                    // 注意：被取代循环的迟到 accept 不设代次门——监听器是连接级共享资源，
+                    // 客户端向服务器端口的接入本身合法；收编后由纪元机制收敛（见 DESIGN）。
                     lock (_sessionGate)
                     {
                         if (ct.IsCancellationRequested || IsDisposed)
