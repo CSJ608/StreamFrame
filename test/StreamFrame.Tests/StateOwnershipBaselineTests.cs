@@ -224,7 +224,13 @@ public class StateOwnershipBaselineTests
         await using var server = Create(port, false);
 
         var states = new ConcurrentQueue<ConnectionState>();
-        server.ConnectionChanged += (_, state) => states.Enqueue(state);
+        var connectedRecorded = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        server.ConnectionChanged += (_, state) =>
+        {
+            states.Enqueue(state);
+            if (state == ConnectionState.Connected)
+                connectedRecorded.TrySetResult(true);
+        };
 
         server.Start(CancellationToken.None);
         await WaitForAsync(() => server.State == ConnectionState.Connecting, "接受循环进入监听等待");
@@ -243,7 +249,10 @@ public class StateOwnershipBaselineTests
         // （发布 Connected、建立会话），由纪元机制收敛；取代者循环 B 取锁后经代次检查静默退出
         using var client = new TcpClient();
         await client.ConnectAsync(IPAddress.Loopback, port).WaitAsync(Budget);
-        await WaitForAsync(() => server.State == ConnectionState.Connected, "迟到客户端被收编并发布 Connected");
+        // State 在线性化点先写，锁外回调随后记录；等事件本身而非 State 快路径，
+        // 防止读到 Connected 时记录队列还没入队（不能放宽下方精确状态序列）。
+        await connectedRecorded.Task.WaitAsync(Budget);
+        Assert.Equal(ConnectionState.Connected, server.State);
         Assert.NotEqual(0, server.CurrentSessionId);
         Assert.Equal(
             new[] { ConnectionState.Connecting, ConnectionState.Retry, ConnectionState.Connecting, ConnectionState.Connected },
