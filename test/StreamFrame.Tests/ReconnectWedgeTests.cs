@@ -11,14 +11,14 @@ namespace StreamFrame.Tests;
 /// </summary>
 public class ReconnectWedgeTests
 {
-    private readonly Xunit.Abstractions.ITestOutputHelper _output;
+    private readonly Xunit.ITestOutputHelper _output;
 
-    public ReconnectWedgeTests(Xunit.Abstractions.ITestOutputHelper output) => _output = output;
+    public ReconnectWedgeTests(Xunit.ITestOutputHelper output) => _output = output;
 
     private sealed class DumpLogger : Microsoft.Extensions.Logging.ILogger
     {
-        private readonly Xunit.Abstractions.ITestOutputHelper _sink;
-        public DumpLogger(Xunit.Abstractions.ITestOutputHelper sink) => _sink = sink;
+        private readonly Xunit.ITestOutputHelper _sink;
+        public DumpLogger(Xunit.ITestOutputHelper sink) => _sink = sink;
         public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
         public bool IsEnabled(Microsoft.Extensions.Logging.LogLevel logLevel) => true;
         public void Log<TState>(Microsoft.Extensions.Logging.LogLevel logLevel, Microsoft.Extensions.Logging.EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
@@ -123,7 +123,7 @@ public class ReconnectWedgeTests
                 previousSessionId = await AssertNewSessionAsync(server, client, previousSessionId);
 
                 // 两路并发触发（#47 的竞速形态）：杀对端（自动重连）与用户显式 Reconnect() 竞争
-                var kill = Task.Run(client.Dispose);
+                var kill = Task.Run(client.Dispose, cancellationToken: CancellationToken.None);
                 server.Reconnect();
                 await kill;
             }

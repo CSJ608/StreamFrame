@@ -326,7 +326,9 @@ For 64KB-class messages, examine codec intermediate arrays, message materializat
 | `net8.0` (LTS until 2026-11) | .NET 8 |
 | `netstandard2.0` | .NET Framework 4.6.2+, Unity, Mono, ... |
 
-The `netstandard2.0` asset is validated by the **full net48 test suite** (real TCP loopback); TCP KeepAlive parameters are set via `SIO_KEEPALIVE_VALS` on .NET Framework. CI runs all tests on Ubuntu (net8/net10) and Windows (net48).
+The `netstandard2.0` asset is validated by the **full net48 test suite** (real TCP loopback); TCP KeepAlive parameters are set via `SIO_KEEPALIVE_VALS` on .NET Framework. CI runs all tests on Ubuntu (net8/net10) and Windows (net48/net8/net10).
+
+The Demo and NativeAOT samples target .NET 10. The library retains net8 compatibility assets, but .NET 8 security support ends on **2026-11-10**; deployed hosts should migrate. Compatible assets do not replace a supported runtime. See [security maintenance](docs/SECURITY.md) for the SDK baseline, locked restore, the raw-TCP boundary without built-in TLS/authentication, and unresolved embedded coverage-tool dependencies.
 
 ## Dependencies
 
@@ -341,7 +343,7 @@ dotnet build StreamFrame.slnx
 dotnet test
 dotnet run --project samples/StreamFrame.Demo          # 5-scenario end-to-end demo
 dotnet run -c Release --project bench/StreamFrame.Benchmarks   # benchmarks (select filters using bench/README.en.md)
-dotnet test -f net8.0 --collect:"XPlat Code Coverage"  # coverage (CI also collects & summarizes)
+dotnet test -f net10.0 -p:EnableCoverage=true --collect:"XPlat Code Coverage"  # opt-in collector; see security maintenance for known risks
 ```
 
 ## NativeAOT validation

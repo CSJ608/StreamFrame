@@ -90,7 +90,7 @@ public class ConnectionMetricsTests
             catch (OperationCanceledException)
             {
             }
-        });
+        }, cancellationToken: CancellationToken.None);
         server.Start(CancellationToken.None);
 
         long id1;
@@ -101,11 +101,11 @@ public class ConnectionMetricsTests
             id1 = server.CurrentSessionId;
 
             var payload = new string('M', 1024);
-            var sendTask = server.SendInSessionAsync(id1, payload); // 出站：回环缓冲即可写完，对端无需先读
-            await sendTask.WaitAsync(TimeSpan.FromSeconds(10));
+            var sendTask = server.SendInSessionAsync(id1, payload, ct: CancellationToken.None); // 出站：回环缓冲即可写完，对端无需先读
+            await sendTask.WaitAsync(TimeSpan.FromSeconds(10), cancellationToken: CancellationToken.None);
 
             // 入站恰好一帧（长度 3 + "in!"）：驱动 frames_received / bytes_received
-            await client1.GetStream().WriteAsync(new byte[] { 0x00, 0x00, 0x00, 0x03, (byte)'i', (byte)'n', 0x21 });
+            await client1.GetStream().WriteAsync(new byte[] { 0x00, 0x00, 0x00, 0x03, (byte)'i', (byte)'n', 0x21 }, cancellationToken: CancellationToken.None);
             var deadline = TestClock.TickCount64 + 10_000;
             while (TestClock.TickCount64 < deadline)
             {
@@ -114,7 +114,7 @@ public class ConnectionMetricsTests
                     if (received.Count == 1)
                         break;
                 }
-                await Task.Delay(20);
+                await Task.Delay(20, cancellationToken: CancellationToken.None);
             }
             lock (received)
                 Assert.Single(received);
@@ -141,7 +141,7 @@ public class ConnectionMetricsTests
         };
         var drainDeadline = TestClock.TickCount64 + 10_000;
         while (TestClock.TickCount64 < drainDeadline && !keys.All(k => recorded.ContainsKey(k)))
-            await Task.Delay(50);
+            await Task.Delay(50, cancellationToken: CancellationToken.None);
 
         Assert.True(recorded.TryGetValue("streamframe.frames_sent", out var framesSent) && framesSent >= 1,
             $"frames_sent 应有记录，实际 {framesSent}");

@@ -59,11 +59,11 @@ public class ConnectionLifetimeTests
         Assert.Equal(ConnectionState.Disconnected, client.State);
 
         // 消息通道已正常完成：GetMessages 枚举自然结束（不抛异常）
-        await using var enumerator = client.GetMessages().GetAsyncEnumerator();
+        await using var enumerator = client.GetMessages(ct: CancellationToken.None).GetAsyncEnumerator(cancellationToken: CancellationToken.None);
         Assert.False(await enumerator.MoveNextAsync());
 
         // 停机后发送通道已关闭
-        await Assert.ThrowsAnyAsync<ChannelClosedException>(() => client.SendAsync("late"));
+        await Assert.ThrowsAnyAsync<ChannelClosedException>(() => client.SendAsync("late", ct: CancellationToken.None));
     }
 
     [Fact]
@@ -100,8 +100,8 @@ public class ConnectionLifetimeTests
 
         server.Start(CancellationToken.None);
         client.Start(CancellationToken.None);
-        await Task.WhenAll(server.WaitForConnectedAsync(), client.WaitForConnectedAsync())
-            .WaitAsync(TimeSpan.FromSeconds(5));
+        await Task.WhenAll(server.WaitForConnectedAsync(ct: CancellationToken.None), client.WaitForConnectedAsync(ct: CancellationToken.None))
+            .WaitAsync(TimeSpan.FromSeconds(5), cancellationToken: CancellationToken.None);
 
         Assert.Equal(IPAddress.Loopback.ToString(), server.RemoteIpAddress); // 已连接客户端
         Assert.Equal(IPAddress.Loopback.ToString(), client.RemoteIpAddress); // 主动模式 = 配置的远端
@@ -120,8 +120,8 @@ public class ConnectionLifetimeTests
         server.Start(CancellationToken.None);
 
         using var client = new TcpClient();
-        await client.ConnectAsync(IPAddress.Loopback, port);
-        await server.WaitForConnectedAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        await client.ConnectWithoutCancellationAsync(IPAddress.Loopback, port);
+        await server.WaitForConnectedAsync(ct: CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(5), cancellationToken: CancellationToken.None);
         Assert.Equal(ConnectionState.Connected, server.State);
     }
 }

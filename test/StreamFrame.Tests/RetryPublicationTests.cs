@@ -130,10 +130,10 @@ public class RetryPublicationTests
             }
         };
         server.Start(CancellationToken.None);
-        var reconnect = Task.Run(server.Reconnect);
+        var reconnect = Task.Run(server.Reconnect, cancellationToken: CancellationToken.None);
         try
         {
-            await entered.Task.WaitAsync(Budget);
+            await entered.Task.WaitAsync(Budget, cancellationToken: CancellationToken.None);
             Assert.Equal(1, Field(server, "_retryInProgress"));
             var epoch = Field(server, "_sessionEpoch");
             var loop = Field(server, "_acceptLoopId");
@@ -153,7 +153,7 @@ public class RetryPublicationTests
             Assert.Equal(1, Field(server, "_retryInProgress"));
 
             resume.Set();
-            await reconnect.WaitAsync(Budget);
+            await reconnect.WaitAsync(Budget, cancellationToken: CancellationToken.None);
             Assert.True(gateReleased);
             Assert.Equal(0, Field(server, "_retryInProgress"));
             client.Start(CancellationToken.None);
@@ -164,7 +164,7 @@ public class RetryPublicationTests
         finally
         {
             resume.Set();
-            await reconnect.WaitAsync(Budget);
+            await reconnect.WaitAsync(Budget, cancellationToken: CancellationToken.None);
         }
     }
 
@@ -190,7 +190,7 @@ public class RetryPublicationTests
             }
         };
         server.Start(CancellationToken.None);
-        await Task.Run(server.Reconnect).WaitAsync(Budget);
+        await Task.Run(server.Reconnect, cancellationToken: CancellationToken.None).WaitAsync(Budget, cancellationToken: CancellationToken.None);
         Assert.True(reentered);
         Assert.Equal(ConnectionState.Connecting, afterReentry);
         Assert.Equal(ReconnectedStates.Take(3), log.States);
@@ -218,7 +218,7 @@ public class RetryPublicationTests
                 server.Reconnect();
         };
         server.Start(CancellationToken.None);
-        await Task.Run(server.Reconnect).WaitAsync(Budget);
+        await Task.Run(server.Reconnect, cancellationToken: CancellationToken.None).WaitAsync(Budget, cancellationToken: CancellationToken.None);
         Assert.Equal(1, retries);
         Assert.Equal(1, counter.Count);
         Assert.Equal(ReconnectedStates.Take(3), log.States);
@@ -247,7 +247,7 @@ public class RetryPublicationTests
                 throw new InvalidOperationException("测试回调异常隔离");
         };
         server.Start(CancellationToken.None);
-        await Task.Run(server.Reconnect).WaitAsync(Budget);
+        await Task.Run(server.Reconnect, cancellationToken: CancellationToken.None).WaitAsync(Budget, cancellationToken: CancellationToken.None);
         Assert.True(callbackRan);
         Assert.Equal(0, Field(server, "_retryInProgress"));
         if (stop)
@@ -294,17 +294,17 @@ public class RetryPublicationTests
             }
         };
         server.Start(CancellationToken.None);
-        var ready = server.WaitForConnectedAsync();
-        var reconnect = Task.Run(server.Reconnect);
+        var ready = server.WaitForConnectedAsync(ct: CancellationToken.None);
+        var reconnect = Task.Run(server.Reconnect, cancellationToken: CancellationToken.None);
         try
         {
-            await entered.Task.WaitAsync(Budget);
+            await entered.Task.WaitAsync(Budget, cancellationToken: CancellationToken.None);
             client.Start(CancellationToken.None);
-            await client.WaitForConnectedAsync().WaitAsync(Budget);
+            await client.WaitForConnectedAsync(ct: CancellationToken.None).WaitAsync(Budget, cancellationToken: CancellationToken.None);
             // 真实旧 accept 已完成并交出 socket；不是模拟一个没有 socket 的 Connected。
             await WaitForAsync(() => Field(server, "_server") is null);
             // 给错误实现的 Connected 通知机会；正确实现必须一直等到重连发布 Connecting。
-            await Task.WhenAny(prematureConnected.Task, Task.Delay(200));
+            await Task.WhenAny(prematureConnected.Task, Task.Delay(200, cancellationToken: CancellationToken.None));
             Assert.False(prematureConnected.Task.IsCompleted);
             Assert.False(ready.IsCompleted);
             Assert.Equal(ConnectionState.Retry, server.State);
@@ -314,12 +314,12 @@ public class RetryPublicationTests
             if (stop)
                 await server.DisposeAsync();
             resume.Set();
-            await reconnect.WaitAsync(Budget);
+            await reconnect.WaitAsync(Budget, cancellationToken: CancellationToken.None);
             Assert.True(gateReleased);
             Assert.Equal(0, Field(server, "_retryInProgress"));
             if (stop)
             {
-                await Assert.ThrowsAnyAsync<OperationCanceledException>(() => ready.WaitAsync(Budget));
+                await Assert.ThrowsAnyAsync<OperationCanceledException>(() => ready.WaitAsync(Budget, cancellationToken: CancellationToken.None));
                 Assert.Equal(ConnectionState.Disconnected, server.State);
                 Assert.Null(Field(server, "_socket"));
                 Assert.Null(Field(server, "_session"));
@@ -327,20 +327,20 @@ public class RetryPublicationTests
             }
             else
             {
-                await ready.WaitAsync(Budget);
+                await ready.WaitAsync(Budget, cancellationToken: CancellationToken.None);
                 await AssertUsable(server, client);
                 Assert.Equal(ReconnectedStates, log.States);
                 // Retry 回调结束才启动替代循环：不能把已由迟到 accept 满足的监听再打开。
                 Assert.Null(Field(server, "_server"));
                 using var rejected = new TcpClient();
-                await Assert.ThrowsAsync<SocketException>(() => rejected.ConnectAsync(IPAddress.Loopback, port).WaitAsync(Budget));
+                await Assert.ThrowsAsync<SocketException>(() => rejected.ConnectWithoutCancellationAsync(IPAddress.Loopback, port).WaitAsync(Budget, cancellationToken: CancellationToken.None));
             }
             log.AssertConsistent();
         }
         finally
         {
             resume.Set();
-            await reconnect.WaitAsync(Budget);
+            await reconnect.WaitAsync(Budget, cancellationToken: CancellationToken.None);
         }
     }
 
@@ -367,17 +367,17 @@ public class RetryPublicationTests
                 if (!release.Wait(Budget))
                     throw new TimeoutException("测试未释放监听关闭同步点");
             }
-        });
+        }, cancellationToken: CancellationToken.None);
         try
         {
-            await held.Task.WaitAsync(Budget);
-            await first.ConnectAsync(IPAddress.Loopback, port).WaitAsync(Budget);
+            await held.Task.WaitAsync(Budget, cancellationToken: CancellationToken.None);
+            await first.ConnectWithoutCancellationAsync(IPAddress.Loopback, port).WaitAsync(Budget, cancellationToken: CancellationToken.None);
             await WaitForAsync(() => Equals(Field(server, "_acceptPending"), 1));
             // 第一个 accept 已完成，但单客户端监听器的关闭还被门控：第二个握手可以成功。
-            await backlog.ConnectAsync(IPAddress.Loopback, port).WaitAsync(Budget);
+            await backlog.ConnectWithoutCancellationAsync(IPAddress.Loopback, port).WaitAsync(Budget, cancellationToken: CancellationToken.None);
             release.Set();
-            await blocker.WaitAsync(Budget);
-            await server.WaitForConnectedAsync().WaitAsync(Budget);
+            await blocker.WaitAsync(Budget, cancellationToken: CancellationToken.None);
+            await server.WaitForConnectedAsync(ct: CancellationToken.None).WaitAsync(Budget, cancellationToken: CancellationToken.None);
             var accepted = Assert.IsType<Socket>(Field(server, "_socket"));
             var remote = Assert.IsType<IPEndPoint>(accepted.RemoteEndPoint);
             var firstEndpoint = Assert.IsType<IPEndPoint>(first.Client.LocalEndPoint);
@@ -392,7 +392,7 @@ public class RetryPublicationTests
         finally
         {
             release.Set();
-            await blocker.WaitAsync(Budget);
+            await blocker.WaitAsync(Budget, cancellationToken: CancellationToken.None);
         }
     }
 
@@ -416,7 +416,7 @@ public class RetryPublicationTests
             returned = true;
         };
         server.Start(CancellationToken.None);
-        await Task.Run(server.Reconnect).WaitAsync(Budget);
+        await Task.Run(server.Reconnect, cancellationToken: CancellationToken.None).WaitAsync(Budget, cancellationToken: CancellationToken.None);
         Assert.True(returned);
         Assert.Equal(ConnectionState.Retry, stateAfterPublication);
         Assert.Equal(ReconnectedStates, log.States);

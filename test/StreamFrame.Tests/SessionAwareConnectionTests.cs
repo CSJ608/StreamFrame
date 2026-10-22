@@ -227,8 +227,8 @@ public class SessionAwareConnectionTests
         await WaitForStateAsync(server, s => s == ConnectionState.Connected);
         var stream = client.GetStream();
 
-        var sendTask = server.SendInSessionAsync(server.CurrentSessionId, "delayed");
-        await Task.Delay(200); // worker 仍停在编码阶段：字节未写，任务不可能完成
+        var sendTask = server.SendInSessionAsync(server.CurrentSessionId, "delayed", ct: CancellationToken.None);
+        await Task.Delay(200, cancellationToken: CancellationToken.None); // worker 仍停在编码阶段：字节未写，任务不可能完成
         Assert.False(sendTask.IsCompleted, "整帧尚未写出，任务不应完成（不能入队即完成）。");
 
         var message = await ReadFrameAsync(stream); // 对端收完整帧
@@ -251,13 +251,13 @@ public class SessionAwareConnectionTests
         await WaitForStateAsync(server, s => s == ConnectionState.Connected);
         var id = server.CurrentSessionId;
 
-        var writingTask = server.SendInSessionAsync(id, "writing"); // worker 认领后停在编码阶段
+        var writingTask = server.SendInSessionAsync(id, "writing", ct: CancellationToken.None); // worker 认领后停在编码阶段
         var tasks = new List<Task>
         {
-            server.SendInSessionAsync(id, "queued"),   // 占满队列（容量 1）
-            server.SendInSessionAsync(id, "waiting"),  // 队列满，WriteAsync 等待空位
+            server.SendInSessionAsync(id, "queued", ct: CancellationToken.None),   // 占满队列（容量 1）
+            server.SendInSessionAsync(id, "waiting", ct: CancellationToken.None),  // 队列满，WriteAsync 等待空位
         };
-        await Task.Delay(100); // 让第 1 条进入编码
+        await Task.Delay(100, cancellationToken: CancellationToken.None); // 让第 1 条进入编码
 
         server.Reconnect(); // 会话拆除：无需等重连完成，挂起发送必须立即失败
 
@@ -270,7 +270,7 @@ public class SessionAwareConnectionTests
 
         // 正在写出的条目是拆除竞争的合法双结局：整帧恰好写完 → 成功；否则会话失效失败。
         // 两者都符合契约，但必须在时限内终结（不悬挂）
-        var writingDone = await Task.WhenAny(writingTask, Task.Delay(3000));
+        var writingDone = await Task.WhenAny(writingTask, Task.Delay(3000, cancellationToken: CancellationToken.None));
         Assert.True(ReferenceEquals(writingDone, writingTask), "写出中条目应在时限内终结。");
         if (writingTask.Status != TaskStatus.RanToCompletion)
         {
@@ -286,7 +286,7 @@ public class SessionAwareConnectionTests
         {
             await ConnectWithRetryAsync(client2, port);
             await WaitForStateAsync(server, s => s == ConnectionState.Connected, timeoutMs: 8000);
-            await Task.Delay(500); // 留出排空窗口
+            await Task.Delay(500, cancellationToken: CancellationToken.None); // 留出排空窗口
             await AssertNoBytesAsync(client2.GetStream());
         }
     }
@@ -304,11 +304,11 @@ public class SessionAwareConnectionTests
             await WaitForStateAsync(server, s => s == ConnectionState.Connected);
             var id1 = server.CurrentSessionId;
 
-            var writingTask = server.SendInSessionAsync(id1, "writing");
-            var bound = new List<Task> { server.SendInSessionAsync(id1, "bound-drops") };
-            _ = server.SendAsync("plain-replays"); // 普通发送：跨会话续发（既有语义）
+            var writingTask = server.SendInSessionAsync(id1, "writing", ct: CancellationToken.None);
+            var bound = new List<Task> { server.SendInSessionAsync(id1, "bound-drops", ct: CancellationToken.None) };
+            _ = server.SendAsync("plain-replays", ct: CancellationToken.None); // 普通发送：跨会话续发（既有语义）
 
-            await Task.Delay(100);
+            await Task.Delay(100, cancellationToken: CancellationToken.None);
             server.Reconnect(); // 触发会话切换
 
             foreach (var task in bound)
@@ -318,7 +318,7 @@ public class SessionAwareConnectionTests
             }
 
             // 正在写出的条目：拆除竞争的合法双结局（整帧恰好写完→成功；否则失效失败），不悬挂即可
-            var writingDone = await Task.WhenAny(writingTask, Task.Delay(3000));
+            var writingDone = await Task.WhenAny(writingTask, Task.Delay(3000, cancellationToken: CancellationToken.None));
             Assert.True(ReferenceEquals(writingDone, writingTask), "写出中条目应在时限内终结。");
             if (writingTask.Status != TaskStatus.RanToCompletion)
             {
@@ -337,9 +337,9 @@ public class SessionAwareConnectionTests
             Assert.NotEqual(0, id2);
 
             await Assert.ThrowsAsync<SessionExpiredException>(
-                () => server.SendInSessionAsync(id2 + 100, "stale"));
+                () => server.SendInSessionAsync(id2 + 100, "stale", ct: CancellationToken.None));
 
-            await server.SendInSessionAsync(id2, "new-session-ok");
+            await server.SendInSessionAsync(id2, "new-session-ok", ct: CancellationToken.None);
 
             var stream = client2.GetStream();
             // 队列顺序：bound-drops（跳过）→ plain-replays → new-session-ok
@@ -362,11 +362,11 @@ public class SessionAwareConnectionTests
             await WaitForStateAsync(server, s => s == ConnectionState.Connected);
             var id = server.CurrentSessionId;
 
-            var writingTask = server.SendInSessionAsync(id, "writing");
+            var writingTask = server.SendInSessionAsync(id, "writing", ct: CancellationToken.None);
             var tasks = new List<Task>();
             for (var i = 1; i < 4; i++)
-                tasks.Add(server.SendInSessionAsync(id, $"pending-{i}"));
-            await Task.Delay(100);
+                tasks.Add(server.SendInSessionAsync(id, $"pending-{i}", ct: CancellationToken.None));
+            await Task.Delay(100, cancellationToken: CancellationToken.None);
 
             await server.DisposeAsync(); // 停机：挂起的会话绑定发送必须全部异常收尾
 
@@ -377,7 +377,7 @@ public class SessionAwareConnectionTests
             }
 
             // 正在写出的条目：拆除竞争的合法双结局（写完→成功；否则失效失败），不悬挂即可
-            var writingDone = await Task.WhenAny(writingTask, Task.Delay(3000));
+            var writingDone = await Task.WhenAny(writingTask, Task.Delay(3000, cancellationToken: CancellationToken.None));
             Assert.True(ReferenceEquals(writingDone, writingTask), "写出中条目应在时限内终结。");
             if (writingTask.Status != TaskStatus.RanToCompletion)
             {
@@ -402,8 +402,8 @@ public class SessionAwareConnectionTests
         await WaitForStateAsync(server, s => s == ConnectionState.Connected);
         var stream = client.GetStream();
 
-        var firstTask = server.SendInSessionAsync(server.CurrentSessionId, "first");
-        await Task.Delay(100); // worker 认领第 1 条并停在编码
+        var firstTask = server.SendInSessionAsync(server.CurrentSessionId, "first", ct: CancellationToken.None);
+        await Task.Delay(100, cancellationToken: CancellationToken.None); // worker 认领第 1 条并停在编码
 
         using var cts = new CancellationTokenSource();
         var cancelTask = server.SendInSessionAsync(server.CurrentSessionId, "cancel-me", cts.Token);
@@ -449,11 +449,11 @@ public class SessionAwareConnectionTests
             Assert.NotNull(schedule);
             schedule!.Invoke(server, new object[] { 1 }); // 旧会话（epoch=1）的幽灵故障，早已过期
 
-            await Task.Delay(300);
+            await Task.Delay(300, cancellationToken: CancellationToken.None);
             Assert.Equal(ConnectionState.Connected, server.State); // 不被谎报为 Retry
             Assert.Equal(id2, server.CurrentSessionId);            // 活会话编号不被归零
 
-            var task = server.SendInSessionAsync(id2, "alive");
+            var task = server.SendInSessionAsync(id2, "alive", ct: CancellationToken.None);
             Assert.Equal("alive", await ReadFrameAsync(client2.GetStream()));
             await AwaitDoneAsync(task, 3000, "活会话发送");
         }
@@ -495,11 +495,11 @@ public class SessionAwareConnectionTests
             var id2 = server.CurrentSessionId;
             Assert.NotEqual(0, id2);
 
-            await Task.Delay(400); // 幽灵若未被丢弃，此刻已把会话 2 卷进 Retry
+            await Task.Delay(400, cancellationToken: CancellationToken.None); // 幽灵若未被丢弃，此刻已把会话 2 卷进 Retry
             Assert.Equal(ConnectionState.Connected, server.State);
             Assert.Equal(id2, server.CurrentSessionId);
 
-            var task = server.SendInSessionAsync(id2, "alive");
+            var task = server.SendInSessionAsync(id2, "alive", ct: CancellationToken.None);
             Assert.Equal("alive", await ReadFrameAsync(client2.GetStream()));
             await AwaitDoneAsync(task, 3000, "新生会话发送");
         }
@@ -521,7 +521,7 @@ public class SessionAwareConnectionTests
         await AwaitDoneAsync(task, 5000, "提交后发送完成"); // 已成功完成（已过提交点）
 
         cts.Cancel(); // 迟到的取消不得翻转结果
-        await Task.Delay(200);
+        await Task.Delay(200, cancellationToken: CancellationToken.None);
         Assert.Equal(TaskStatus.RanToCompletion, task.Status);
     }
 
@@ -543,7 +543,7 @@ public class SessionAwareConnectionTests
             catch (OperationCanceledException)
             {
             }
-        });
+        }, cancellationToken: CancellationToken.None);
         server.Start(CancellationToken.None);
 
         long id1;
@@ -554,8 +554,8 @@ public class SessionAwareConnectionTests
             id1 = server.CurrentSessionId;
 
             var stream = client1.GetStream();
-            await stream.WriteAsync(Frame("s1a"));
-            await stream.WriteAsync(Frame("s1b"));
+            await stream.WriteAsync(Frame("s1a"), cancellationToken: CancellationToken.None);
+            await stream.WriteAsync(Frame("s1b"), cancellationToken: CancellationToken.None);
             await WaitForAsync(() => { lock (received) return received.Count == 2; }, what: "会话 1 消息送达");
         }
 
@@ -566,7 +566,7 @@ public class SessionAwareConnectionTests
             var id2 = server.CurrentSessionId;
             Assert.True(id2 > id1);
 
-            await client2.GetStream().WriteAsync(Frame("s2a"));
+            await client2.GetStream().WriteAsync(Frame("s2a"), cancellationToken: CancellationToken.None);
             await WaitForAsync(() => { lock (received) return received.Count == 3; }, what: "会话 2 消息送达");
         }
 
@@ -600,7 +600,7 @@ public class SessionAwareConnectionTests
             await WaitForStateAsync(server, s => s == ConnectionState.Connected);
             Assert.Equal(1, server.CurrentSessionId); // 首个会话编号恒为 1
 
-            await client1.GetStream().WriteAsync(new byte[] { 0x7F, 0xFF, 0xFF, 0xFF });
+            await client1.GetStream().WriteAsync(new byte[] { 0x7F, 0xFF, 0xFF, 0xFF }, cancellationToken: CancellationToken.None);
             await WaitForAsync(() => { lock (errors) return errors.Count == 1; }, what: "会话 1 丢弃事件");
             Assert.Equal(ConnectionState.Connected, server.State); // 丢弃不拆会话
         }
@@ -612,7 +612,7 @@ public class SessionAwareConnectionTests
             await WaitForStateAsync(server, s => s == ConnectionState.Connected, timeoutMs: 8000);
             Assert.Equal(2, server.CurrentSessionId);
 
-            await client2.GetStream().WriteAsync(new byte[] { 0x7F, 0xFF, 0xFF, 0xFF });
+            await client2.GetStream().WriteAsync(new byte[] { 0x7F, 0xFF, 0xFF, 0xFF }, cancellationToken: CancellationToken.None);
             await WaitForAsync(() => { lock (errors) return errors.Count == 2; }, what: "会话 2 丢弃事件");
         }
 
@@ -651,7 +651,7 @@ public class SessionAwareConnectionTests
             catch (OperationCanceledException)
             {
             }
-        });
+        }, cancellationToken: CancellationToken.None);
         _ = Task.Run(async () =>
         {
             try
@@ -663,14 +663,14 @@ public class SessionAwareConnectionTests
             catch (OperationCanceledException)
             {
             }
-        });
+        }, cancellationToken: CancellationToken.None);
         server.Start(CancellationToken.None);
 
         using (var client = new TcpClient())
         {
             await ConnectWithRetryAsync(client, port);
             await WaitForStateAsync(server, s => s == ConnectionState.Connected);
-            await client.GetStream().WriteAsync(Frame("only-one"));
+            await client.GetStream().WriteAsync(Frame("only-one"), cancellationToken: CancellationToken.None);
         }
 
         await WaitForAsync(() =>
@@ -799,7 +799,7 @@ public class SessionAwareConnectionTests
                 catch (OperationCanceledException)
                 {
                 }
-            });
+            }, cancellationToken: CancellationToken.None);
 
             var sends = Enumerable.Range(0, SendsPerRound)
                 .Select(i => server.SendInSessionAsync(server.CurrentSessionId, $"r{round}-{i}"))
@@ -813,7 +813,7 @@ public class SessionAwareConnectionTests
 
             foreach (var send in sends)
             {
-                var done = await Task.WhenAny(send, Task.Delay(8000));
+                var done = await Task.WhenAny(send, Task.Delay(8000, cancellationToken: CancellationToken.None));
                 Assert.True(ReferenceEquals(send, done), "发送任务在时限内未结束（悬挂）。");
                 if (send.Status == TaskStatus.RanToCompletion)
                     successes++;
@@ -824,9 +824,9 @@ public class SessionAwareConnectionTests
             }
 
             // 停读前留出排空窗口：成功的帧可能还在对端接收缓冲里未被读出
-            await Task.Delay(300);
+            await Task.Delay(300, cancellationToken: CancellationToken.None);
             readCts.Cancel();
-            _ = await Task.WhenAny(readTask, Task.Delay(2000)); // 尽力收尾，超时不再等待
+            _ = await Task.WhenAny(readTask, Task.Delay(2000, cancellationToken: CancellationToken.None)); // 尽力收尾，超时不再等待
 
             // 成功核对（仅 Reconnect 轮次：对端全程在读，成功帧必然可达且完整）：
             // 客户端主动 Dispose 轮次不对账——本地关闭时未读数据随 RST 丢弃属 TCP 语义，
@@ -866,7 +866,7 @@ public class SessionAwareConnectionTests
         {
             await ConnectWithRetryAsync(client, port);
             await WaitForStateAsync(server, s => s == ConnectionState.Connected, timeoutMs: 8000);
-            var task = server.SendInSessionAsync(server.CurrentSessionId, "healthy");
+            var task = server.SendInSessionAsync(server.CurrentSessionId, "healthy", ct: CancellationToken.None);
             Assert.Equal("healthy", await ReadFrameAsync(client.GetStream()));
             await AwaitDoneAsync(task, 5000, "压测后发送");
         }

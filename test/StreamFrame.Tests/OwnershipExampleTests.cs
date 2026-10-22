@@ -15,15 +15,15 @@ public class OwnershipExampleTests
     {
         var source = new byte[] { 1, 2, 3, 4 };
         var sequence = segmented ? Segment.Create(source) : new ReadOnlySequence<byte>(source);
-        var bytes = new OwnedBytesCodec().Decode(sequence);
-        var memory = new OwnedMemoryCodec().Decode(sequence);
+        var bytes = new OwnedBytesCodec().Decode(sequence, ct: CancellationToken.None);
+        var memory = new OwnedMemoryCodec().Decode(sequence, ct: CancellationToken.None);
         Array.Clear(source, 0, source.Length); // Deterministic invalidation, no pool timing assumption.
         await Task.Yield();
         Assert.Equal(new byte[] { 1, 2, 3, 4 }, bytes);
         Assert.Equal(bytes, memory.ToArray());
         using var writer = new PooledBufferWriter(16);
-        new OwnedBytesCodec().Encode(bytes, writer);
-        new OwnedMemoryCodec().Encode(memory, writer);
+        new OwnedBytesCodec().Encode(bytes, writer, ct: CancellationToken.None);
+        new OwnedMemoryCodec().Encode(memory, writer, ct: CancellationToken.None);
         Assert.Equal(new byte[] { 1, 2, 3, 4, 1, 2, 3, 4 }, writer.WrittenMemory.ToArray());
         ProductionExample.CreateOptions().Validate();
     }

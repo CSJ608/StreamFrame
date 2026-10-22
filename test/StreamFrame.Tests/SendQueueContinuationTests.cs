@@ -29,7 +29,7 @@ public class SendQueueContinuationTests
         };
         server.Start(CancellationToken.None);
         using var peer1 = new TcpClient();
-        await SoakRun.BoundedAsync(peer1.ConnectAsync(IPAddress.Loopback, port), "first regression peer connect");
+        await SoakRun.BoundedAsync(peer1.ConnectWithoutCancellationAsync(IPAddress.Loopback, port), "first regression peer connect");
         await UntilAsync(() => server.CurrentSessionId != 0);
         var oldSession = server.CurrentSessionId;
         // 会话资源集中在内部 Session 对象上（#68）：经 _session 取发送 worker 任务。
@@ -51,11 +51,11 @@ public class SendQueueContinuationTests
         var oldWorker = TasksOf(server)![2];
         try
         {
-            await server.SendAsync("already-written");
-            Assert.Same(written.Task, await Task.WhenAny(written.Task, Task.Delay(5000)));
-            await server.SendAsync("must-continue");
+            await server.SendAsync("already-written", ct: CancellationToken.None);
+            Assert.Same(written.Task, await Task.WhenAny(written.Task, Task.Delay(5000, cancellationToken: CancellationToken.None)));
+            await server.SendAsync("must-continue", ct: CancellationToken.None);
             // Callback gates the old worker after the complete write, before its next dequeue.
-            await SoakRun.BoundedAsync(Task.Run(() => server.Reconnect()), "regression reconnect");
+            await SoakRun.BoundedAsync(Task.Run(() => server.Reconnect(), cancellationToken: CancellationToken.None), "regression reconnect");
             Assert.NotEqual(oldSession, server.CurrentSessionId);
         }
         finally { release.Set(); }
@@ -63,9 +63,9 @@ public class SendQueueContinuationTests
         Assert.Equal(0, Volatile.Read(ref gateTimedOut));
         peer1.Dispose();
         using var peer2 = new TcpClient();
-        await SoakRun.BoundedAsync(peer2.ConnectAsync(IPAddress.Loopback, port), "second regression peer connect");
+        await SoakRun.BoundedAsync(peer2.ConnectWithoutCancellationAsync(IPAddress.Loopback, port), "second regression peer connect");
         await UntilAsync(() => server.CurrentSessionId > oldSession);
-        await server.SendAsync("sentinel");
+        await server.SendAsync("sentinel", ct: CancellationToken.None);
         Assert.Equal("must-continue", await ReadAsync(peer2));
         Assert.Equal("sentinel", await ReadAsync(peer2));
     }

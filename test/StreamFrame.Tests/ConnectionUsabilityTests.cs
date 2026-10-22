@@ -40,13 +40,13 @@ public class ConnectionUsabilityTests
         await using var server = CreateConnection(port, isActive: false);
 
         client.Start(CancellationToken.None);
-        var pending = client.WaitForConnectedAsync();
+        var pending = client.WaitForConnectedAsync(ct: CancellationToken.None);
         // 服务端稍后才启动：等待者必须跨过若干次连接失败重试
-        await Task.Delay(400);
+        await Task.Delay(400, cancellationToken: CancellationToken.None);
         server.Start(CancellationToken.None);
 
-        await pending.WaitAsync(TimeSpan.FromSeconds(5));
-        await server.WaitForConnectedAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        await pending.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken: CancellationToken.None);
+        await server.WaitForConnectedAsync(ct: CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(5), cancellationToken: CancellationToken.None);
         Assert.Equal(ConnectionState.Connected, client.State);
     }
 
@@ -59,9 +59,9 @@ public class ConnectionUsabilityTests
 
         client.Start(CancellationToken.None);
         server.Start(CancellationToken.None);
-        await client.WaitForConnectedAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        await client.WaitForConnectedAsync(ct: CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(5), cancellationToken: CancellationToken.None);
 
-        var again = client.WaitForConnectedAsync();
+        var again = client.WaitForConnectedAsync(ct: CancellationToken.None);
         Assert.Equal(TaskStatus.RanToCompletion, again.Status);
     }
 
@@ -73,11 +73,11 @@ public class ConnectionUsabilityTests
         await using var server = CreateConnection(port, isActive: false);
 
         client.Start(CancellationToken.None);
-        var waitTask = client.WaitForConnectedAsync();
+        var waitTask = client.WaitForConnectedAsync(ct: CancellationToken.None);
         Assert.False(waitTask.IsCompleted); // 服务端未启动，必然仍在等待
 
         server.Start(CancellationToken.None);
-        await waitTask.WaitAsync(TimeSpan.FromSeconds(5));
+        await waitTask.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken: CancellationToken.None);
     }
 
     [Fact]
@@ -87,7 +87,7 @@ public class ConnectionUsabilityTests
         await using var client = CreateConnection(port, isActive: true);
 
         client.Start(CancellationToken.None); // 服务端永远不启动
-        var waitTask = client.WaitForConnectedAsync();
+        var waitTask = client.WaitForConnectedAsync(ct: CancellationToken.None);
         Assert.False(waitTask.IsCompleted);
 
         await client.DisposeAsync();
@@ -100,7 +100,7 @@ public class ConnectionUsabilityTests
         await using var client = CreateConnection(12345, isActive: true);
         await client.DisposeAsync();
 
-        var wait = client.WaitForConnectedAsync();
+        var wait = client.WaitForConnectedAsync(ct: CancellationToken.None);
         Assert.True(wait.IsCanceled);
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => wait);
     }
@@ -117,17 +117,17 @@ public class ConnectionUsabilityTests
             {
                 Assert.True(start.SignalAndWait(TimeSpan.FromSeconds(5)));
                 wait = client.WaitForConnectedAsync();
-            });
+            }, cancellationToken: CancellationToken.None);
             var shutdown = Task.Run(async () =>
             {
                 Assert.True(start.SignalAndWait(TimeSpan.FromSeconds(5)));
                 await client.DisposeAsync();
-            });
-            await Task.WhenAll(register, shutdown).WaitAsync(TimeSpan.FromSeconds(10));
+            }, cancellationToken: CancellationToken.None);
+            await Task.WhenAll(register, shutdown).WaitAsync(TimeSpan.FromSeconds(10), cancellationToken: CancellationToken.None);
             Assert.NotNull(wait);
             // net48 的 WaitAsync 兼容包装通过异步延续传播取消，必须等待传播完成。
             await Assert.ThrowsAnyAsync<OperationCanceledException>(
-                () => wait.WaitAsync(TimeSpan.FromSeconds(5)));
+                () => wait.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken: CancellationToken.None));
             Assert.True(wait.IsCanceled);
         }
     }
@@ -137,14 +137,14 @@ public class ConnectionUsabilityTests
     {
         await using var client = CreateConnection(12345, isActive: true);
         using var caller = new CancellationTokenSource();
-        var shared = client.WaitForConnectedAsync();
+        var shared = client.WaitForConnectedAsync(ct: CancellationToken.None);
         var canceled = client.WaitForConnectedAsync(caller.Token);
         caller.Cancel();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => canceled);
         Assert.False(shared.IsCompleted);
         await client.DisposeAsync();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
-            () => shared.WaitAsync(TimeSpan.FromSeconds(5)));
+            () => shared.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken: CancellationToken.None));
         Assert.True(shared.IsCanceled);
     }
 
@@ -154,12 +154,12 @@ public class ConnectionUsabilityTests
         await using var client = CreateConnection(GetFreePort(), isActive: true);
         using var lifetime = new CancellationTokenSource();
         client.Start(lifetime.Token);
-        var wait = client.WaitForConnectedAsync();
+        var wait = client.WaitForConnectedAsync(ct: CancellationToken.None);
         lifetime.Cancel();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
-            () => wait.WaitAsync(TimeSpan.FromSeconds(5)));
+            () => wait.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken: CancellationToken.None));
         Assert.True(wait.IsCanceled);
-        Assert.True(client.WaitForConnectedAsync().IsCanceled);
+        Assert.True(client.WaitForConnectedAsync(ct: CancellationToken.None).IsCanceled);
     }
 
     [Fact]
@@ -231,19 +231,19 @@ public class ConnectionUsabilityTests
             catch (OperationCanceledException)
             {
             }
-        });
+        }, cancellationToken: CancellationToken.None);
 
         server.Start(CancellationToken.None);
 
         using var client = new TcpClient();
-        await client.ConnectAsync(IPAddress.Loopback, port);
-        await server.WaitForConnectedAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        await client.ConnectWithoutCancellationAsync(IPAddress.Loopback, port);
+        await server.WaitForConnectedAsync(ct: CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(5), cancellationToken: CancellationToken.None);
 
         // 一次性灌入 5 帧（容量 2）：解码必须暂停等待消费、随后按序全部送达
         var buffer = new TestWrittenBufferWriter();
         foreach (var i in Enumerable.Range(1, 5))
             new LengthPrefixFramer().EncodeFrame(Encoding.UTF8.GetBytes($"msg-{i}"), buffer);
-        await client.GetStream().WriteAsync(buffer.WrittenSpan.ToArray());
+        await client.GetStream().WriteAsync(buffer.WrittenSpan.ToArray(), cancellationToken: CancellationToken.None);
 
         var deadline = TestClock.TickCount64 + 5000;
         while (TestClock.TickCount64 < deadline)
@@ -253,7 +253,7 @@ public class ConnectionUsabilityTests
                 if (received.Count == 5)
                     break;
             }
-            await Task.Delay(20);
+            await Task.Delay(20, cancellationToken: CancellationToken.None);
         }
 
         lock (received)
