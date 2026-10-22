@@ -3,6 +3,11 @@
 本项目版本变更记录，格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [Unreleased]
+
+### 变更
+- 运行时依赖 `System.IO.Pipelines`、`System.Threading.Channels`、`Microsoft.Bcl.AsyncInterfaces`、`Microsoft.Extensions.Logging.Abstractions`、`System.Diagnostics.DiagnosticSource` 更新至 10.0.13；测试 SDK 更新至 18.11.0、VSTest 适配器更新至 4.0.1，.NET Framework 引用程序集仅由 net48 测试目标引入。
+
 ## [2.7.0] - 2026-10-15
 
 ### 修复
