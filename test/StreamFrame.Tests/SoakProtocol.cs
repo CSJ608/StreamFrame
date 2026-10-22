@@ -12,7 +12,10 @@ namespace StreamFrame.Tests;
 
 internal sealed class SoakFactAttribute : FactAttribute
 {
-    public SoakFactAttribute()
+    public SoakFactAttribute(
+        [System.Runtime.CompilerServices.CallerFilePath] string? sourceFilePath = null,
+        [System.Runtime.CompilerServices.CallerLineNumber] int sourceLineNumber = 0)
+        : base(sourceFilePath, sourceLineNumber)
     {
         var raw = Environment.GetEnvironmentVariable("STREAMFRAME_SOAK_SECONDS");
         if (!double.TryParse(raw, System.Globalization.NumberStyles.Float,
@@ -23,10 +26,10 @@ internal sealed class SoakFactAttribute : FactAttribute
 
 internal sealed class SoakTrace
 {
-    private readonly Xunit.Abstractions.ITestOutputHelper _output;
+    private readonly Xunit.ITestOutputHelper _output;
     private readonly long _start = TestClock.TickCount64;
     private readonly bool _verbose;
-    public SoakTrace(Xunit.Abstractions.ITestOutputHelper output, bool verbose = true)
+    public SoakTrace(Xunit.ITestOutputHelper output, bool verbose = true)
     {
         _output = output;
         _verbose = verbose;

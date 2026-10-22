@@ -69,11 +69,11 @@ public class SingleClientConnectionTests
         server.Start(CancellationToken.None);
 
         // 等监听就绪
-        await Task.Delay(300);
+        await Task.Delay(300, cancellationToken: CancellationToken.None);
 
         // 第一个客户端连上，并进入 Connected
         using var firstClient = new TcpClient();
-        await firstClient.ConnectAsync(IPAddress.Loopback, port);
+        await firstClient.ConnectWithoutCancellationAsync(IPAddress.Loopback, port);
         Assert.True(firstClient.Connected, "第一个客户端应能连接成功");
 
         // 等服务端状态机进入 Connected（监听 socket 已关闭）
@@ -92,10 +92,10 @@ public class SingleClientConnectionTests
         await using var server = CreateServer(port);
         server.Start(CancellationToken.None);
 
-        await Task.Delay(300);
+        await Task.Delay(300, cancellationToken: CancellationToken.None);
 
         using var firstClient = new TcpClient();
-        await firstClient.ConnectAsync(IPAddress.Loopback, port);
+        await firstClient.ConnectWithoutCancellationAsync(IPAddress.Loopback, port);
         var stream = firstClient.GetStream();
 
         // 发一个 LengthPrefix 帧
@@ -103,7 +103,7 @@ public class SingleClientConnectionTests
         var frame = new byte[4 + payload.Length];
         System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(frame.AsSpan(0, 4), payload.Length);
         payload.CopyTo(frame.AsSpan(4));
-        await stream.WriteAsync(frame);
+        await stream.WriteAsync(frame, cancellationToken: CancellationToken.None);
 
         // 服务端应解码出该消息
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
@@ -125,11 +125,11 @@ public class SingleClientConnectionTests
         await using var server = CreateServer(port, acceptFirstClientOnly: false);
         server.Start(CancellationToken.None);
 
-        await Task.Delay(300);
+        await Task.Delay(300, cancellationToken: CancellationToken.None);
 
         // 第一个客户端连上
         using var firstClient = new TcpClient();
-        await firstClient.ConnectAsync(IPAddress.Loopback, port);
+        await firstClient.ConnectWithoutCancellationAsync(IPAddress.Loopback, port);
         await WaitForServerConnectedAsync(server);
         Assert.Equal(ConnectionState.Connected, server.State);
 

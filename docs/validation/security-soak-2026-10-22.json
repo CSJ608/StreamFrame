@@ -1,0 +1,28 @@
+{
+  "baselineCommit": "23b0e1acf06b394be47519586eb10d5c6ea6a36d",
+  "date": "2026-10-22",
+  "sourceFile": "src/StreamFrame/Connection/StreamConnection.cs",
+  "sourceSha256": "1bedc5594e28b631b4db90a4a7309bfd937a3c6d6f8b5d893673a11d6b843f80",
+  "scenarioSeconds": 600,
+  "scenarios": ["Soak_ReconnectRacing_LongRun", "Soak_Chaos_RandomFaults_NoHangAndIntegrity", "Soak_LongRun_MessageIntegrity"],
+  "passedScenarios": 45,
+  "failedScenarios": 0,
+  "skippedScenarios": 0,
+  "runs": [
+    {"round":1,"seed":673152,"os":"windows","tfm":"net8.0","passed":3,"elapsedSeconds":1804.41,"trxSha256":"cd0d92dc8190a97f2031f5aa51f540597dd97754a8371438a2e0794b607f2c78"},
+    {"round":1,"seed":673152,"os":"windows","tfm":"net10.0","passed":3,"elapsedSeconds":1804.72,"trxSha256":"f948f0f83dcee090e1a95b0f5a4bc35b26675b52305d8c9a70ae597575a8014d"},
+    {"round":1,"seed":673152,"os":"windows","tfm":"net48","passed":3,"elapsedSeconds":1807.06,"trxSha256":"f12c088a7be2c722327d3f623979278583ee6f36fb3675c0d14c527e7a1fb370"},
+    {"round":1,"seed":673152,"os":"linux","tfm":"net8.0","passed":3,"elapsedSeconds":1806.27,"trxSha256":"ecf735db93dcabf359ea8614c81d091afed6ee20708ea138fc578af99082244a"},
+    {"round":1,"seed":673152,"os":"linux","tfm":"net10.0","passed":3,"elapsedSeconds":1806.11,"trxSha256":"0419127a04c3239c2a2a7773c16018e598dd729e609bdddf5e1eed7b5a34e051"},
+    {"round":2,"seed":673153,"os":"windows","tfm":"net8.0","passed":3,"elapsedSeconds":1803.5,"trxSha256":"3d16ff3aba200533f77dea4a5db98a7f5f4c8a07ddaac7845c4c99f5bcb58cbe"},
+    {"round":2,"seed":673153,"os":"windows","tfm":"net10.0","passed":3,"elapsedSeconds":1803.67,"trxSha256":"6ce76efe1a7e248ef9e6df6f78b6f896ef8452e3d6960a8a400de34ae2b40386"},
+    {"round":2,"seed":673153,"os":"windows","tfm":"net48","passed":3,"elapsedSeconds":1805.61,"trxSha256":"44c33e6b7a9e7e669cdaaf6c665682e19b8524c14f8fa16154e321759ffef4de"},
+    {"round":2,"seed":673153,"os":"linux","tfm":"net8.0","passed":3,"elapsedSeconds":1804.3,"trxSha256":"f168101254c8a2d19797aed3a332ea0735ce1bccc0f935f59e034b4d14accea1"},
+    {"round":2,"seed":673153,"os":"linux","tfm":"net10.0","passed":3,"elapsedSeconds":1804.14,"trxSha256":"de9083f742d697393fe508bda07cd65f0dd9ad947c1ab1ba1c6f2df6dacc079d"},
+    {"round":3,"seed":673154,"os":"windows","tfm":"net8.0","passed":3,"elapsedSeconds":1804.12,"trxSha256":"99e3f05ebdfbbf4c3294d1cb0bfbd21dd98c15132e4afbda381d52223c4b40cd"},
+    {"round":3,"seed":673154,"os":"windows","tfm":"net10.0","passed":3,"elapsedSeconds":1804.22,"trxSha256":"ac23d0e457b5e76c34d7b5d710385c99326ff9307085375ea353b22eba9508b0"},
+    {"round":3,"seed":673154,"os":"windows","tfm":"net48","passed":3,"elapsedSeconds":1805.92,"trxSha256":"ba8bd3a890def8f65a553e3e65f0bb7958227e1ef86107e0c25ef3715205a651"},
+    {"round":3,"seed":673154,"os":"linux","tfm":"net8.0","passed":3,"elapsedSeconds":1804.67,"trxSha256":"1a4525403bd0ed4a0ae25c0d6caf7a4435baea54be5077734223860e6db54e0c"},
+    {"round":3,"seed":673154,"os":"linux","tfm":"net10.0","passed":3,"elapsedSeconds":1804.55,"trxSha256":"6f17e2148eae933bd9b3d0482717a88b76c2cbd215a3d012cf436d525c1b411f"}
+  ]
+}

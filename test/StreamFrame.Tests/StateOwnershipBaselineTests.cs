@@ -86,8 +86,8 @@ public class StateOwnershipBaselineTests
         await using var client = Create(port, true);
         server.Start(CancellationToken.None);
         client.Start(CancellationToken.None);
-        await Task.WhenAll(server.WaitForConnectedAsync(), client.WaitForConnectedAsync())
-            .WaitAsync(Budget);
+        await Task.WhenAll(server.WaitForConnectedAsync(ct: CancellationToken.None), client.WaitForConnectedAsync(ct: CancellationToken.None))
+            .WaitAsync(Budget, cancellationToken: CancellationToken.None);
         var liveSessionId = server.CurrentSessionId;
         Assert.NotEqual(0, liveSessionId);
 
@@ -137,21 +137,21 @@ public class StateOwnershipBaselineTests
         // 服务端就绪不走 WaitForConnectedAsync：回调内重连会消费掉 Connected#1 的等待器，
         // 迟到的等待将挂到 Connected#2（第二个客户端之后才接入）。以客户端就绪 + 回调
         // 执行标志为准。
-        await firstClient.WaitForConnectedAsync().WaitAsync(Budget);
+        await firstClient.WaitForConnectedAsync(ct: CancellationToken.None).WaitAsync(Budget, cancellationToken: CancellationToken.None);
         await WaitForAsync(() => Volatile.Read(ref reentered) != 0, "首个 Connected 回调执行重入 Reconnect");
         var firstSessionId = connectedSessionIds.Single();
 
         // 重连后的新会话由第二个客户端接入
         await using var secondClient = Create(port, true);
         secondClient.Start(CancellationToken.None);
-        await secondClient.WaitForConnectedAsync().WaitAsync(Budget);
+        await secondClient.WaitForConnectedAsync(ct: CancellationToken.None).WaitAsync(Budget, cancellationToken: CancellationToken.None);
         await WaitForAsync(() => server.State == ConnectionState.Connected && server.CurrentSessionId != firstSessionId,
             "重入重连后的新会话发布");
 
         // 收敛后的会话双向可用；编号在 Connected 可见期间恒非零且不被复用
-        await secondClient.SendAsync("after-reentry-reconnect");
+        await secondClient.SendAsync("after-reentry-reconnect", ct: CancellationToken.None);
         Assert.Equal("after-reentry-reconnect", await ReceiveOne(server));
-        await server.SendAsync("reply");
+        await server.SendAsync("reply", ct: CancellationToken.None);
         Assert.Equal("reply", await ReceiveOne(secondClient));
 
         var observedIds = connectedSessionIds.ToArray();
@@ -199,10 +199,10 @@ public class StateOwnershipBaselineTests
         server.Start(CancellationToken.None);
         // 服务端等待器先挂起：Connected 发布（回调之后）的完成点在停机取消之后——
         // 回调内 Dispose 的合法结果就是等待器以取消收尾（#65 契约在重入场景同样成立）
-        var serverReady = server.WaitForConnectedAsync().WaitAsync(Budget);
+        var serverReady = server.WaitForConnectedAsync(ct: CancellationToken.None).WaitAsync(Budget, cancellationToken: CancellationToken.None);
         client.Start(CancellationToken.None);
-        await client.WaitForConnectedAsync().WaitAsync(Budget);
-        await disposedInCallback.Task.WaitAsync(Budget);
+        await client.WaitForConnectedAsync(ct: CancellationToken.None).WaitAsync(Budget, cancellationToken: CancellationToken.None);
+        await disposedInCallback.Task.WaitAsync(Budget, cancellationToken: CancellationToken.None);
         Assert.True(disposeCompletedSynchronously);
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => serverReady);
 
@@ -211,9 +211,9 @@ public class StateOwnershipBaselineTests
 
         // 停机后的公共契约：消息流自然结束、发送通道关闭
         using var messageBudget = new CancellationTokenSource(Budget);
-        await using (var enumerator = server.GetMessages(messageBudget.Token).GetAsyncEnumerator())
+        await using (var enumerator = server.GetMessages(messageBudget.Token).GetAsyncEnumerator(cancellationToken: CancellationToken.None))
             Assert.False(await enumerator.MoveNextAsync()); // 通道已完成：立即 false；若悬挂则由预算令牌超时暴露
-        await Assert.ThrowsAnyAsync<ChannelClosedException>(() => server.SendAsync("late"));
+        await Assert.ThrowsAnyAsync<ChannelClosedException>(() => server.SendAsync("late", ct: CancellationToken.None));
         await client.DisposeAsync();
     }
 
@@ -248,10 +248,10 @@ public class StateOwnershipBaselineTests
         // 监听器是连接级共享资源：客户端向服务器端口的接入合法——迟到 accept 照常收编
         // （发布 Connected、建立会话），由纪元机制收敛；取代者循环 B 取锁后经代次检查静默退出
         using var client = new TcpClient();
-        await client.ConnectAsync(IPAddress.Loopback, port).WaitAsync(Budget);
+        await client.ConnectWithoutCancellationAsync(IPAddress.Loopback, port).WaitAsync(Budget, cancellationToken: CancellationToken.None);
         // State 在线性化点先写，锁外回调随后记录；等事件本身而非 State 快路径，
         // 防止读到 Connected 时记录队列还没入队（不能放宽下方精确状态序列）。
-        await connectedRecorded.Task.WaitAsync(Budget);
+        await connectedRecorded.Task.WaitAsync(Budget, cancellationToken: CancellationToken.None);
         Assert.Equal(ConnectionState.Connected, server.State);
         Assert.NotEqual(0, server.CurrentSessionId);
         Assert.Equal(
@@ -292,15 +292,15 @@ public class StateOwnershipBaselineTests
                 catch (OperationCanceledException)
                 {
                 }
-            });
+            }, cancellationToken: CancellationToken.None);
             var dispose = Task.Run(async () =>
             {
                 if (jitterMode == 2)
                     await Task.Delay(1);
                 await server.DisposeAsync();
-            });
+            }, cancellationToken: CancellationToken.None);
 
-            await Task.WhenAll(connect, dispose).WaitAsync(Budget);
+            await Task.WhenAll(connect, dispose).WaitAsync(Budget, cancellationToken: CancellationToken.None);
             client.Dispose();
             AssertTerminalInvariants(server, port);
         }
@@ -319,8 +319,8 @@ public class StateOwnershipBaselineTests
             await using var client = Create(port, true);
             server.Start(CancellationToken.None);
             client.Start(CancellationToken.None);
-            await Task.WhenAll(server.WaitForConnectedAsync(), client.WaitForConnectedAsync())
-                .WaitAsync(Budget);
+            await Task.WhenAll(server.WaitForConnectedAsync(ct: CancellationToken.None), client.WaitForConnectedAsync(ct: CancellationToken.None))
+                .WaitAsync(Budget, cancellationToken: CancellationToken.None);
 
             // 对端拆除 → 服务端进入故障重连（重新监听），与并发 Reconnect/Dispose 竞速
             await client.DisposeAsync();
@@ -335,9 +335,9 @@ public class StateOwnershipBaselineTests
                 {
                     // 已停机：合法竞速结果
                 }
-            })).Append(Task.Run(() => server.DisposeAsync().AsTask()));
+            })).Append(Task.Run(() => server.DisposeAsync().AsTask(), cancellationToken: CancellationToken.None));
 
-            await Task.WhenAll(actors).WaitAsync(Budget);
+            await Task.WhenAll(actors).WaitAsync(Budget, cancellationToken: CancellationToken.None);
             AssertTerminalInvariants(server, port);
         }
     }

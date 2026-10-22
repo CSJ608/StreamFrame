@@ -135,8 +135,8 @@ public class ListenerSecurityTests
         var firstListener = Assert.IsType<Socket>(Listener(server));
         var firstIp = IPAddress.Parse(firstAddress);
         using var first = new TcpClient(firstIp.AddressFamily);
-        await first.ConnectAsync(firstIp, port).WaitAsync(Budget);
-        await server.WaitForConnectedAsync().WaitAsync(Budget);
+        await first.ConnectWithoutCancellationAsync(firstIp, port).WaitAsync(Budget, cancellationToken: CancellationToken.None);
+        await server.WaitForConnectedAsync(ct: CancellationToken.None).WaitAsync(Budget, cancellationToken: CancellationToken.None);
         await ExchangeAsync(server, first, "before-rebind");
         var firstSession = server.CurrentSessionId;
         Assert.NotEqual(0, firstSession);
@@ -145,11 +145,11 @@ public class ListenerSecurityTests
 
         // 第二个正常客户端仍应在 TCP 层被拒；不可通过保留 listener 绕过独占重绑问题。
         using (var extra = new TcpClient(firstIp.AddressFamily))
-            await Assert.ThrowsAsync<SocketException>(() => extra.ConnectAsync(firstIp, port).WaitAsync(Budget));
+            await Assert.ThrowsAsync<SocketException>(() => extra.ConnectWithoutCancellationAsync(firstIp, port).WaitAsync(Budget, cancellationToken: CancellationToken.None));
 
         server.Reconnect(); // 必须由服务端主动关闭，不能先关客户端规避服务端 FIN_WAIT/TIME_WAIT。
-        var eof = first.GetStream().ReadAsync(new byte[1], 0, 1);
-        await eof.WaitAsync(Budget);
+        var eof = first.GetStream().ReadAsync(new byte[1], 0, 1, cancellationToken: CancellationToken.None);
+        await eof.WaitAsync(Budget, cancellationToken: CancellationToken.None);
         Assert.Equal(0, await eof);
         if (!keepOldPeerOpen)
         {
@@ -164,8 +164,8 @@ public class ListenerSecurityTests
 
         var nextIp = IPAddress.Parse(nextAddress);
         using var next = new TcpClient(nextIp.AddressFamily);
-        await next.ConnectAsync(nextIp, port).WaitAsync(Budget);
-        await server.WaitForConnectedAsync().WaitAsync(Budget);
+        await next.ConnectWithoutCancellationAsync(nextIp, port).WaitAsync(Budget, cancellationToken: CancellationToken.None);
+        await server.WaitForConnectedAsync(ct: CancellationToken.None).WaitAsync(Budget, cancellationToken: CancellationToken.None);
         await ExchangeAsync(server, next, "after-rebind");
         Assert.True(server.CurrentSessionId > firstSession);
         Assert.Equal(nextIp.ToString(), server.RemoteIpAddress);

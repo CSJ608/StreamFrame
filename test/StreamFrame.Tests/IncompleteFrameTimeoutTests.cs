@@ -138,11 +138,11 @@ public class IncompleteFrameTimeoutTests
 
         using (var client = new TcpClient())
         {
-            await client.ConnectAsync(IPAddress.Loopback, port);
+            await client.ConnectWithoutCancellationAsync(IPAddress.Loopback, port);
             await WaitForStateAsync(server, s => s == ConnectionState.Connected);
 
             // 连接后一个字节都不发：即使超过未完成帧超时时长，也不能触发（没有进行中的帧）
-            await Task.Delay(600);
+            await Task.Delay(600, cancellationToken: CancellationToken.None);
             Assert.Equal(ConnectionState.Connected, server.State);
         }
 
@@ -163,13 +163,13 @@ public class IncompleteFrameTimeoutTests
 
         using (var client = new TcpClient())
         {
-            await client.ConnectAsync(IPAddress.Loopback, port);
+            await client.ConnectWithoutCancellationAsync(IPAddress.Loopback, port);
             await WaitForStateAsync(server, s => s == ConnectionState.Connected);
 
             // 一帧完整送达后长时间静默：帧已切尽、缓冲为空，不应计时
-            await client.GetStream().WriteAsync(Frame("done"));
+            await client.GetStream().WriteAsync(Frame("done"), cancellationToken: CancellationToken.None);
             await WaitForAsync(() => { lock (received) return received.Count == 1; });
-            await Task.Delay(1200);
+            await Task.Delay(1200, cancellationToken: CancellationToken.None);
 
             Assert.Equal(ConnectionState.Connected, server.State);
         }
@@ -190,11 +190,11 @@ public class IncompleteFrameTimeoutTests
 
         using (var client1 = new TcpClient())
         {
-            await client1.ConnectAsync(IPAddress.Loopback, port);
+            await client1.ConnectWithoutCancellationAsync(IPAddress.Loopback, port);
             await WaitForStateAsync(server, s => s == ConnectionState.Connected);
 
             // 只发长度头的前 2 字节（完整头是 4 字节大端），半帧永远等不齐
-            await client1.GetStream().WriteAsync(new byte[] { 0x00, 0x00 });
+            await client1.GetStream().WriteAsync(new byte[] { 0x00, 0x00 }, cancellationToken: CancellationToken.None);
 
             await WaitForAsync(() => { lock (errors) return errors.Count == 1; }, timeoutMs: 3000);
             lock (errors)
@@ -216,8 +216,8 @@ public class IncompleteFrameTimeoutTests
         {
             await ConnectWithRetryAsync(client2, port);
             await WaitForStateAsync(server, s => s == ConnectionState.Connected, timeoutMs: 8000);
-            await Task.Delay(300);
-            await client2.GetStream().WriteAsync(Frame("after-timeout"));
+            await Task.Delay(300, cancellationToken: CancellationToken.None);
+            await client2.GetStream().WriteAsync(Frame("after-timeout"), cancellationToken: CancellationToken.None);
 
             // #56 会话归属：重连后旧会话的超时事件不被改写——事件编号仍是 1，
             // 与当前会话编号（已递增为 2）严格区分
@@ -241,12 +241,12 @@ public class IncompleteFrameTimeoutTests
 
         using (var client = new TcpClient())
         {
-            await client.ConnectAsync(IPAddress.Loopback, port);
+            await client.ConnectWithoutCancellationAsync(IPAddress.Loopback, port);
             await WaitForStateAsync(server, s => s == ConnectionState.Connected);
 
             // 长度头完整（声明 10 字节正文）但正文只到 3 字节
             var partial = new byte[] { 0x00, 0x00, 0x00, 0x0A, 0x41, 0x42, 0x43 };
-            await client.GetStream().WriteAsync(partial);
+            await client.GetStream().WriteAsync(partial, cancellationToken: CancellationToken.None);
 
             await WaitForAsync(() => { lock (errors) return errors.Count == 1; }, timeoutMs: 3000);
             lock (errors)
@@ -272,23 +272,23 @@ public class IncompleteFrameTimeoutTests
 
         using (var client = new TcpClient())
         {
-            await client.ConnectAsync(IPAddress.Loopback, port);
+            await client.ConnectWithoutCancellationAsync(IPAddress.Loopback, port);
             await WaitForStateAsync(server, s => s == ConnectionState.Connected);
             var stream = client.GetStream();
 
             // 每段间隔 250ms（< 1000ms 超时）：每次续传都应重置计时，最终整帧交付
             var header = new byte[4];
             BinaryPrimitives.WriteInt32BigEndian(header, 8);
-            await stream.WriteAsync(header);
-            await Task.Delay(250);
-            await stream.WriteAsync(Encoding.UTF8.GetBytes("123"));
-            await Task.Delay(250);
-            await stream.WriteAsync(Encoding.UTF8.GetBytes("456"));
-            await Task.Delay(250);
-            await stream.WriteAsync(Encoding.UTF8.GetBytes("78"));
+            await stream.WriteAsync(header, cancellationToken: CancellationToken.None);
+            await Task.Delay(250, cancellationToken: CancellationToken.None);
+            await stream.WriteAsync(Encoding.UTF8.GetBytes("123"), cancellationToken: CancellationToken.None);
+            await Task.Delay(250, cancellationToken: CancellationToken.None);
+            await stream.WriteAsync(Encoding.UTF8.GetBytes("456"), cancellationToken: CancellationToken.None);
+            await Task.Delay(250, cancellationToken: CancellationToken.None);
+            await stream.WriteAsync(Encoding.UTF8.GetBytes("78"), cancellationToken: CancellationToken.None);
 
             await WaitForAsync(() => { lock (received) return received.Count == 1; });
-            await Task.Delay(400); // 交付后再静默一会儿，确认没有迟到的超时
+            await Task.Delay(400, cancellationToken: CancellationToken.None); // 交付后再静默一会儿，确认没有迟到的超时
 
             Assert.Equal(ConnectionState.Connected, server.State);
         }
@@ -315,7 +315,7 @@ public class IncompleteFrameTimeoutTests
             using var client = new TcpClient();
             await ConnectWithRetryAsync(client, port);
             await WaitForStateAsync(server, s => s == ConnectionState.Connected, timeoutMs: 8000);
-            await client.GetStream().WriteAsync(new byte[] { 0x00, 0x0F });
+            await client.GetStream().WriteAsync(new byte[] { 0x00, 0x0F }, cancellationToken: CancellationToken.None);
 
             var expected = cycle + 1;
             await WaitForAsync(
@@ -338,8 +338,8 @@ public class IncompleteFrameTimeoutTests
         {
             await ConnectWithRetryAsync(client, port);
             await WaitForStateAsync(server, s => s == ConnectionState.Connected, timeoutMs: 8000);
-            await Task.Delay(300);
-            await client.GetStream().WriteAsync(Frame("third-session"));
+            await Task.Delay(300, cancellationToken: CancellationToken.None);
+            await client.GetStream().WriteAsync(Frame("third-session"), cancellationToken: CancellationToken.None);
         }
         await WaitForAsync(() => { lock (received) return received.Count == 1; }, timeoutMs: 8000);
         lock (received)
@@ -356,13 +356,13 @@ public class IncompleteFrameTimeoutTests
 
         using (var client = new TcpClient())
         {
-            await client.ConnectAsync(IPAddress.Loopback, port);
+            await client.ConnectWithoutCancellationAsync(IPAddress.Loopback, port);
             await WaitForStateAsync(server, s => s == ConnectionState.Connected);
 
             // 声明 20000 字节正文但只发 9000 字节：快照必须被截到上限（8192），而不是全量拷贝
             var partial = new byte[4 + 9000];
             BinaryPrimitives.WriteInt32BigEndian(partial, 20000);
-            await client.GetStream().WriteAsync(partial);
+            await client.GetStream().WriteAsync(partial, cancellationToken: CancellationToken.None);
 
             await WaitForAsync(() => { lock (errors) return errors.Count == 1; }, timeoutMs: 3000);
             lock (errors)
@@ -387,9 +387,9 @@ public class IncompleteFrameTimeoutTests
 
         using (var client = new TcpClient())
         {
-            await client.ConnectAsync(IPAddress.Loopback, port);
+            await client.ConnectWithoutCancellationAsync(IPAddress.Loopback, port);
             await WaitForStateAsync(server, s => s == ConnectionState.Connected);
-            await client.GetStream().WriteAsync(new byte[] { 0x00, 0x2A });
+            await client.GetStream().WriteAsync(new byte[] { 0x00, 0x2A }, cancellationToken: CancellationToken.None);
 
             // 超时触发、重连流程进行中即 Dispose：必须干净停机、不抛异常
             await WaitForStateAsync(server, s => s != ConnectionState.Connected);

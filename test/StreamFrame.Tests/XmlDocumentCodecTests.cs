@@ -15,7 +15,7 @@ public class XmlDocumentCodecTests
         var doc = XDocument.Parse("<Message><Id>42</Id><Name>DeviceA</Name></Message>");
 
         var writer = new TestWrittenBufferWriter();
-        codec.Encode(doc, writer);
+        codec.Encode(doc, writer, ct: CancellationToken.None);
 
         // 编码结果应包含 XML 内容
         var xmlText = Encoding.UTF8.GetString(writer.WrittenSpan);
@@ -23,7 +23,7 @@ public class XmlDocumentCodecTests
         Assert.Contains("DeviceA", xmlText, StringComparison.Ordinal);
 
         // 解码还原
-        var decoded = codec.Decode(new ReadOnlySequence<byte>(writer.WrittenSpan.ToArray()));
+        var decoded = codec.Decode(new ReadOnlySequence<byte>(writer.WrittenSpan.ToArray()), ct: CancellationToken.None);
         Assert.Equal("42", decoded.Root?.Element("Id")?.Value);
         Assert.Equal("DeviceA", decoded.Root?.Element("Name")?.Value);
     }
@@ -35,14 +35,14 @@ public class XmlDocumentCodecTests
         var malicious = Encoding.UTF8.GetBytes(
             "<!DOCTYPE Message [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><Message>&xxe;</Message>");
 
-        Assert.ThrowsAny<Exception>(() => codec.Decode(new ReadOnlySequence<byte>(malicious)));
+        Assert.ThrowsAny<Exception>(() => codec.Decode(new ReadOnlySequence<byte>(malicious), ct: CancellationToken.None));
     }
 
     [Fact]
     public void Decode_EmptyFrame_Throws()
     {
         var codec = new XmlDocumentCodec();
-        Assert.ThrowsAny<Exception>(() => codec.Decode(new ReadOnlySequence<byte>(Array.Empty<byte>())));
+        Assert.ThrowsAny<Exception>(() => codec.Decode(new ReadOnlySequence<byte>(Array.Empty<byte>()), ct: CancellationToken.None));
     }
 
     [Fact]
@@ -52,7 +52,7 @@ public class XmlDocumentCodecTests
         var payload = Encoding.UTF8.GetBytes("<Message>payload-longer-than-sixteen-bytes</Message>");
 
         Assert.Throws<InvalidOperationException>(
-            () => codec.Decode(new ReadOnlySequence<byte>(payload)));
+            () => codec.Decode(new ReadOnlySequence<byte>(payload), ct: CancellationToken.None));
     }
 
     [Fact]
@@ -61,6 +61,6 @@ public class XmlDocumentCodecTests
         var codec = new XmlDocumentCodec();
         var garbage = new byte[] { 0x3C, 0x78, 0x3E, 0xFF, 0xFE, 0x00, 0x7A }; // "<x>" + 非法 UTF-8 序列
 
-        Assert.ThrowsAny<XmlException>(() => codec.Decode(new ReadOnlySequence<byte>(garbage)));
+        Assert.ThrowsAny<XmlException>(() => codec.Decode(new ReadOnlySequence<byte>(garbage), ct: CancellationToken.None));
     }
 }

@@ -85,10 +85,10 @@ public class ListenerRetryTests
         using var lifetime = new CancellationTokenSource();
         using var failure = new FailureGate();
         await using var server = Create(port, false, failure);
-        var start = Task.Run(() => server.Start(lifetime.Token));
+        var start = Task.Run(() => server.Start(lifetime.Token), cancellationToken: CancellationToken.None);
         try
         {
-            await failure.Failed.Task.WaitAsync(Budget);
+            await failure.Failed.Task.WaitAsync(Budget, cancellationToken: CancellationToken.None);
             var type = typeof(StreamConnection<string>);
             var listenerGate = type.GetField("_listenerGate", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(server)!;
             var initialize = type.GetMethod("InitServer", BindingFlags.Instance | BindingFlags.NonPublic)!;
@@ -113,21 +113,21 @@ public class ListenerRetryTests
                     attempting.Set();
                     var error = Assert.Throws<TargetInvocationException>(() => initialize.Invoke(server, new object[] { CancellationToken.None }));
                     Assert.IsAssignableFrom<OperationCanceledException>(error.InnerException);
-                });
-                Assert.True(attempting.Wait(Budget));
+                }, cancellationToken: CancellationToken.None);
+                Assert.True(attempting.Wait(Budget, cancellationToken: CancellationToken.None));
                 shutdown = Task.Run(async () =>
                 {
                     if (cancel)
                         lifetime.Cancel();
                     else
                         await server.DisposeAsync();
-                });
-                Assert.True(stopping.Wait(Budget));
+                }, cancellationToken: CancellationToken.None);
+                Assert.True(stopping.Wait(Budget, cancellationToken: CancellationToken.None));
                 occupied.Stop();
             }
-            await Task.WhenAll(lateInitialization, shutdown).WaitAsync(Budget);
+            await Task.WhenAll(lateInitialization, shutdown).WaitAsync(Budget, cancellationToken: CancellationToken.None);
             failure.Continue.Set();
-            await start.WaitAsync(Budget);
+            await start.WaitAsync(Budget, cancellationToken: CancellationToken.None);
             Assert.Null(RetainedListener(server));
             var replacement = Occupy(port);
             replacement.Stop();
@@ -136,7 +136,7 @@ public class ListenerRetryTests
         {
             failure.Continue.Set();
             occupied.Stop();
-            await start.WaitAsync(Budget);
+            await start.WaitAsync(Budget, cancellationToken: CancellationToken.None);
         }
     }
 
@@ -147,30 +147,30 @@ public class ListenerRetryTests
         var port = ((IPEndPoint)occupied.LocalEndpoint).Port;
         using var gate = new FailureGate();
         await using var server = Create(port, false, gate);
-        var start = Task.Run(() => server.Start(CancellationToken.None));
+        var start = Task.Run(() => server.Start(CancellationToken.None), cancellationToken: CancellationToken.None);
         try
         {
-            await gate.Failed.Task.WaitAsync(Budget);
+            await gate.Failed.Task.WaitAsync(Budget, cancellationToken: CancellationToken.None);
             occupied.Stop();
             gate.Continue.Set();
-            await start.WaitAsync(Budget);
+            await start.WaitAsync(Budget, cancellationToken: CancellationToken.None);
             await using var client = Create(port, true);
             client.Start(CancellationToken.None);
-            await server.WaitForConnectedAsync().WaitAsync(Budget);
-            await client.WaitForConnectedAsync().WaitAsync(Budget);
-            await client.SendAsync("after-bind-failure");
+            await server.WaitForConnectedAsync(ct: CancellationToken.None).WaitAsync(Budget, cancellationToken: CancellationToken.None);
+            await client.WaitForConnectedAsync(ct: CancellationToken.None).WaitAsync(Budget, cancellationToken: CancellationToken.None);
+            await client.SendAsync("after-bind-failure", ct: CancellationToken.None);
             Assert.Equal("after-bind-failure", await Receive(server));
-            await server.SendAsync("reply");
+            await server.SendAsync("reply", ct: CancellationToken.None);
             Assert.Equal("reply", await Receive(client));
             Assert.Null(RetainedListener(server)); // 单客户端接受后必须关闭监听器。
             using var second = new TcpClient();
-            await Assert.ThrowsAsync<SocketException>(() => second.ConnectAsync(IPAddress.Loopback, port).WaitAsync(Budget));
+            await Assert.ThrowsAsync<SocketException>(() => second.ConnectWithoutCancellationAsync(IPAddress.Loopback, port).WaitAsync(Budget, cancellationToken: CancellationToken.None));
         }
         finally
         {
             gate.Continue.Set();
             occupied.Stop();
-            await start.WaitAsync(Budget);
+            await start.WaitAsync(Budget, cancellationToken: CancellationToken.None);
         }
     }
 
@@ -184,10 +184,10 @@ public class ListenerRetryTests
         using var lifetime = new CancellationTokenSource();
         using var gate = new FailureGate();
         await using var server = Create(port, false, gate);
-        var start = Task.Run(() => server.Start(lifetime.Token));
+        var start = Task.Run(() => server.Start(lifetime.Token), cancellationToken: CancellationToken.None);
         try
         {
-            await gate.Failed.Task.WaitAsync(Budget);
+            await gate.Failed.Task.WaitAsync(Budget, cancellationToken: CancellationToken.None);
             Assert.Null(RetainedListener(server));
             if (cancel)
                 lifetime.Cancel();
@@ -195,7 +195,7 @@ public class ListenerRetryTests
                 await server.DisposeAsync();
             occupied.Stop();
             gate.Continue.Set();
-            await start.WaitAsync(Budget);
+            await start.WaitAsync(Budget, cancellationToken: CancellationToken.None);
             Assert.True(server.IsDisposed);
             Assert.Equal(ConnectionState.Disconnected, server.State);
             Assert.Null(RetainedListener(server));
@@ -206,7 +206,7 @@ public class ListenerRetryTests
         {
             gate.Continue.Set();
             occupied.Stop();
-            await start.WaitAsync(Budget);
+            await start.WaitAsync(Budget, cancellationToken: CancellationToken.None);
         }
     }
 }

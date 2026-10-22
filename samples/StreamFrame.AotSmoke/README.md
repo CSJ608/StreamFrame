@@ -5,10 +5,11 @@
 - **可发布**：`dotnet publish` 成功，证明当前引用路径通过 NativeAOT 编译及裁剪分析；工程保留 `PublishAot` 和 `TreatWarningsAsErrors`，包括 IL2026/IL3050 等警告门禁。
 - **运行冒烟通过**：在 Linux x64 上直接执行生成的原生程序，退出 0 并报告 `AOT smoke OK`。它验证真实 TCP 回环连接、两条会话绑定发送、一条普通发送，以及接收顺序和 JSON 内容。发布成功本身不代表运行通过。
 
-在具有 .NET 8/10 SDK 和 NativeAOT 工具链的 Linux x64 环境执行：
+示例目标为 .NET 10；库仍保留 net8/netstandard 兼容资产。在具有 `global.json` 指定 SDK 或同 feature band 更新补丁、以及 NativeAOT 工具链的 Linux x64 环境执行：
 
 ```bash
-dotnet publish samples/StreamFrame.AotSmoke -c Release -r linux-x64 -o artifacts/aot
+dotnet restore samples/StreamFrame.AotSmoke --locked-mode
+dotnet publish samples/StreamFrame.AotSmoke -c Release -r linux-x64 --no-restore -o artifacts/aot
 timeout 40s ./artifacts/aot/StreamFrame.AotSmoke
 ```
 

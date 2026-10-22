@@ -24,9 +24,9 @@ public class SecurityConfigurationTests
         var sequence = segmented ? Segment.Split(bytes) : new ReadOnlySequence<byte>(bytes);
         Assert.Equal(!segmented, sequence.IsSingleSegment);
         var codec = new XmlDocumentCodec { MaxDocumentBytes = bytes.Length };
-        Assert.Equal("安全", codec.Decode(sequence).Root?.Value);
+        Assert.Equal("安全", codec.Decode(sequence, ct: CancellationToken.None).Root?.Value);
         Assert.Throws<InvalidOperationException>(() =>
-            new XmlDocumentCodec { MaxDocumentBytes = bytes.Length - 1 }.Decode(sequence));
+            new XmlDocumentCodec { MaxDocumentBytes = bytes.Length - 1 }.Decode(sequence, ct: CancellationToken.None));
     }
 
     [Theory]
@@ -37,7 +37,7 @@ public class SecurityConfigurationTests
         var bytes = Encoding.UTF8.GetBytes(xml);
         var sequence = Segment.Split(bytes);
         var codec = new XmlDocumentCodec { MaxDocumentBytes = bytes.Length };
-        Assert.Throws<XmlException>(() => codec.Decode(sequence));
+        Assert.Throws<XmlException>(() => codec.Decode(sequence, ct: CancellationToken.None));
     }
 
     [Theory]
@@ -52,26 +52,26 @@ public class SecurityConfigurationTests
             var codec = new SignalingOwnedCodec();
             await using var connection = CreateConnection(listener, codec);
             connection.Start(CancellationToken.None);
-            using var peer = await WithinAsync(listener.AcceptTcpClientAsync());
-            await connection.WaitForConnectedAsync().WaitAsync(Deadline);
+            using var peer = await WithinAsync(listener.AcceptTcpClientWithoutCancellationAsync());
+            await connection.WaitForConnectedAsync(ct: CancellationToken.None).WaitAsync(Deadline, cancellationToken: CancellationToken.None);
             var oldSession = connection.CurrentSessionId;
-            await peer.GetStream().WriteAsync(Frames("old-a", "old-b"));
+            await peer.GetStream().WriteAsync(Frames("old-a", "old-b"), cancellationToken: CancellationToken.None);
             // 未启动消费；第二次 Decode 证明第一条已入容量为 1 的队列。
-            await codec.SecondDecoded.Task.WaitAsync(Deadline);
+            await codec.SecondDecoded.Task.WaitAsync(Deadline, cancellationToken: CancellationToken.None);
 
             if (reconnect)
-                await Task.Run(connection.Reconnect).WaitAsync(Deadline);
+                await Task.Run(connection.Reconnect, cancellationToken: CancellationToken.None).WaitAsync(Deadline, cancellationToken: CancellationToken.None);
             else
-                await Task.Run(async () => await connection.DisposeAsync()).WaitAsync(Deadline);
+                await Task.Run(async () => await connection.DisposeAsync(), cancellationToken: CancellationToken.None).WaitAsync(Deadline, cancellationToken: CancellationToken.None);
 
-            using var nextPeer = reconnect ? await WithinAsync(listener.AcceptTcpClientAsync()) : null;
+            using var nextPeer = reconnect ? await WithinAsync(listener.AcceptTcpClientWithoutCancellationAsync()) : null;
             var newSession = 0L;
             if (nextPeer is not null)
             {
-                await connection.WaitForConnectedAsync().WaitAsync(Deadline);
+                await connection.WaitForConnectedAsync(ct: CancellationToken.None).WaitAsync(Deadline, cancellationToken: CancellationToken.None);
                 newSession = connection.CurrentSessionId;
                 Assert.True(newSession > oldSession);
-                await nextPeer.GetStream().WriteAsync(Frames("new-a"));
+                await nextPeer.GetStream().WriteAsync(Frames("new-a"), cancellationToken: CancellationToken.None);
             }
             else
             {
@@ -79,13 +79,13 @@ public class SecurityConfigurationTests
             }
 
             var received = new List<SessionMessage<ReadOnlyMemory<byte>>>();
-            await using var messages = connection.GetSessionMessages().GetAsyncEnumerator();
+            await using var messages = connection.GetSessionMessages(ct: CancellationToken.None).GetAsyncEnumerator(cancellationToken: CancellationToken.None);
             for (var i = 0; i < (reconnect ? 3 : 1); i++)
             {
                 Assert.True(await WithinAsync(messages.MoveNextAsync().AsTask()));
                 received.Add(messages.Current);
             }
-            await Task.Run(async () => await connection.DisposeAsync()).WaitAsync(Deadline);
+            await Task.Run(async () => await connection.DisposeAsync(), cancellationToken: CancellationToken.None).WaitAsync(Deadline, cancellationToken: CancellationToken.None);
             Assert.False(await WithinAsync(messages.MoveNextAsync().AsTask()));
             await Task.Yield(); // 异步业务侧仍持有消息；解码源已被覆写，连接也已释放。
             var expected = reconnect ? new[] { "old-a", "old-b", "new-a" } : new[] { "old-a" };
@@ -112,18 +112,18 @@ public class SecurityConfigurationTests
                 if (state == ConnectionState.Retry) retry.TrySetResult(true);
             };
             connection.Start(CancellationToken.None);
-            using var peer = await WithinAsync(listener.AcceptTcpClientAsync());
-            await connection.WaitForConnectedAsync().WaitAsync(Deadline);
+            using var peer = await WithinAsync(listener.AcceptTcpClientWithoutCancellationAsync());
+            await connection.WaitForConnectedAsync(ct: CancellationToken.None).WaitAsync(Deadline, cancellationToken: CancellationToken.None);
             var session = connection.CurrentSessionId;
-            await using var messages = connection.GetSessionMessages().GetAsyncEnumerator();
+            await using var messages = connection.GetSessionMessages(ct: CancellationToken.None).GetAsyncEnumerator(cancellationToken: CancellationToken.None);
             var ticks = Channel.CreateUnbounded<bool>();
             using var timer = new Timer(_ => ticks.Writer.TryWrite(true), null, 0, 100);
             var elapsed = Stopwatch.StartNew();
             // 定时器只控制心跳节拍；实际到达和状态转换均由信号驱动，不猜测调度耗时。
             do
             {
-                await WithinAsync(ticks.Reader.ReadAsync().AsTask());
-                await peer.GetStream().WriteAsync(Frames("heartbeat"));
+                await WithinAsync(ticks.Reader.ReadAsync(cancellationToken: CancellationToken.None).AsTask());
+                await peer.GetStream().WriteAsync(Frames("heartbeat"), cancellationToken: CancellationToken.None);
                 Assert.True(await WithinAsync(messages.MoveNextAsync().AsTask()));
                 Assert.Equal(session, messages.Current.SessionId);
                 Assert.Equal("heartbeat", Encoding.UTF8.GetString(messages.Current.Message.ToArray()));
@@ -132,7 +132,7 @@ public class SecurityConfigurationTests
             timer.Change(Timeout.Infinite, Timeout.Infinite);
             Assert.Equal(ConnectionState.Connected, connection.State);
             // 对端仍打开：停止流量后必须真的触发 idle 重连，而非把超时禁用了。
-            await retry.Task.WaitAsync(Deadline);
+            await retry.Task.WaitAsync(Deadline, cancellationToken: CancellationToken.None);
         }
         finally { listener.Stop(); }
     }

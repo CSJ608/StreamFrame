@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 // 块式命名空间：一个文件多个命名空间（文件级命名空间仅限单个）
@@ -26,6 +27,11 @@ namespace System.IO
         // netfx 的 Stream 没有单参（ReadOnlyMemory）的 WriteAsync 重载
         public static Task WriteAsync(this Stream stream, byte[] buffer)
             => stream.WriteAsync(buffer, 0, buffer.Length);
+
+        public static Task WriteAsync(this Stream stream, byte[] buffer, CancellationToken cancellationToken)
+            => cancellationToken.CanBeCanceled
+                ? stream.WriteAsync(buffer, 0, buffer.Length, cancellationToken)
+                : stream.WriteAsync(buffer, 0, buffer.Length);
     }
 }
 #endif

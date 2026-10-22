@@ -1,5 +1,7 @@
 using System.Buffers;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +17,16 @@ internal static class TestClock
 #else
         Environment.TickCount64;
 #endif
+}
+
+// 保留原有无取消 Task 重载，避免新 token 重载的 ValueTask/框架差异改变测试调用。
+internal static class TestSocketCancellationCompat
+{
+    public static Task ConnectWithoutCancellationAsync(this TcpClient client, IPAddress address, int port)
+        => client.ConnectAsync(address, port);
+
+    public static Task<TcpClient> AcceptTcpClientWithoutCancellationAsync(this TcpListener listener)
+        => listener.AcceptTcpClientAsync();
 }
 
 #if NET48

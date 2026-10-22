@@ -322,7 +322,9 @@ _ = Task.Run(async () =>
 | `net8.0`（LTS 至 2026-11） | .NET 8 |
 | `netstandard2.0` | .NET Framework 4.6.2+、Unity、Mono 等 |
 
-`netstandard2.0` 资产经 **net48 全量测试套件**（真实 TCP 回环）验证；TCP KeepAlive 参数在 .NET Framework 上通过 `SIO_KEEPALIVE_VALS` 设置。CI 在 Ubuntu（net8/net10）与 Windows（net48）双平台运行全部测试。
+`netstandard2.0` 资产经 **net48 全量测试套件**（真实 TCP 回环）验证；TCP KeepAlive 参数在 .NET Framework 上通过 `SIO_KEEPALIVE_VALS` 设置。CI 在 Ubuntu（net8/net10）与 Windows（net48/net8/net10）双平台运行全部测试。
+
+Demo 和 NativeAOT 示例使用 .NET 10。库保留 net8 兼容资产，但 .NET 8 的安全支持于 **2026-11-10** 结束，实际宿主应及时迁移；资产兼容不能替代受支持的运行时。SDK 基线、锁定恢复、无内置 TLS/认证的部署边界，以及覆盖率工具的已知内嵌组件风险见 [安全维护说明](docs/SECURITY.md)。
 
 ## 依赖
 
@@ -337,7 +339,7 @@ dotnet build StreamFrame.slnx
 dotnet test
 dotnet run --project samples/StreamFrame.Demo          # 五场景端到端 demo
 dotnet run -c Release --project bench/StreamFrame.Benchmarks   # 性能基准（先按 bench/README.md 筛选）
-dotnet test -f net8.0 --collect:"XPlat Code Coverage"  # 覆盖率（CI 亦自动收集并写入运行摘要）
+dotnet test -f net10.0 -p:EnableCoverage=true --collect:"XPlat Code Coverage"  # 隔离覆盖率工具，已知风险见安全维护说明
 ```
 
 ## NativeAOT 验证

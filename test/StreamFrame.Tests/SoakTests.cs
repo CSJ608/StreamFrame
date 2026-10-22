@@ -16,9 +16,9 @@ namespace StreamFrame.Tests;
 /// </summary>
 public class SoakTests
 {
-    private readonly Xunit.Abstractions.ITestOutputHelper _output;
+    private readonly Xunit.ITestOutputHelper _output;
 
-    public SoakTests(Xunit.Abstractions.ITestOutputHelper output) => _output = output;
+    public SoakTests(Xunit.ITestOutputHelper output) => _output = output;
 
     /// <summary>
     /// 状态机转移的全程记录与校验器（长期观察的核心断言面）：

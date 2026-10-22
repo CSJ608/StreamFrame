@@ -24,29 +24,35 @@ StreamFrame 的发布流程：打 `v*` 标签 → GitHub Actions **单条流水�
 ## 日常发布流程（打 tag 即发布）
 
 ```bash
-# 1. 提交改动并推送
-git add -A && git commit -m "..." && git push origin main
+# 1. 从最新 main 建主题分支，提交、推送分支并开 PR
+# PR 通过必需检查后 rebase 合并；禁止直接推 main。
+# 发布前另以 PR 同步两个 csproj 版本并归档 CHANGELOG，确认长测与安全门禁。
 
-# 2. 打版本标签并推送 → 触发 release.yml 单条流水线
-git tag -a v1.0.1 -m "描述"
-git push origin v1.0.1
+# 2. 获得发版授权后，在已合并且校验过的提交打标签（示例版本）
+git switch main
+git pull --ff-only origin main
+git tag -a v2.7.1 -m "描述"
+git push origin v2.7.1
 
 # 3. 查看流水线结果（发布与推送在同一条运行里）
 gh run list --workflow release.yml
 ```
 
-> 忘了同步 csproj 版本？流水线第一步就会红掉并提示哪个文件不一致，不会发出错误版本号的包。
+> 忘了同步 csproj 版本？打包 job 的版本校验会失败并提示哪个文件不一致，不会发出错误版本号的包。
 
 ## 发布流水线（release.yml）各阶段做什么
 
 | 阶段 | 说明 |
 |---|---|
 | 版本校验 | tag 与两个 csproj 的 `<Version>` 必须一致，否则直接失败 |
-| 构建 + 测试 | `dotnet build` + `dotnet test`；测试不过，后面的 Release 与发包都不会执行 |
-| GitHub Release | 正文从 CHANGELOG 提取当前版本段落（找不到时回退 GitHub 自动生成）；附 `*.nupkg` / `*.snupkg` |
-| 推 nuget.org | `NuGet/login@v1` 用 OIDC 换短时 API key，推送 `--skip-duplicate` 幂等 |
+| 构建 + 测试 | 只读 job 做锁定恢复、安全审计和五个 OS/TFM 组合测试；测试失败不打包发布 |
+| 打包 | 独立只读 job 仅构建两个生产项目，生成包、变更说明、提交标识与 SHA256 摘要；上传本次运行的唯一产物 |
+| GitHub Release | 发布 job 下载同一次运行的包并校验提交/摘要，附 `*.nupkg` / `*.snupkg` / 摘要；不执行 restore/build/test |
+| 推 nuget.org | 仅发布 job 有 `contents: write` / `id-token: write`；固定 SHA 的 `NuGet/login` 用 OIDC 换短时 API key，推送 `--skip-duplicate` 幂等 |
 
-`workflow_dispatch` 手动触发只跑构建 + 测试（演练用），不创建 Release、不发包（OIDC subject 只信任 tag ref）。需要重发某个版本时，在对应 tag 的运行记录上 **Re-run** 即可。
+`workflow_dispatch` 手动触发执行测试、审计和打包演练，不创建 Release、不发包（OIDC subject 只信任 tag ref）。产物名包含运行尝试号；需要重试时选择 **Re-run all jobs** 重新生成同一次尝试的产物，不仅重跑下载产物的发布 job。
+
+SDK 基线、依赖锁、覆盖率工具内嵌组件的未解决风险及部署边界见 [安全维护说明](SECURITY.md)。现有 NuGet Trusted Publisher 的 workflow/environment 配置不变；增加发布 environment 前必须单独同步其身份策略。
 
 ## 版本号约定
 

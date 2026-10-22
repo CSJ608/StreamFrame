@@ -4,8 +4,8 @@ namespace StreamFrame.Tests;
 
 public class DeliveryProtocolTests
 {
-    private readonly Xunit.Abstractions.ITestOutputHelper _output;
-    public DeliveryProtocolTests(Xunit.Abstractions.ITestOutputHelper output) => _output = output;
+    private readonly Xunit.ITestOutputHelper _output;
+    public DeliveryProtocolTests(Xunit.ITestOutputHelper output) => _output = output;
 
     [Fact]
     public async Task LostAck_RetryUsesSameBusinessId_ReceiverAppliesOnce()

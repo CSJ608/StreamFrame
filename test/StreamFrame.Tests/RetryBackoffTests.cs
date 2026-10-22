@@ -64,7 +64,7 @@ public class RetryBackoffTests
             isActive: true,
             new StreamConnectionOptions { ConnectRetryDelayMs = 100, MaxRetryDelayMs = 400 });
         client.Start(CancellationToken.None);
-        await Task.Delay(1500);
+        await Task.Delay(1500, cancellationToken: CancellationToken.None);
 
         await using var server = new StreamConnection<string>(
             new LengthPrefixFramer(),
@@ -74,7 +74,7 @@ public class RetryBackoffTests
             isActive: false);
         server.Start(CancellationToken.None);
 
-        await client.WaitForConnectedAsync().WaitAsync(TimeSpan.FromSeconds(15));
+        await client.WaitForConnectedAsync(ct: CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(15), cancellationToken: CancellationToken.None);
 
         var received = 0;
         using var drainCts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
@@ -88,13 +88,13 @@ public class RetryBackoffTests
             catch (OperationCanceledException)
             {
             }
-        });
-        await server.WaitForConnectedAsync().WaitAsync(TimeSpan.FromSeconds(15));
+        }, cancellationToken: CancellationToken.None);
+        await server.WaitForConnectedAsync(ct: CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(15), cancellationToken: CancellationToken.None);
 
-        await client.SendAsync("after-backoff");
+        await client.SendAsync("after-backoff", ct: CancellationToken.None);
         var deadline = TestClock.TickCount64 + 5000;
         while (TestClock.TickCount64 < deadline && Volatile.Read(ref received) < 1)
-            await Task.Delay(20);
+            await Task.Delay(20, cancellationToken: CancellationToken.None);
 
         Assert.Equal(1, Volatile.Read(ref received));
         drainCts.Cancel();

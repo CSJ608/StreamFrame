@@ -18,7 +18,7 @@ public class FrameDecoderTests
         using var h = CreateDecoder(new LengthPrefixFramer(), incompleteFrameTimeoutMs: timeoutMs, sessionId: 42);
         var bytes = Enumerable.Repeat((byte)0xFF, badHeaders * 4)
             .Concat(new byte[] { 0, 0, 0, 3, 65, 65, 65, 0, 0, 0, 1, 66 }).ToArray();
-        await h.Pipe.Writer.WriteAsync(bytes);
+        await h.Pipe.Writer.WriteAsync(bytes, cancellationToken: CancellationToken.None);
         if (eof) h.Pipe.Writer.Complete();
         var run = h.Decoder.RunAsync(CancellationToken.None);
         try
@@ -40,7 +40,7 @@ public class FrameDecoderTests
             });
             if (timeoutMs > 0)
             {
-                await Task.Delay(timeoutMs * 3);
+                await Task.Delay(timeoutMs * 3, cancellationToken: CancellationToken.None);
                 Assert.False(run.IsCompleted); // 已切尽的缓冲不得启动半帧超时
             }
         }
@@ -58,13 +58,13 @@ public class FrameDecoderTests
     {
         var framer = new ProgressFramer();
         using var h = CreateDecoder(framer);
-        await h.Pipe.Writer.WriteAsync(new byte[] { 255, 0, 0, 0, 2, 65 });
+        await h.Pipe.Writer.WriteAsync(new byte[] { 255, 0, 0, 0, 2, 65 }, cancellationToken: CancellationToken.None);
         var run = h.Decoder.RunAsync(CancellationToken.None);
         try
         {
             Assert.Equal(2, framer.Calls); // 丢弃一次、半帧一次；不忙循环
             Assert.False(h.Relay.Reader.TryRead(out _));
-            if (!eof) await h.Pipe.Writer.WriteAsync(new byte[] { 66 });
+            if (!eof) await h.Pipe.Writer.WriteAsync(new byte[] { 66 }, cancellationToken: CancellationToken.None);
         }
         finally
         {
@@ -83,7 +83,7 @@ public class FrameDecoderTests
     public async Task Resync_CustomFramer_CompleteFrameDeliveredWithoutFurtherInput()
     {
         using var h = CreateDecoder(new ProgressFramer());
-        await h.Pipe.Writer.WriteAsync(new byte[] { 255, 0, 0, 0, 1, 65 });
+        await h.Pipe.Writer.WriteAsync(new byte[] { 255, 0, 0, 0, 1, 65 }, cancellationToken: CancellationToken.None);
         var run = h.Decoder.RunAsync(CancellationToken.None);
         try
         {
@@ -292,7 +292,7 @@ public class FrameDecoderTests
         StartDrain(h);
         var decodeTask = h.Decoder.RunAsync(CancellationToken.None);
 
-        await h.Pipe.Writer.WriteAsync(new byte[] { 0x00, 0x00, 0x00, 0x00 }); // 空负载帧
+        await h.Pipe.Writer.WriteAsync(new byte[] { 0x00, 0x00, 0x00, 0x00 }, cancellationToken: CancellationToken.None); // 空负载帧
         await WaitForMessagesAsync(h, 1);
         h.Pipe.Writer.Complete();
         await decodeTask;
@@ -312,7 +312,7 @@ public class FrameDecoderTests
         var decodeTask = h.Decoder.RunAsync(CancellationToken.None);
 
         // 超过 MaxPayloadBytes 的长度头 + 尾随垃圾
-        await h.Pipe.Writer.WriteAsync(new byte[] { 0x7F, 0xFF, 0xFF, 0xFF, 0x41 });
+        await h.Pipe.Writer.WriteAsync(new byte[] { 0x7F, 0xFF, 0xFF, 0xFF, 0x41 }, cancellationToken: CancellationToken.None);
         h.Pipe.Writer.Complete();
         await decodeTask;
 
@@ -336,7 +336,7 @@ public class FrameDecoderTests
 
         // 噪声 N*2 + 被新 STX 中止的半帧(STX A) + 有效帧(STX B ETX)
         var bytes = new byte[] { 0x4E, 0x4E, 0x02, (byte)'A', 0x02, (byte)'B', 0x03 };
-        await h.Pipe.Writer.WriteAsync(bytes);
+        await h.Pipe.Writer.WriteAsync(bytes, cancellationToken: CancellationToken.None);
         await WaitForMessagesAsync(h, 1);
         h.Pipe.Writer.Complete();
         await decodeTask;
@@ -364,7 +364,7 @@ public class FrameDecoderTests
         // 声明 1KB 的帧但只喂 32 字节（> 上限 16），永远凑不齐
         var header = new byte[4];
         System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(header, 1024);
-        await h.Pipe.Writer.WriteAsync(header.Concat(new byte[32]).ToArray());
+        await h.Pipe.Writer.WriteAsync(header.Concat(new byte[32]).ToArray(), cancellationToken: CancellationToken.None);
 
         await Assert.ThrowsAsync<SessionFaultException>(() => decodeTask);
 
@@ -386,7 +386,7 @@ public class FrameDecoderTests
 
         var header = new byte[4];
         System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(header, 1024 * 1024);
-        await h.Pipe.Writer.WriteAsync(header.Concat(new byte[9 * 1024]).ToArray());
+        await h.Pipe.Writer.WriteAsync(header.Concat(new byte[9 * 1024]).ToArray(), cancellationToken: CancellationToken.None);
 
         await Assert.ThrowsAsync<SessionFaultException>(() => decodeTask);
 
@@ -410,14 +410,14 @@ public class FrameDecoderTests
         var oldTask = oldSession.Decoder.RunAsync(CancellationToken.None);
 
         // 旧会话先产生一个丢弃事件
-        await oldSession.Pipe.Writer.WriteAsync(new byte[] { 0x7F, 0xFF, 0xFF, 0xFF, 0x41 });
+        await oldSession.Pipe.Writer.WriteAsync(new byte[] { 0x7F, 0xFF, 0xFF, 0xFF, 0x41 }, cancellationToken: CancellationToken.None);
         oldSession.Pipe.Writer.Complete();
         await oldTask;
 
         // 会话重建：新解码器（编号 8）开始工作并产生自己的事件
         using var newSession = CreateDecoder(framing, sessionId: 8);
         var newTask = newSession.Decoder.RunAsync(CancellationToken.None);
-        await newSession.Pipe.Writer.WriteAsync(new byte[] { 0x7F, 0xFF, 0xFF, 0xFF, 0x42 });
+        await newSession.Pipe.Writer.WriteAsync(new byte[] { 0x7F, 0xFF, 0xFF, 0xFF, 0x42 }, cancellationToken: CancellationToken.None);
         newSession.Pipe.Writer.Complete();
         await newTask;
 
@@ -436,7 +436,7 @@ public class FrameDecoderTests
         var frame = new byte[4 + payload.Length];
         System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(frame.AsSpan(0, 4), payload.Length);
         payload.CopyTo(frame.AsSpan(4));
-        await h.Pipe.Writer.WriteAsync(frame);
+        await h.Pipe.Writer.WriteAsync(frame, cancellationToken: CancellationToken.None);
 
         await Assert.ThrowsAsync<SessionFaultException>(() => decodeTask);
 

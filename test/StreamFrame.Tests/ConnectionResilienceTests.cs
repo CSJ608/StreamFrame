@@ -81,16 +81,16 @@ public class ConnectionResilienceTests
             catch (OperationCanceledException)
             {
             }
-        });
+        }, cancellationToken: CancellationToken.None);
 
         server.Start(CancellationToken.None);
 
         // 第一个客户端：正常收发
         using (var client1 = new TcpClient())
         {
-            await client1.ConnectAsync(IPAddress.Loopback, port);
+            await client1.ConnectWithoutCancellationAsync(IPAddress.Loopback, port);
             await WaitForConnectedAsync(server);
-            await client1.GetStream().WriteAsync(Frame("before-disconnect"));
+            await client1.GetStream().WriteAsync(Frame("before-disconnect"), cancellationToken: CancellationToken.None);
         }
 
         var deadline = TestClock.TickCount64 + 5000;
@@ -101,7 +101,7 @@ public class ConnectionResilienceTests
                 if (received.Count == 1)
                     break;
             }
-            await Task.Delay(20);
+            await Task.Delay(20, cancellationToken: CancellationToken.None);
         }
         lock (received)
             Assert.Equal(new[] { "before-disconnect" }, received);
@@ -113,9 +113,9 @@ public class ConnectionResilienceTests
         // 第二个客户端：重连后的消息必须照常送达
         using (var client2 = new TcpClient())
         {
-            await client2.ConnectAsync(IPAddress.Loopback, port);
-            await Task.Delay(300);
-            await client2.GetStream().WriteAsync(Frame("after-reconnect"));
+            await client2.ConnectWithoutCancellationAsync(IPAddress.Loopback, port);
+            await Task.Delay(300, cancellationToken: CancellationToken.None);
+            await client2.GetStream().WriteAsync(Frame("after-reconnect"), cancellationToken: CancellationToken.None);
         }
 
         deadline = TestClock.TickCount64 + 5000;
@@ -126,7 +126,7 @@ public class ConnectionResilienceTests
                 if (received.Count == 2)
                     break;
             }
-            await Task.Delay(20);
+            await Task.Delay(20, cancellationToken: CancellationToken.None);
         }
         lock (received)
             Assert.Equal(new[] { "before-disconnect", "after-reconnect" }, received);
@@ -158,16 +158,16 @@ public class ConnectionResilienceTests
             catch (OperationCanceledException)
             {
             }
-        });
+        }, cancellationToken: CancellationToken.None);
 
         server.Start(CancellationToken.None);
 
         using (var client1 = new TcpClient())
         {
-            await client1.ConnectAsync(IPAddress.Loopback, port);
+            await client1.ConnectWithoutCancellationAsync(IPAddress.Loopback, port);
             await WaitForConnectedAsync(server);
-            await client1.GetStream().WriteAsync(Frame("FLAKY")); // 触发一次解码失败
-            await client1.GetStream().WriteAsync(Frame("never-arrives")); // 断线时排队/未投递
+            await client1.GetStream().WriteAsync(Frame("FLAKY"), cancellationToken: CancellationToken.None); // 触发一次解码失败
+            await client1.GetStream().WriteAsync(Frame("never-arrives"), cancellationToken: CancellationToken.None); // 断线时排队/未投递
         }
 
         // 解码失败 → 会话断开 → 状态离开 Connected 并重连
@@ -187,9 +187,9 @@ public class ConnectionResilienceTests
         // 重连后正常消息恢复送达
         using (var client2 = new TcpClient())
         {
-            await client2.ConnectAsync(IPAddress.Loopback, port);
-            await Task.Delay(300);
-            await client2.GetStream().WriteAsync(Frame("recovered"));
+            await client2.ConnectWithoutCancellationAsync(IPAddress.Loopback, port);
+            await Task.Delay(300, cancellationToken: CancellationToken.None);
+            await client2.GetStream().WriteAsync(Frame("recovered"), cancellationToken: CancellationToken.None);
         }
 
         var deadline = TestClock.TickCount64 + 5000;
@@ -200,7 +200,7 @@ public class ConnectionResilienceTests
                 if (received.Count > 0)
                     break;
             }
-            await Task.Delay(20);
+            await Task.Delay(20, cancellationToken: CancellationToken.None);
         }
         lock (received)
             Assert.Equal(new[] { "recovered" }, received);
@@ -233,17 +233,17 @@ public class ConnectionResilienceTests
             catch (OperationCanceledException)
             {
             }
-        });
+        }, cancellationToken: CancellationToken.None);
 
         server.Start(CancellationToken.None);
 
         using var client = new TcpClient();
-        await client.ConnectAsync(IPAddress.Loopback, port);
+        await client.ConnectWithoutCancellationAsync(IPAddress.Loopback, port);
         await WaitForConnectedAsync(server);
 
         // 坏帧与好帧粘在同一批字节里
         var bytes = Frame("poison").Concat(Frame("good")).ToArray();
-        await client.GetStream().WriteAsync(bytes);
+        await client.GetStream().WriteAsync(bytes, cancellationToken: CancellationToken.None);
 
         var deadline = TestClock.TickCount64 + 5000;
         while (TestClock.TickCount64 < deadline)
@@ -253,7 +253,7 @@ public class ConnectionResilienceTests
                 if (received.Count == 1)
                     break;
             }
-            await Task.Delay(20);
+            await Task.Delay(20, cancellationToken: CancellationToken.None);
         }
 
         lock (received)
@@ -299,16 +299,16 @@ public class ConnectionResilienceTests
             catch (OperationCanceledException)
             {
             }
-        });
+        }, cancellationToken: CancellationToken.None);
 
         server.Start(CancellationToken.None);
 
         using var client = new TcpClient();
-        await client.ConnectAsync(IPAddress.Loopback, port);
+        await client.ConnectWithoutCancellationAsync(IPAddress.Loopback, port);
         await WaitForConnectedAsync(server);
 
-        await client.GetStream().WriteAsync(Frame("first"));
-        await client.GetStream().WriteAsync(Frame("second"));
+        await client.GetStream().WriteAsync(Frame("first"), cancellationToken: CancellationToken.None);
+        await client.GetStream().WriteAsync(Frame("second"), cancellationToken: CancellationToken.None);
 
         var deadline = TestClock.TickCount64 + 5000;
         while (TestClock.TickCount64 < deadline)
@@ -318,7 +318,7 @@ public class ConnectionResilienceTests
                 if (received.Count == 2)
                     break;
             }
-            await Task.Delay(20);
+            await Task.Delay(20, cancellationToken: CancellationToken.None);
         }
 
         lock (received)
@@ -340,7 +340,7 @@ public class ConnectionResilienceTests
         server.Start(CancellationToken.None);
 
         using var client = new TcpClient();
-        await client.ConnectAsync(IPAddress.Loopback, port);
+        await client.ConnectWithoutCancellationAsync(IPAddress.Loopback, port);
         await WaitForConnectedAsync(server);
 
         // 不发任何数据，静默超时应判定连接死亡并进入重连
@@ -357,13 +357,13 @@ public class ConnectionResilienceTests
 
         // 用 RST 关闭的客户端（LingerState(true,0)）：服务端 socket 发送时才感知死亡
         var client = new TcpClient();
-        await client.ConnectAsync(IPAddress.Loopback, port);
+        await client.ConnectWithoutCancellationAsync(IPAddress.Loopback, port);
         await WaitForConnectedAsync(server);
         client.LingerState = new LingerOption(true, 0);
         client.Close();
 
-        await Task.Delay(300);
-        await server.SendAsync("burst-after-death");
+        await Task.Delay(300, cancellationToken: CancellationToken.None);
+        await server.SendAsync("burst-after-death", ct: CancellationToken.None);
 
         // 发送失败不应被静默吞掉：状态必须离开 Connected 进入重连
         await WaitForStateAsync(server, s => s != ConnectionState.Connected, timeoutMs: 5000);
@@ -383,13 +383,13 @@ public class ConnectionResilienceTests
         server.Start(CancellationToken.None);
 
         using var client = new TcpClient();
-        await client.ConnectAsync(IPAddress.Loopback, port);
+        await client.ConnectWithoutCancellationAsync(IPAddress.Loopback, port);
         await WaitForConnectedAsync(server);
 
         // 声明 1KB、只发 128B（> 上限 64）：判定流不可恢复，断线
         var header = new byte[4];
         BinaryPrimitives.WriteInt32BigEndian(header, 1024);
-        await client.GetStream().WriteAsync(header.Concat(new byte[128]).ToArray());
+        await client.GetStream().WriteAsync(header.Concat(new byte[128]).ToArray(), cancellationToken: CancellationToken.None);
 
         await WaitForStateAsync(server, s => s != ConnectionState.Connected, timeoutMs: 3000);
         Assert.NotEqual(ConnectionState.Connected, server.State);

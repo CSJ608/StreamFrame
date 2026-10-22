@@ -23,3 +23,7 @@ bench-results.txt
 
 # 本地覆盖率收集产物（dotnet test --collect）
 test/**/TestResults/
+TestResults/
+coverage/
+artifacts/
+__pycache__/

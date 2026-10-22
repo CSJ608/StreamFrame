@@ -12,9 +12,14 @@
 
 ### 变更
 - 运行时依赖 `System.IO.Pipelines`、`System.Threading.Channels`、`Microsoft.Bcl.AsyncInterfaces`、`Microsoft.Extensions.Logging.Abstractions`、`System.Diagnostics.DiagnosticSource` 更新至 10.0.13；测试 SDK 更新至 18.11.0、VSTest 适配器更新至 4.0.1，.NET Framework 引用程序集仅由 net48 测试目标引入。
+- 测试框架由 xUnit 2.9.3 迁至 `xunit.v3` 4.0.2，保留 VSTest、TRX 与覆盖率采集方式；自定义 Soak 特性保留源位置信息与未启用时的 Skip。Meziantou.Analyzer 更新至 3.0.316；测试取消参数显式化以保留独立取消与生命周期回归语义，不降低分析器规则。
+- Demo 与 NativeAOT 示例迁至 net10.0，库仍保留 netstandard2.0/net8.0/net10.0 资产和 net48 回归；文档明确 .NET 8 支持期限与实际宿主更新责任。
+- 仓库固定 NuGet 下载/审计源、统一传递依赖审计与锁文件；CI 检查审计完整性并交叉查询 GitHub 公告。普通测试与覆盖率采用独立锁图，collector 只在显式开启覆盖率时引入。
+- Actions 固定官方提交 SHA；测试和构建打包只读，发布 job 只验证同次运行产物并使用短时 OIDC 凭据，不执行项目构建。增加 Windows net8/net10 普通测试且保留原必需检查名称；修正发布指南的直推 main 旧命令。
+- 明确记录 coverlet 10.1.0 内嵌 Pkcs 10.0.12 的两项未修复公告；隔离覆盖率权限不视为修复或豁免，高危内嵌组件仍使该作业审计失败。
 
 ### 新增
-- 补充 XML 字节边界/分段/DTD、满接收队列拆除与会话归属、周期流量重置空闲超时的回归测试。
+- 安全部署与维护说明，以及 XML 字节边界/分段/DTD、满接收队列拆除与会话归属、周期流量重置空闲超时的回归测试。
 
 ## [2.7.0] - 2026-10-15
 
