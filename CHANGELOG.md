@@ -5,8 +5,16 @@
 
 ## [Unreleased]
 
+### 修复
+- 重连请求在发布副作用前取得准入，被合并的重入不再留下孤立 Retry；迟到接入保留 socket 并延后至 Connecting 后提交，跨线程非终态通知排队且回调不持发布锁。补充确定性重复重连、同步回调重入、Retry 期间迟到接入、终态释放与监听代次回归。跨线程 Reconnect 遇到正在发布的回调时先排队返回；同线程回调重入仍内联，停机保持同步优先终结。
+- 快速重连回归不再将 TCP 握手或旧 Connected 状态当作新会话成立：每轮验证新会话编号、双向报文及探针会话终止；状态序列测试等待 Connected 事件记录完成，不放宽原有精确序列和时间预算。
+- Windows TCP 监听改为独占地址绑定，拒绝使用地址复用的本机竞争监听；Unix 保留原有复用策略。补充 IPv4/IPv6/双栈、服务端主动重连和旧对端半开时的端口重绑回归，不改变单客户端契约。
+
 ### 变更
 - 运行时依赖 `System.IO.Pipelines`、`System.Threading.Channels`、`Microsoft.Bcl.AsyncInterfaces`、`Microsoft.Extensions.Logging.Abstractions`、`System.Diagnostics.DiagnosticSource` 更新至 10.0.13；测试 SDK 更新至 18.11.0、VSTest 适配器更新至 4.0.1，.NET Framework 引用程序集仅由 net48 测试目标引入。
+
+### 新增
+- 补充 XML 字节边界/分段/DTD、满接收队列拆除与会话归属、周期流量重置空闲超时的回归测试。
 
 ## [2.7.0] - 2026-10-15
 

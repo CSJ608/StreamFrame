@@ -34,18 +34,44 @@ public class ReconnectWedgeTests
         return port;
     }
 
-    private static async Task<bool> TryConnectAsync(int port)
+    private static async Task<long> AssertNewSessionAsync(StreamConnection<string> server, TcpClient client, long previousId, int timeoutMs = 30_000)
     {
-        try
+        var deadline = TestClock.TickCount64 + timeoutMs;
+        while (TestClock.TickCount64 < deadline
+            && (server.State != ConnectionState.Connected || server.CurrentSessionId <= previousId))
+            await Task.Delay(20);
+        Assert.Equal(ConnectionState.Connected, server.State);
+        var sessionId = server.CurrentSessionId;
+        Assert.True(sessionId > previousId, $"连接必须形成新会话：{previousId} → {sessionId}");
+
+        // 握手成功不等于已被 accept（第二客户端可能只进入旧监听器 backlog）。双向帧
+        // 证明这个客户端与新编号的会话确实配对，不能把上一客户端的 Connected 当作成功。
+        using var timeout = new CancellationTokenSource(TimeSpan.FromMilliseconds(timeoutMs));
+        var stream = client.GetStream();
+        await stream.WriteAsync(new byte[] { 0, 0, 0, 1, (byte)'q' }, 0, 5, timeout.Token);
+        await using var messages = server.GetSessionMessages(timeout.Token).GetAsyncEnumerator();
+        Assert.True(await messages.MoveNextAsync());
+        Assert.Equal(sessionId, messages.Current.SessionId);
+        Assert.Equal("q", messages.Current.Message);
+        await server.SendInSessionAsync(sessionId, "r", timeout.Token).WaitAsync(timeout.Token);
+        var reply = new byte[5];
+        var read = 0;
+        while (read < reply.Length)
         {
-            using var probe = new TcpClient();
-            await probe.ConnectAsync(IPAddress.Loopback, port);
-            return true;
+            var count = await stream.ReadAsync(reply, read, reply.Length - read, timeout.Token);
+            Assert.True(count > 0, "新会话回复未完整送达即关闭");
+            read += count;
         }
-        catch (SocketException)
-        {
-            return false;
-        }
+        Assert.Equal(new byte[] { 0, 0, 0, 1, (byte)'r' }, reply);
+        return sessionId;
+    }
+
+    private static async Task WaitSessionEndedAsync(StreamConnection<string> server, long sessionId)
+    {
+        var deadline = TestClock.TickCount64 + 30_000;
+        while (TestClock.TickCount64 < deadline && server.CurrentSessionId == sessionId)
+            await Task.Delay(20);
+        Assert.NotEqual(sessionId, server.CurrentSessionId);
     }
 
     private static async Task ConnectWithRetryAsync(TcpClient client, int port, int timeoutMs = 10_000)
@@ -67,14 +93,6 @@ public class ReconnectWedgeTests
         }
     }
 
-    private static async Task WaitConnectedAsync(StreamConnection<string> server, int timeoutMs = 30_000)
-    {
-        var deadline = TestClock.TickCount64 + timeoutMs; // 预算宽裕：本断言探测的是永久不可用，并行负载下偶发慢收敛不应误报
-        while (TestClock.TickCount64 < deadline && server.State != ConnectionState.Connected)
-            await Task.Delay(20);
-        Assert.Equal(ConnectionState.Connected, server.State);
-    }
-
     [Fact]
     public async Task RapidServerInitiatedReconnects_PortStaysAcceptable()
     {
@@ -86,6 +104,7 @@ public class ReconnectWedgeTests
             isActive: false, new StreamConnectionOptions { AcceptRetryDelayMs = 200 },
             logger: new DumpLogger(_output));
         server.Start(CancellationToken.None);
+        long previousSessionId = 0;
 
         for (var round = 0; round < rounds; round++)
         {
@@ -93,14 +112,15 @@ public class ReconnectWedgeTests
             using (var client = new TcpClient())
             {
                 await ConnectWithRetryAsync(client, port);
-                await WaitConnectedAsync(server, timeoutMs: 30_000);
+                previousSessionId = await AssertNewSessionAsync(server, client, previousSessionId);
             }
+            await WaitSessionEndedAsync(server, previousSessionId);
 
             // 等自动重连完成、再次形成会话
             using (var client = new TcpClient())
             {
                 await ConnectWithRetryAsync(client, port);
-                await WaitConnectedAsync(server, 30_000);
+                previousSessionId = await AssertNewSessionAsync(server, client, previousSessionId);
 
                 // 两路并发触发（#47 的竞速形态）：杀对端（自动重连）与用户显式 Reconnect() 竞争
                 var kill = Task.Run(client.Dispose);
@@ -108,17 +128,19 @@ public class ReconnectWedgeTests
                 await kill;
             }
 
-            var rebindDeadline = TestClock.TickCount64 + 20_000; // 修复目标：秒级可用（20s 上限：并行负载下偶发慢收敛，曾以 1/15 概率闪失）
-            while (TestClock.TickCount64 < rebindDeadline)
+            await WaitSessionEndedAsync(server, previousSessionId);
+            var rebindDeadline = TestClock.TickCount64 + 20_000;
+            using (var probe = new TcpClient())
             {
-                if (await TryConnectAsync(port))
-                    break;
-                await Task.Delay(100);
+                await ConnectWithRetryAsync(probe, port, timeoutMs: 20_000);
+                var remaining = (int)Math.Max(1, rebindDeadline - TestClock.TickCount64);
+                previousSessionId = await AssertNewSessionAsync(server, probe, previousSessionId, remaining);
+                Assert.True(TestClock.TickCount64 < rebindDeadline,
+                    $"第 {round} 轮：服务端主动重连后 20000ms 内无法接受并收发新连接（监听楔死，#47）。");
             }
-
-            Assert.True(TestClock.TickCount64 < rebindDeadline,
-                $"第 {round} 轮：服务端主动重连后 {10_000}ms 内无法接受新连接（监听楔死，#47）。");
-            _output.WriteLine($"[{TestClock.TickCount64 % 100000}] 第 {round} 轮重绑可用 ✓");
+            // 探针也是真客户端：等它所属的会话终止，下一轮才能发起另一条单客户端接入。
+            await WaitSessionEndedAsync(server, previousSessionId);
+            _output.WriteLine($"[{TestClock.TickCount64 % 100000}] 第 {round} 轮重绑及双向帧可用");
         }
     }
 }

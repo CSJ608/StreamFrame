@@ -98,6 +98,8 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
     /// _acceptLock 后静默退出：监听器的创建/关闭/accept 只归属当代循环。
     /// </summary>
     private int _acceptLoopId;
+    // accept 已成功但尚未交给状态发布者；阻止 Retry 在该交接窗口重开监听器。
+    private int _acceptPending;
 
     /// <summary>当前会话（#68）：一次 TCP 连接的全部会话资源——socket、Pipe、取消源、
     /// 接收/解码/发送三个任务与编号/纪元/建立时刻——集中在一个不可变对象上，任务只操作
@@ -126,6 +128,10 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
     private readonly SemaphoreSlim _acceptLock = new(1, 1);
     private readonly ILogger _logger;
     private int _retryInProgress;
+    // 发布者只在锁内认领；回调始终在锁外。同线程重入内联，跨线程发布排队而不等待回调。
+    private int _publishingThreadId;
+    private readonly Queue<StatePublication> _pendingPublications = new();
+    private readonly Queue<StatePublication> _pendingConnections = new();
     private readonly RetryDelayScheduler _retryScheduler;
     private int _started;
 
@@ -237,41 +243,22 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
         {
             while (!connected && !ct.IsCancellationRequested && !IsDisposed)
             {
-                // 代次复查前置（#68 统一发布入口）：被取代的循环连 Connecting 也不发布，
-                // 状态序列不混入替换者之外的杂音
-                if (!IsActive && Volatile.Read(ref _acceptLoopId) != loopId)
-                    return; // 已被更新的接受循环取代：静默退出，不再竞争 accept
-
-                CommunicationStateChanging(ConnectionState.Connecting);
+                // 代次复查与 Connecting 提交在发布锁内完成，不能先检查再跨窗口发布。
+                var connecting = new StatePublication(ConnectionState.Connecting, loopId: loopId);
+                DispatchState(connecting);
+                if (!await connecting.Completion.Task.ConfigureAwait(false))
+                    return; // 已被取代，或已有合法迟到 accept 正在交接，不再打开另一个监听器。
                 try
                 {
                     var socket = IsActive ? await ConnectAsync(ct).ConfigureAwait(false) : await AcceptAsync(ct, loopId).ConfigureAwait(false);
                     if (socket is null)
                         return; // 排队等到锁时已被取代（AcceptAsync 内部的代次检查）
 
-                    // 停机与"连接已建立"的竞速守门（#68）：Shutdown 可能在传输建立完成后、
-                    // 发布前的窗口内完成——终态已广播、会话已拆除。此时发布 Connected 会翻转
-                    // 终态并重建会话；把 socket 留进 _socket 则无人负责关闭（Shutdown 已走过
-                    // 关闭点），泄漏到终结器。判定与赋值同锁于 Shutdown 末尾的关闭块：窗口闭合。
-                    // 注意：被取代循环的迟到 accept 不设代次门——监听器是连接级共享资源，
-                    // 客户端向服务器端口的接入本身合法；收编后由纪元机制收敛（见 DESIGN）。
-                    lock (_sessionGate)
-                    {
-                        if (ct.IsCancellationRequested || IsDisposed)
-                        {
-                            socket.Dispose();
-                            return;
-                        }
-
-                        // 被取代的旧 socket（回调内 Reconnect 重入、并发双循环的直连迁移）：
-                        // 新连接接管字段时旧值已无人认领（其会话从未建立或已被拆除），
-                        // 当场释放不泄漏。正常路径此处恒为 null（会话拆除时已清理）。
-                        _socket?.Dispose();
-                        _socket = socket;
-                    }
-
-                    _retryScheduler.Reset();
-                    CommunicationStateChanging(ConnectionState.Connected);
+                    // 请求持有刚建立的 socket，直到状态发布段真正提交；Retry 回调期间的
+                    // 迟到 accept 不丢弃、不抢先覆盖会话，也不阻塞回调等待 Connecting。
+                    var established = new StatePublication(ConnectionState.Connected, socket: socket);
+                    DispatchState(established);
+                    await established.Completion.Task.ConfigureAwait(false);
                     connected = true;
                 }
                 catch (Exception ex) when (!ct.IsCancellationRequested && !IsDisposed)
@@ -352,7 +339,7 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
                 // 代次门控（#47 阶段二）：排队等到锁时若已被更新的循环取代，静默退出——
                 // 监听器的创建/关闭/accept 只归属当代循环，杜绝僵尸循环泄漏监听器
                 // （泄漏的监听器无人 accept，客户端 SYN 进入 backlog 后 ConnectAsync 永久挂起）
-                if (Volatile.Read(ref _acceptLoopId) != loopId)
+                if (Volatile.Read(ref _acceptLoopId) != loopId || Volatile.Read(ref _acceptPending) != 0)
                     return null;
 
                 var listener = InitServer(ct);
@@ -376,6 +363,13 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
                 if (accepted is not null)
                 {
                     ConfigureSocket(accepted);
+                    // 必须在交还 _acceptLock 前让排队替代者失效；StartCore 稍后才推进代次
+                    // 也会看到 pending，不会在 Retry 回调暂停窗口重新创建监听器。
+                    lock (_publishGate)
+                    {
+                        Volatile.Write(ref _acceptPending, 1);
+                        Interlocked.Increment(ref _acceptLoopId);
+                    }
 
                     // 单客户端模式：accept 到第一个客户端后关闭监听 socket，
                     // 后续连接在 TCP 层被立即拒绝。代次门控保证此处 _server 属于当代循环，
@@ -421,10 +415,17 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
             try
             {
                 listener.Blocking = false;
-                // 允许重绑覆盖遗留的 TIME_WAIT：服务端主动关闭（用户 Reconnect/停机）后立即重新
-                // 监听不受 2MSL 限制（Linux 上没有该选项会遇到 EADDRINUSE；Windows 实测宽松，
-                // 一并设置保持跨平台行为一致——#47 防御性修复）
-                listener.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                // Windows 的 SO_REUSEADDR 允许其它本机 socket 抢占同一地址，须在 Bind 前
+                // 独占监听；Unix 保留 SO_REUSEADDR，以便服务端主动重连时重绑 TIME_WAIT 端口。
+#if NETSTANDARD2_0
+                var windows = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows);
+#else
+                var windows = OperatingSystem.IsWindows();
+#endif
+                if (windows)
+                    listener.ExclusiveAddressUse = true;
+                else
+                    listener.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 listener.Bind(new IPEndPoint(NormalizeListenAddress(IpAddress), Port));
                 listener.Listen(0);
                 _server = listener; // 全部成功才转移所有权；失败保持字段为空，下一轮可重试。
@@ -517,8 +518,132 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
         });
     }
 
-    private void CommunicationStateChanging(ConnectionState newState, int? observedEpoch = null)
+    private sealed class StatePublication
     {
+        public StatePublication(ConnectionState state, int? observedEpoch = null, int? loopId = null, Socket? socket = null)
+        {
+            State = state;
+            ObservedEpoch = observedEpoch;
+            LoopId = loopId;
+            Socket = socket;
+        }
+
+        public ConnectionState State { get; }
+        public int? ObservedEpoch { get; }
+        public int? LoopId { get; }
+        public Socket? Socket { get; }
+        public bool OwnsRetry { get; set; }
+        public TaskCompletionSource<bool> Completion { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    }
+
+    private void CommunicationStateChanging(ConnectionState newState, int? observedEpoch = null)
+        => DispatchState(new StatePublication(newState, observedEpoch));
+
+    private void DispatchState(StatePublication publication)
+    {
+        var drain = false;
+        var threadId = Environment.CurrentManagedThreadId;
+        lock (_publishGate)
+        {
+            if (IsDisposed && publication.State != ConnectionState.Disconnected)
+            {
+                CompletePublication(publication, false);
+                return;
+            }
+
+            if (publication.State == ConnectionState.Retry)
+            {
+                if (publication.ObservedEpoch is { } epoch && Volatile.Read(ref _sessionEpoch) != epoch
+                    || Interlocked.CompareExchange(ref _retryInProgress, 1, 0) != 0)
+                {
+                    CompletePublication(publication, false);
+                    return;
+                }
+                publication.OwnsRetry = true;
+            }
+
+            // 同步回调可以重入；其它线程不等待回调（也不持有会话锁等待发布者）。
+            // Shutdown 必须同步终结，允许抢占；待发请求会在终态守门处整体丢弃。
+            if (_publishingThreadId != 0 && _publishingThreadId != threadId
+                && publication.State != ConnectionState.Disconnected)
+            {
+                _pendingPublications.Enqueue(publication);
+                return;
+            }
+            if (_publishingThreadId == 0)
+            {
+                _publishingThreadId = threadId;
+                drain = true;
+            }
+        }
+
+        try
+        {
+            PublishState(publication);
+        }
+        finally
+        {
+            if (drain)
+                DrainPublications();
+        }
+    }
+
+    private void CompletePublication(StatePublication publication, bool proceed)
+    {
+        if (!proceed)
+            publication.Socket?.Dispose();
+        if (publication.OwnsRetry)
+        {
+            publication.OwnsRetry = false;
+            Interlocked.Exchange(ref _retryInProgress, 0);
+        }
+        publication.Completion.TrySetResult(proceed);
+    }
+
+    private void DrainPublications()
+    {
+        while (true)
+        {
+            StatePublication publication;
+            lock (_publishGate)
+            {
+                if (_pendingConnections.Count > 0 && State != ConnectionState.Retry)
+                    publication = _pendingConnections.Dequeue();
+                else if (_pendingPublications.Count > 0)
+                    publication = _pendingPublications.Dequeue();
+                else
+                {
+                    _publishingThreadId = 0;
+                    return;
+                }
+            }
+            PublishState(publication);
+        }
+    }
+
+    private void PublishState(StatePublication publication)
+    {
+        var deferred = false;
+        var proceed = false;
+        try
+        {
+            PublishStateCore(publication, ref deferred, ref proceed);
+        }
+        finally
+        {
+            // 准入覆盖发布、用户回调及所有提前返回；失败的重入不能释放别人的准入。
+            if (!deferred)
+                CompletePublication(publication, proceed);
+        }
+    }
+
+    private void PublishStateCore(StatePublication publication, ref bool deferred, ref bool proceed)
+    {
+        var newState = publication.State;
+        var observedEpoch = publication.ObservedEpoch;
+        long sessionId = 0;
+        var sessionEpoch = 0;
+        var canConnect = true;
         // 发布段（_publishGate 锁内）：迟到/过期判定 + 编号纪元簿记 + State 写入。
         // 判定与写入必须原子：否则"已通过停机检查、尚未写入 State"的发布线程被抢占，
         // 停机线程在此间隙写入 Disconnected 后，迟到的 Retry/Connected 会把终态翻转
@@ -540,14 +665,50 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
                 && Volatile.Read(ref _sessionEpoch) != staleEpoch)
                 return;
 
+            if (newState == ConnectionState.Connected && State == ConnectionState.Retry)
+            {
+                // 判定与入队同锁于 State 提交，不能先在 StartAsync 检查再无条件发布。
+                // 同步重入只留请求，绝不等待外层 Retry 回调自己返回。
+                _pendingConnections.Enqueue(publication);
+                deferred = true;
+                return;
+            }
+
+            if (newState == ConnectionState.Connecting && !IsActive && publication.LoopId is { } loopId)
+            {
+                canConnect = Volatile.Read(ref _acceptPending) == 0;
+                if (Volatile.Read(ref _acceptLoopId) != loopId && (canConnect || State != ConnectionState.Retry))
+                    return;
+                if (!canConnect && State != ConnectionState.Retry)
+                    return;
+            }
+
+            if (newState == ConnectionState.Connected && publication.Socket is { } socket)
+            {
+                // 与 Shutdown 末尾关闭块共锁；请求直到此刻才交出 socket 所有权。
+                lock (_sessionGate)
+                {
+                    if (IsDisposed)
+                        return;
+                    _socket?.Dispose();
+                    _socket = socket;
+                }
+                if (!IsActive)
+                {
+                    Volatile.Write(ref _acceptPending, 0);
+                    Interlocked.Increment(ref _acceptLoopId);
+                }
+                _retryScheduler.Reset();
+            }
+
             // 公共会话编号的线性化点：Connected 对外发布（事件回调/等待器完成）之前完成分配；
             // 会话纪元（epoch）同样在发布之前递增——发布后到达的旧纪元幽灵故障在函数入口
             // 即被判为过期丢弃，不会卷进"已发布、任务未创建"的新生会话（评审附带发现收口）。
             if (newState == ConnectionState.Connected)
             {
-                var id = checked(Interlocked.Increment(ref _sessionCounter));
-                Volatile.Write(ref _currentSessionId, id);
-                Interlocked.Increment(ref _sessionEpoch);
+                sessionId = checked(Interlocked.Increment(ref _sessionCounter));
+                Volatile.Write(ref _currentSessionId, sessionId);
+                sessionEpoch = Interlocked.Increment(ref _sessionEpoch);
             }
             else if (newState is ConnectionState.Retry or ConnectionState.Disconnected)
             {
@@ -557,6 +718,15 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
             }
 
             State = newState;
+            proceed = canConnect;
+            if (newState == ConnectionState.Disconnected)
+            {
+                while (_pendingConnections.Count > 0)
+                    CompletePublication(_pendingConnections.Dequeue(), false);
+                while (_pendingPublications.Count > 0)
+                    CompletePublication(_pendingPublications.Dequeue(), false);
+                Volatile.Write(ref _acceptPending, 0);
+            }
         }
 
         // 通知段（锁外）：用户回调可能重入（回调内 Reconnect/Dispose），不得持有发布锁。
@@ -579,17 +749,13 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
         switch (newState)
         {
             case ConnectionState.Connected:
-                StartSession(Volatile.Read(ref _currentSessionId), Volatile.Read(ref _sessionEpoch));
+                StartSession(sessionId, sessionEpoch);
                 break;
 
             case ConnectionState.Retry:
                 if (IsDisposed)
                     return;
 
-                if (Interlocked.CompareExchange(ref _retryInProgress, 1, 0) != 0)
-                    return;
-
-                try
                 {
                     Session? session = null;
                     lock (_sessionGate)
@@ -622,10 +788,6 @@ public sealed class StreamConnection<TMessage> : ISessionAwareStreamConnection<T
                     catch (ObjectDisposedException)
                     {
                     }
-                }
-                finally
-                {
-                    Interlocked.Exchange(ref _retryInProgress, 0);
                 }
 
                 break;
