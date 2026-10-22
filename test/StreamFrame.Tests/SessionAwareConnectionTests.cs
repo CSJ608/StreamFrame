@@ -34,6 +34,33 @@ public class SessionAwareConnectionTests
         }
     }
 
+    private sealed class SessionSwitchCodec : ICodec<string>, IDisposable
+    {
+        private readonly ManualResetEventSlim _release = new();
+        public TaskCompletionSource<bool> Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public string Decode(in ReadOnlySequence<byte> frame, CancellationToken ct = default)
+            => StringCodec.Instance.Decode(frame, ct);
+
+        public void Encode(string message, IBufferWriter<byte> writer, CancellationToken ct = default)
+        {
+            if (message == "writing")
+            {
+                Entered.TrySetResult(true);
+                // 只有会话取消或测试清理才可继续，不能用睡眠推断队列尚未被认领。
+                if (!_release.Wait(TimeSpan.FromSeconds(5), ct))
+                    throw new TimeoutException("会话切换未及时取消被门控的编码。");
+            }
+            StringCodec.Instance.Encode(message, writer, ct);
+        }
+
+        public void Dispose()
+        {
+            _release.Set();
+            _release.Dispose();
+        }
+    }
+
     private static int GetFreePort()
     {
         var listener = new TcpListener(IPAddress.Loopback, 0);
@@ -295,7 +322,8 @@ public class SessionAwareConnectionTests
     public async Task SessionSwitch_BoundSendFails_NoReplay_PlainSendStillReplays()
     {
         var port = GetFreePort();
-        await using var server = CreateServer(port, codec: new DelayedCodec(400));
+        using var codec = new SessionSwitchCodec();
+        await using var server = CreateServer(port, codec: codec);
         server.Start(CancellationToken.None);
 
         using (var client1 = new TcpClient())
@@ -303,13 +331,20 @@ public class SessionAwareConnectionTests
             await ConnectWithRetryAsync(client1, port);
             await WaitForStateAsync(server, s => s == ConnectionState.Connected);
             var id1 = server.CurrentSessionId;
+            // Connected 先于 worker 装配发布；门控编码必须等会话发布完成，不能占住装配锁。
+            var sessionField = typeof(StreamConnection<string>).GetField(
+                "_session", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+            await WaitForAsync(() => sessionField.GetValue(server) is not null, what: "会话 worker 装配完成");
 
-            var writingTask = server.SendInSessionAsync(id1, "writing", ct: CancellationToken.None);
+            var writingTask = Task.Run(
+                () => server.SendInSessionAsync(id1, "writing", ct: CancellationToken.None),
+                cancellationToken: CancellationToken.None);
+            await codec.Entered.Task.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken: CancellationToken.None);
             var bound = new List<Task> { server.SendInSessionAsync(id1, "bound-drops", ct: CancellationToken.None) };
-            _ = server.SendAsync("plain-replays", ct: CancellationToken.None); // 普通发送：跨会话续发（既有语义）
+            await server.SendAsync("plain-replays", ct: CancellationToken.None);
+            Assert.False(writingTask.IsCompleted);
 
-            await Task.Delay(100, cancellationToken: CancellationToken.None);
-            server.Reconnect(); // 触发会话切换
+            server.Reconnect(); // 首条编码仍被门控，后两条尚未认领；取消会话才释放 worker。
 
             foreach (var task in bound)
             {
