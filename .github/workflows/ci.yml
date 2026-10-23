@@ -114,11 +114,11 @@ jobs:
           name: coverage-${{ github.run_id }}-${{ github.run_attempt }}
           path: coverage/
           retention-days: 14
-      # 隔离不等于修复；内嵌组件的高危告警仍使该作业失败，不自动豁免。
+      # 仅延期 Issue #107 登记的精确组件告警；其他漏洞与审计错误仍失败。
       - name: Audit embedded coverage components
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python3 build/security-audit.py --coverage
+        run: python3 build/security-audit.py --coverage --defer-coverlet-107
 
   aot:
     runs-on: ubuntu-latest

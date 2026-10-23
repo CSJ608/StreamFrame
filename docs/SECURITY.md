@@ -63,8 +63,16 @@ Pkcs 修复版本为 10.0.13。本项目和已检查的 coverlet 源码未发现
 
 临时措施：collector 仅由 `EnableCoverage=true` 引入，在独立低权限覆盖率 job 中执行；
 普通测试、CodeQL 和生产打包默认不引用 collector，发布 job 不构建任何项目。
-覆盖率 job 仍生成报告，随后审计其内嵌依赖；高危告警仍使该 job 失败，没有自动豁免。
-**隔离不是漏洞修复，也不是风险接受审批。** 在上游更新并核验实际包内组件后才能关闭该项。
+
+经仓库所有者指示，该问题登记为 [Issue #107](https://github.com/CSJ608/StreamFrame/issues/107) 延期处理，其他已验证改动先合并。
+覆盖率 CI 显式传入 `--defer-coverlet-107`：仅对 **collector 10.1.0 内嵌 Pkcs 10.0.12** 的上述两项公告不阻断，
+日志、warning 注解和 Summary 仍完整列出风险及 Issue。脚本默认严格模式不变，
+`python build/security-audit.py --coverage` 仍因高危公告失败。
+
+延期不适用于项目依赖图中的同项漏洞、其他内嵌组件、其他 collector/Pkcs 版本、新增公告或升级为 Critical 的告警；
+审计源不可用、结果缺失/不完整也仍失败。没有对整个审计步骤使用 `continue-on-error`。
+**这是已登记的临时延期，不是修复或永久豁免。** 上游修复后须核验官方包实际内嵌组件、移除精确延期逻辑与 CI 参数，
+并按 Issue 的关闭条件完成回归后再关闭问题。
 
 本地覆盖率运行需在 restore、build、test 三步保持同一属性：
 
