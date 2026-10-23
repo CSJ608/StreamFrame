@@ -178,7 +178,7 @@
       "streamframe.protocols.xml": {
         "type": "Project",
         "dependencies": {
-          "StreamFrame": "[2.7.0, )"
+          "StreamFrame": "[2.7.1, )"
         }
       }
     }
