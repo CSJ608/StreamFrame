@@ -269,8 +269,9 @@ public class SessionAwareConnectionTests
     public async Task SessionTeardown_PendingBoundSends_FailPromptly()
     {
         var port = GetFreePort();
+        using var codec = new SessionSwitchCodec();
         await using var server = CreateServer(
-            port, new StreamConnectionOptions { SendQueueCapacity = 1 }, new DelayedCodec(400));
+            port, new StreamConnectionOptions { SendQueueCapacity = 1 }, codec);
         server.Start(CancellationToken.None);
 
         using var client = new TcpClient();
@@ -278,13 +279,18 @@ public class SessionAwareConnectionTests
         await WaitForStateAsync(server, s => s == ConnectionState.Connected);
         var id = server.CurrentSessionId;
 
-        var writingTask = server.SendInSessionAsync(id, "writing", ct: CancellationToken.None); // worker 认领后停在编码阶段
+        var sessionField = typeof(StreamConnection<string>).GetField(
+            "_session", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+        await WaitForAsync(() => sessionField.GetValue(server) is not null, what: "会话 worker 装配完成");
+        var writingTask = Task.Run(() => server.SendInSessionAsync(id, "writing", ct: CancellationToken.None),
+            cancellationToken: CancellationToken.None);
+        await codec.Entered.Task.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken: CancellationToken.None);
         var tasks = new List<Task>
         {
             server.SendInSessionAsync(id, "queued", ct: CancellationToken.None),   // 占满队列（容量 1）
             server.SendInSessionAsync(id, "waiting", ct: CancellationToken.None),  // 队列满，WriteAsync 等待空位
         };
-        await Task.Delay(100, cancellationToken: CancellationToken.None); // 让第 1 条进入编码
+        Assert.False(writingTask.IsCompleted); // 门控尚未释放，后两条必然尚未被认领。
 
         server.Reconnect(); // 会话拆除：无需等重连完成，挂起发送必须立即失败
 
