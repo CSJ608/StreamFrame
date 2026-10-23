@@ -5,6 +5,8 @@
 
 ## [Unreleased]
 
+## [2.7.1] - 2026-10-23
+
 ### 修复
 - 重连请求在发布副作用前取得准入，被合并的重入不再留下孤立 Retry；迟到接入保留 socket 并延后至 Connecting 后提交，跨线程非终态通知排队且回调不持发布锁。补充确定性重复重连、同步回调重入、Retry 期间迟到接入、终态释放与监听代次回归。跨线程 Reconnect 遇到正在发布的回调时先排队返回；同线程回调重入仍内联，停机保持同步优先终结。
 - 快速重连回归不再将 TCP 握手或旧 Connected 状态当作新会话成立：每轮验证新会话编号、双向报文及探针会话终止；状态序列测试等待 Connected 事件记录完成，不放宽原有精确序列和时间预算。
@@ -221,7 +223,8 @@
 - 发布自动化：`release.yml`（tag 自动建 GitHub Release）、`publish-nuget.yml`（OIDC Trusted Publishing 推送 nuget.org）。
 - 单元测试 25 个 + 三场景端到端 demo。
 
-[Unreleased]: https://github.com/CSJ608/StreamFrame/compare/v2.7.0...HEAD
+[Unreleased]: https://github.com/CSJ608/StreamFrame/compare/v2.7.1...HEAD
+[2.7.1]: https://github.com/CSJ608/StreamFrame/compare/v2.7.0...v2.7.1
 [2.7.0]: https://github.com/CSJ608/StreamFrame/compare/v2.6.0...v2.7.0
 [2.6.0]: https://github.com/CSJ608/StreamFrame/compare/v2.5.0...v2.6.0
 [2.5.0]: https://github.com/CSJ608/StreamFrame/compare/v2.4.0...v2.5.0
