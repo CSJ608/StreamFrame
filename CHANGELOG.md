@@ -5,8 +5,10 @@
 
 ## [Unreleased]
 
+## [2.7.2] - 2026-11-07
+
 ### 修复
-- 修复 NativeAOT 工具链的 Brotli 越界写漏洞（CVE-2026-111497）；移除覆盖率工具内嵌 Pkcs 的高危/中危拒绝服务漏洞及 Issue #107 延期逻辑，所有已知漏洞均阻断审计。
+- 修复 NativeAOT 工具链的 Brotli 越界写漏洞（CVE-2026-111497）；移除覆盖率工具内嵌 Pkcs 的高危/中危拒绝服务漏洞及 [Issue #107](https://github.com/CSJ608/StreamFrame/issues/107) 延期逻辑，所有已知漏洞均阻断审计。
 
 ### 变更
 - .NET SDK 与发布 SDK 基线更新至 10.0.403，NativeAOT 隐式依赖更新至 10.0.14，同步普通与覆盖率锁文件。
@@ -230,7 +232,8 @@
 - 发布自动化：`release.yml`（tag 自动建 GitHub Release）、`publish-nuget.yml`（OIDC Trusted Publishing 推送 nuget.org）。
 - 单元测试 25 个 + 三场景端到端 demo。
 
-[Unreleased]: https://github.com/CSJ608/StreamFrame/compare/v2.7.1...HEAD
+[Unreleased]: https://github.com/CSJ608/StreamFrame/compare/v2.7.2...HEAD
+[2.7.2]: https://github.com/CSJ608/StreamFrame/compare/v2.7.1...v2.7.2
 [2.7.1]: https://github.com/CSJ608/StreamFrame/compare/v2.7.0...v2.7.1
 [2.7.0]: https://github.com/CSJ608/StreamFrame/compare/v2.6.0...v2.7.0
 [2.6.0]: https://github.com/CSJ608/StreamFrame/compare/v2.5.0...v2.6.0
