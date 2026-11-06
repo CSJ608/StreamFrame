@@ -103,7 +103,7 @@ jobs:
         run: |
           for fw in net8.0 net10.0; do
             dotnet test test/StreamFrame.Tests/StreamFrame.Tests.csproj -c Release --no-build -f "$fw" \
-              --collect:"XPlat Code Coverage" --results-directory "coverage/$fw"
+              --collect:"Code Coverage;Format=cobertura" --settings build/coverage.runsettings --results-directory "coverage/$fw"
           done
       - name: Verify and summarize coverage
         run: python3 build/coverage-summary.py
@@ -114,11 +114,10 @@ jobs:
           name: coverage-${{ github.run_id }}-${{ github.run_attempt }}
           path: coverage/
           retention-days: 14
-      # 仅延期 Issue #107 登记的精确组件告警；其他漏洞与审计错误仍失败。
       - name: Audit embedded coverage components
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python3 build/security-audit.py --coverage --defer-coverlet-107
+        run: python3 build/security-audit.py --coverage
 
   aot:
     runs-on: ubuntu-latest

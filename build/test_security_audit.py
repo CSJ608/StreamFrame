@@ -1,5 +1,8 @@
 import importlib.util
+import hashlib
+import json
 from pathlib import Path
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -9,6 +12,28 @@ spec.loader.exec_module(audit)
 
 
 class AuditTests(unittest.TestCase):
+    def test_coverage_manifest_rejects_tampering_and_new_binaries(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            collector = root / 'microsoft.codecoverage/18.11.0'
+            collector.mkdir(parents=True)
+            binary = collector / 'Dependency.dll'
+            binary.write_bytes(b'official package bytes')
+            manifest = {'package': 'Microsoft.CodeCoverage', 'version': '18.11.0',
+                        'packages': ['Dependency@1.2.3'],
+                        'files': {'Dependency.dll': hashlib.sha256(binary.read_bytes()).hexdigest()}}
+            (root / 'build').mkdir()
+            (root / 'build/codecoverage-components.json').write_text(json.dumps(manifest))
+            with patch.object(audit, 'ROOT', root):
+                self.assertEqual({'Dependency@1.2.3'}, audit.verified_coverage_components(collector))
+                binary.write_bytes(b'tampered')
+                with self.assertRaises(ValueError):
+                    audit.verified_coverage_components(collector)
+                binary.write_bytes(b'official package bytes')
+                (collector / 'Unexpected.dll').write_bytes(b'new component')
+                with self.assertRaises(ValueError):
+                    audit.verified_coverage_components(collector)
+
     def test_complete_empty_result_passes(self):
         self.assertEqual([], audit.validate_report({"version": 1, "projects": [{"path": "a.csproj"}]}, {"a.csproj"}))
 
@@ -63,75 +88,13 @@ class AuditTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 audit.command_json(["gh", "api", "advisories"])
 
-    def test_only_registered_embedded_findings_can_be_deferred(self):
-        known = {
-            ("GHSA-846f-f764-76mx", "high", "https://github.com/advisories/GHSA-846f-f764-76mx"),
-            ("GHSA-2fmv-rv2c-59x7", "medium", "https://github.com/advisories/GHSA-2fmv-rv2c-59x7"),
-        }
-        pkcs = "System.Security.Cryptography.Pkcs@10.0.12"
-        scan = lambda packages: known if pkcs in packages else set()
-        findings, deferred = audit.scan_package_findings(
-            ["coverlet.collector@10.1.0"], [pkcs], {"coverlet.collector/10.1.0"}, True, scan)
-        self.assertEqual(known, findings)
-        self.assertEqual(known, deferred)
-
-    def test_strict_coverage_does_not_defer(self):
-        known = {("GHSA-846f-f764-76mx", "high", "https://github.com/advisories/GHSA-846f-f764-76mx")}
-        pkcs = "System.Security.Cryptography.Pkcs@10.0.12"
-        findings, deferred = audit.scan_package_findings(
-            [], [pkcs], {"coverlet.collector/10.1.0"}, False,
-            lambda packages: known if pkcs in packages else set())
-        self.assertEqual(known, findings)
-        self.assertFalse(deferred)
-
-    def test_changed_tool_or_component_version_is_not_deferred(self):
-        known = {("GHSA-846f-f764-76mx", "high", "https://github.com/advisories/GHSA-846f-f764-76mx")}
-        for collector, component in (("10.1.1", "10.0.12"), ("10.1.0", "10.0.11")):
-            pkcs = "System.Security.Cryptography.Pkcs@" + component
-            _, deferred = audit.scan_package_findings(
-                [], [pkcs], {"coverlet.collector/" + collector}, True,
-                lambda packages: known if pkcs in packages else set())
-            self.assertFalse(deferred)
-
-    def test_graph_dependency_with_same_advisory_is_not_deferred(self):
-        known = {("GHSA-846f-f764-76mx", "high", "https://github.com/advisories/GHSA-846f-f764-76mx")}
-        pkcs = "System.Security.Cryptography.Pkcs@10.0.12"
-        _, deferred = audit.scan_package_findings(
-            [pkcs], [pkcs], {"coverlet.collector/10.1.0"}, True,
-            lambda packages: known if pkcs in packages else set())
-        self.assertFalse(deferred)
-
-    def test_new_or_escalated_advisory_remains_blocking(self):
-        pkcs = "System.Security.Cryptography.Pkcs@10.0.12"
-        for finding in (("GHSA-new", "high", "https://github.com/advisories/GHSA-new"),
-                        ("GHSA-846f-f764-76mx", "critical", "https://github.com/advisories/GHSA-846f-f764-76mx")):
-            findings, deferred = audit.scan_package_findings(
-                [], [pkcs], {"coverlet.collector/10.1.0"}, True,
-                lambda packages: {finding} if pkcs in packages else set())
-            self.assertIn(finding, findings)
-            self.assertFalse(deferred)
-
-    def test_other_embedded_component_is_not_deferred(self):
-        known = {("GHSA-846f-f764-76mx", "high", "https://github.com/advisories/GHSA-846f-f764-76mx")}
-        _, deferred = audit.scan_package_findings(
-            [], ["Other.Package@1.0"], {"coverlet.collector/10.1.0"}, True,
-            lambda packages: known if packages else set())
-        self.assertFalse(deferred)
-
-    def test_embedded_audit_failure_cannot_be_deferred(self):
-        def failed(_):
-            raise ValueError("advisory service unavailable")
-        with self.assertRaises(ValueError):
-            audit.scan_package_findings([], ["System.Security.Cryptography.Pkcs@10.0.12"],
-                                        {"coverlet.collector/10.1.0"}, True, failed)
-
-    def test_high_severity_exits_failure(self):
-        for severity, expected in (("high", 1), ("critical", 1), ("medium", 0)):
+    def test_every_severity_exits_failure(self):
+        for severity, expected in (("high", 1), ("critical", 1), ("medium", 1), ("low", 1)):
             projects = {f"p{i}.csproj" for i in range(6)}
             report = {"version": 1, "projects": [{"path": p} for p in projects]}
             with patch.object(audit, "project_paths", return_value=projects), \
                     patch.object(audit, "command_json", return_value=report), \
-                    patch.object(audit, "resolved_packages", return_value=(["P@1"], [], set())), \
+                    patch.object(audit, "resolved_packages", return_value=(["P@1"], [])), \
                     patch.object(audit, "github_findings", return_value={("GHSA-test", severity, "https://example.test")}), \
                     patch("sys.argv", ["security-audit.py"]), patch.dict(audit.os.environ, {}, clear=True):
                 self.assertEqual(expected, audit.main())

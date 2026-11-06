@@ -19,8 +19,14 @@ class CoverageTests(unittest.TestCase):
                 for framework in ("net8.0", "net10.0"):
                     report = Path("coverage") / framework / "run" / "coverage.cobertura.xml"
                     report.parent.mkdir(parents=True)
-                    report.write_text('<coverage lines-covered="1" lines-valid="2" line-rate="0.5" branch-rate="0.5"/>')
+                    report.write_text('<coverage lines-covered="1" lines-valid="2" line-rate="0.5" branch-rate="0.5">'
+                                      '<packages><package name="StreamFrame"/><package name="StreamFrame.Protocols.Xml"/>'
+                                      '</packages></coverage>')
                 coverage.main()
+                report.write_text('<coverage lines-covered="1" lines-valid="2" line-rate="0.5" branch-rate="0.5">'
+                                  '<packages><package name="StreamFrame.Tests"/></packages></coverage>')
+                with self.assertRaises(ValueError):
+                    coverage.main()
                 report.unlink()
                 with self.assertRaises(ValueError):
                     coverage.main()

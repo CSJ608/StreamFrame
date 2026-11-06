@@ -43,44 +43,42 @@ python build/security-audit.py
 
 审计脚本验证六个项目的扫描结果，并用 GitHub Advisory Database 交叉核对解析的包版本。
 运行交叉检查需要已认证的 `gh`；CI 使用只读 `GH_TOKEN`。
-高危/严重告警、结果缺失或审计服务错误都不能当成通过。
+任何级别告警、结果缺失或审计服务错误都不能当成通过。
 类库锁文件保证本仓库构建可复现，不强制消费者使用相同的传递依赖。
 
 更新依赖后须更新并审核普通与覆盖率两套锁文件；NativeAOT 还要覆盖实际发布 RID。
 不能把已有 obj/bin 的旧元数据当作当前包内容，发布前检查实际生成的两个 nupkg。
 
-## 覆盖率工具的已知未解决风险
+## 覆盖率工具与内嵌依赖
 
-截至 2026-10-22，`coverlet.collector 10.1.0` 是最新稳定版，但其包内携带
-`System.Security.Cryptography.Pkcs 10.0.12`，落在以下受影响版本范围：
+覆盖率使用测试 SDK 已包含的 `Microsoft.CodeCoverage 18.11.0`，输出 Cobertura；
+已移除携带漏洞 Pkcs 的 `coverlet.collector 10.1.0`，不再保留 Issue #107 的告警延期。
+`build/coverage.runsettings` 仅统计两个生产程序集，net8/net10 均采集并验证报告。
+不同采集器的插桩与统计口径不同，替换前后的覆盖率百分比不直接比较。
 
-- [CVE-2026-84008 / GHSA-846f-f764-76mx](https://github.com/advisories/GHSA-846f-f764-76mx)：高危，SignedCms 签名检查资源消耗。
-- [CVE-2026-70162 / GHSA-2fmv-rv2c-59x7](https://github.com/advisories/GHSA-2fmv-rv2c-59x7)：中危，Windows EnvelopedCms 解码资源消耗。
+Microsoft.CodeCoverage 不提供 deps.json。`build/codecoverage-components.json` 记录从官方
+18.11.0 包实际 DLL 产品版本核验的内嵌 NuGet 组件（Mono.Cecil 三个 DLL 属于同一包），
+以及全部 DLL/EXE/SO/DYLIB 的 SHA256；工具自身和原生二进制随 Microsoft.CodeCoverage 包版本审计。
+普通与覆盖率审计均验证完整二进制文件集合和摘要，再将内嵌包版本加入 GitHub 公告查询。
+包升级、文件增加/删除或摘要变化均失败，须重新盘点官方包后更新清单；不能只修改版本或忽略失败。
+该检查覆盖已知 NuGet 公告，不等于对所有原生代码进行源码漏洞分析。
 
-Pkcs 修复版本为 10.0.13。本项目和已检查的 coverlet 源码未发现对应 API 的直接调用，
-但这不等于证明所有工具加载路径都不可达。普通 NuGet 图不包含这类内嵌组件。
-仅在测试项目额外引用新版 Pkcs 不能保证替换 collector 自带 DLL。
-
-临时措施：collector 仅由 `EnableCoverage=true` 引入，在独立低权限覆盖率 job 中执行；
-普通测试、CodeQL 和生产打包默认不引用 collector，发布 job 不构建任何项目。
-
-经仓库所有者指示，该问题登记为 [Issue #107](https://github.com/CSJ608/StreamFrame/issues/107) 延期处理，其他已验证改动先合并。
-覆盖率 CI 显式传入 `--defer-coverlet-107`：仅对 **collector 10.1.0 内嵌 Pkcs 10.0.12** 的上述两项公告不阻断，
-日志、warning 注解和 Summary 仍完整列出风险及 Issue。脚本默认严格模式不变，
-`python build/security-audit.py --coverage` 仍因高危公告失败。
-
-延期不适用于项目依赖图中的同项漏洞、其他内嵌组件、其他 collector/Pkcs 版本、新增公告或升级为 Critical 的告警；
-审计源不可用、结果缺失/不完整也仍失败。没有对整个审计步骤使用 `continue-on-error`。
-**这是已登记的临时延期，不是修复或永久豁免。** 上游修复后须核验官方包实际内嵌组件、移除精确延期逻辑与 CI 参数，
-并按 Issue 的关闭条件完成回归后再关闭问题。
-
-本地覆盖率运行需在 restore、build、test 三步保持同一属性：
+CI 对所有严重级别的已知依赖漏洞均失败，不保留豁免；审计接口失败或结果不完整也失败。
+本地覆盖率运行需在 restore、build、test 和审计保持同一 `EnableCoverage=true` 属性
+（PowerShell 使用 `$env:EnableCoverage='true'`）：
 
 ```bash
-EnableCoverage=true dotnet restore StreamFrame.slnx --locked-mode
-EnableCoverage=true dotnet build test/StreamFrame.Tests/StreamFrame.Tests.csproj -c Release --no-restore
-EnableCoverage=true dotnet test test/StreamFrame.Tests/StreamFrame.Tests.csproj -c Release --no-build -f net10.0 --collect:"XPlat Code Coverage"
+export EnableCoverage=true
+dotnet restore StreamFrame.slnx --locked-mode -p:AuditPipeline=true
+dotnet build test/StreamFrame.Tests/StreamFrame.Tests.csproj -c Release --no-restore
+dotnet test test/StreamFrame.Tests/StreamFrame.Tests.csproj -c Release --no-build -f net10.0 --collect:"Code Coverage;Format=cobertura" --settings build/coverage.runsettings --results-directory coverage/net10.0
+python build/security-audit.py --coverage
 ```
+
+SDK 基线为 10.0.403，NativeAOT 编译器/运行时为 10.0.14，修复
+[CVE-2026-111497](https://github.com/advisories/GHSA-p3jp-9v83-76w9)。
+部署方还需更新实际宿主（.NET 8 至少 8.0.33，.NET 10 至少 10.0.14）；
+升级项目 NuGet 引用不能替代更新宿主，已有自包含/AOT 产物需重新发布。
 
 ## 发布权限与验证
 
