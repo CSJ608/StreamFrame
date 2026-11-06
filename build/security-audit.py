@@ -1,5 +1,6 @@
 """核对完整 NuGet 解析图及开发工具内嵌组件，不接受不完整的扫描结果。"""
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -9,12 +10,7 @@ import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parent.parent
 SEVERITIES = {"low", "moderate", "medium", "high", "critical"}
-COVERLET_ISSUE = "https://github.com/CSJ608/StreamFrame/issues/107"
-COVERLET_COMPONENT = "System.Security.Cryptography.Pkcs@10.0.12"
-COVERLET_DEFERRED = {
-    ("GHSA-846f-f764-76mx", "high", "https://github.com/advisories/GHSA-846f-f764-76mx"),
-    ("GHSA-2fmv-rv2c-59x7", "medium", "https://github.com/advisories/GHSA-2fmv-rv2c-59x7"),
-}
+
 
 
 def command_json(command):
@@ -79,35 +75,43 @@ def embedded_packages(deps):
             for name, metadata in libraries.items() if metadata.get("type") == "package"}
 
 
+def verified_coverage_components(collector):
+    # Microsoft.CodeCoverage 没有 deps.json；按核验过的官方包二进制清单校验，升级必须重新盘点。
+    manifest = json.loads((ROOT / "build/codecoverage-components.json").read_text(encoding="utf-8-sig"))
+    if collector.name != manifest["version"] or collector.parent.name != manifest["package"].lower():
+        raise ValueError("覆盖率工具版本变化，必须重新核验内嵌组件清单")
+    files = {p.relative_to(collector).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+             for p in collector.rglob("*") if p.is_file() and p.suffix in {".dll", ".so", ".dylib", ".exe"}}
+    if not files or files != manifest["files"]:
+        raise ValueError("覆盖率工具二进制与已核验清单不一致")
+    if not manifest["packages"]:
+        raise ValueError("覆盖率工具内嵌包清单为空")
+    return set(manifest["packages"])
+
+
 def resolved_packages(projects, coverage):
     packages = set()
     embedded = set()
     collectors = set()
-    collector_versions = set()
     for project in sorted(projects):
         assets_path = ROOT / Path(project).parent / "obj/project.assets.json"
         assets = json.loads(assets_path.read_text(encoding="utf-8-sig"))
         packages.update(embedded_packages(assets))
         for name in assets["libraries"]:
-            if name.lower().startswith("coverlet.collector/"):
-                collector_versions.add(name.lower())
+            if name.lower().startswith("coverlet."):
+                raise ValueError("恢复图包含已移除的 Coverlet 工具，请审核依赖")
+            if name.lower().startswith("microsoft.codecoverage/"):
                 matches = [Path(folder) / name.lower() for folder in assets.get("packageFolders", {})
                            if (Path(folder) / name.lower()).is_dir()]
                 if not matches:
                     raise ValueError(f"覆盖率工具缓存缺失: {name}")
                 collectors.update(matches)
-    if collector_versions and not coverage:
-        raise ValueError("普通恢复图意外包含覆盖率工具，请使用默认属性重新 restore")
-    if coverage:
-        if not collectors:
-            raise ValueError("覆盖率恢复图缺少 collector，不能跳过内嵌依赖检查")
-        for collector in collectors:
-            files = list(collector.glob("build/*/coverlet.collector.deps.json"))
-            if not files:
-                raise ValueError(f"覆盖率工具内嵌清单缺失: {collector}")
-            for path in files:
-                embedded.update(embedded_packages(json.loads(path.read_text(encoding="utf-8-sig"))))
-    return sorted(packages), sorted(embedded), collector_versions
+    if coverage and not collectors:
+        raise ValueError("覆盖率恢复图缺少 collector，不能跳过内嵌依赖检查")
+    # 此工具也由 Test.Sdk 间接引入，普通测试图同样检查内嵌依赖。
+    for collector in collectors:
+        embedded.update(verified_coverage_components(collector))
+    return sorted(packages), sorted(embedded)
 
 
 def github_findings(packages, fetch=command_json):
@@ -130,30 +134,10 @@ def github_findings(packages, fetch=command_json):
     return findings
 
 
-def scan_package_findings(packages, embedded, collector_versions, defer_coverlet, scan=None):
-    scan = scan or github_findings
-    graph_findings = scan(packages)
-    embedded = set(embedded)
-    can_defer = (defer_coverlet and collector_versions == {"coverlet.collector/10.1.0"}
-                 and COVERLET_COMPONENT in embedded)
-    if not can_defer:
-        return graph_findings | scan(sorted(embedded)), set()
-
-    # 同一公告若来自项目依赖或另一内嵌组件，不属于本 Issue 的延期范围。
-    component_findings = scan([COVERLET_COMPONENT])
-    other_findings = scan(sorted(embedded - {COVERLET_COMPONENT}))
-    deferred = (component_findings & COVERLET_DEFERRED) - graph_findings - other_findings
-    return graph_findings | component_findings | other_findings, deferred
-
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--coverage", action="store_true")
-    parser.add_argument("--defer-coverlet-107", action="store_true",
-                        help="仅延期 Issue #107 登记的精确覆盖率组件告警，仍输出全部结果")
     args = parser.parse_args()
-    if args.defer_coverlet_107 and not args.coverage:
-        parser.error("--defer-coverlet-107 仅适用于 --coverage")
     try:
         projects = project_paths()
         if len(projects) != 6:
@@ -162,21 +146,11 @@ def main():
                                "--vulnerable", "--include-transitive", "--no-restore",
                                "--format", "json", "--output-version", "1"])
         nuget_findings = set(validate_report(report, projects))
-        packages, embedded, collector_versions = resolved_packages(projects, args.coverage)
-        github_results, deferred = scan_package_findings(
-            packages, embedded, collector_versions, args.defer_coverlet_107)
-        graph_urls = {url for _, _, url in nuget_findings}
-        deferred = {finding for finding in deferred if finding[2] not in graph_urls}
-        findings = nuget_findings | github_results
+        packages, embedded = resolved_packages(projects, args.coverage)
+        findings = nuget_findings | github_findings(sorted(set(packages) | set(embedded)))
         lines = [f"已核对 {len(projects)} 个项目、{len(set(packages) | set(embedded))} 个包版本。"]
         lines += [f"- {severity}: {name} {url}" for name, severity, url in sorted(findings)]
-        failed = any(severity in {"high", "critical"} for _, severity, _ in findings - deferred)
-        if deferred:
-            lines.append(f"已知覆盖率组件风险按 Issue #107 延期处理，未修复：{COVERLET_ISSUE}")
-            if os.environ.get("GITHUB_ACTIONS") == "true":
-                print(f"::warning title=Coverlet 已知漏洞延期::仅延期已登记组件告警；未修复，跟踪 {COVERLET_ISSUE}")
-        if args.coverage and failed:
-            lines.append("覆盖率工具存在未获延期的告警；本次审计失败，不自动豁免。")
+        failed = bool(findings)
         text = "\n".join(lines)
         print(text)
         if os.environ.get("GITHUB_STEP_SUMMARY"):

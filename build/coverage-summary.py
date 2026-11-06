@@ -7,10 +7,13 @@ import xml.etree.ElementTree as ET
 def main():
     lines = ["## 测试覆盖率", "", "| 目标 | 行覆盖率 | 分支覆盖率 |", "|---|---:|---:|"]
     for framework in ("net8.0", "net10.0"):
-        reports = list((Path("coverage") / framework).rglob("coverage.cobertura.xml"))
+        reports = list((Path("coverage") / framework).rglob("*.cobertura.xml"))
         if len(reports) != 1:
             raise ValueError(f"{framework} 必须恰有一份覆盖率报告，实际 {len(reports)} 份")
         root = ET.parse(reports[0]).getroot()
+        modules = {p.attrib.get("name") for p in root.findall("./packages/package")}
+        if modules != {"StreamFrame", "StreamFrame.Protocols.Xml"}:
+            raise ValueError(f"{framework} 覆盖率必须包含且仅包含两个生产程序集: {modules}")
         covered = int(root.attrib["lines-covered"])
         valid = int(root.attrib["lines-valid"])
         line_rate = float(root.attrib["line-rate"])
